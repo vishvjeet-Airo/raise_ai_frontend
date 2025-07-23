@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
 import { Search, ChevronDown, Eye, Copy, Download } from "lucide-react";
 
@@ -15,32 +16,80 @@ const documentsData: Document[] = [
   {
     id: "1",
     name: "Master Circular - Guarantees and Co-acceptances",
-    publicationDate: "12/03/2025",
+    publicationDate: "12 / 04 / 2026",
     status: "Published",
     publisher: "RBI"
   },
   {
     id: "2", 
     name: "Master Circular - Housing Finance",
-    publicationDate: "15/02/2025",
+    publicationDate: "15 / 04 / 2026",
     status: "Published", 
     publisher: "RBI"
   },
   {
     id: "3",
     name: "Master Circular - Bank Finance to Non-banking Financial Companies (NBFCs)",
-    publicationDate: "05/07/2025",
+    publicationDate: "05 / 04 / 2026",
     status: "Reviewed",
     publisher: "RBI"
   },
   {
     id: "4",
     name: "Master Circular - Credit facilities to Scheduled Castes (SCs) & Scheduled Tribes (STs)",
-    publicationDate: "23/06/2025",
+    publicationDate: "23 / 04 / 2026",
     status: "Reviewed",
     publisher: "RBI"
   },
- 
+  {
+    id: "5",
+    name: "Master Circular on Inter-Bank Lending Programme",
+    publicationDate: "14 / 04 / 2026",
+    status: "Processing",
+    publisher: "RBI"
+  },
+  {
+    id: "6",
+    name: "Master Circular - Management of Advances - UCPB",
+    publicationDate: "08 / 05 / 2026",
+    status: "Published",
+    publisher: "RBI"
+  },
+  {
+    id: "7",
+    name: "Master Circular - Guarantees and Co-acceptances",
+    publicationDate: "09 / 04 / 2026",
+    status: "Published",
+    publisher: "RBI"
+  },
+  {
+    id: "8",
+    name: "Master Circular - Credit facilities to Scheduled Castes (SCs) & Scheduled Tribes (STs)",
+    publicationDate: "27 / 04 / 2026",
+    status: "Processing",
+    publisher: "RBI"
+  },
+  {
+    id: "9",
+    name: "Master Circular on Inter-Bank Lending Programme",
+    publicationDate: "14 / 04 / 2026",
+    status: "Published",
+    publisher: "RBI"
+  },
+  {
+    id: "10",
+    name: "Master Circular - Management of Advances - UCPB",
+    publicationDate: "08 / 04 / 2026",
+    status: "Reviewed",
+    publisher: "RBI"
+  },
+  {
+    id: "11",
+    name: "Master Circular - Guarantees and Co-acceptances",
+    publicationDate: "09 / 04 / 2026",
+    status: "Reviewed",
+    publisher: "RBI"
+  }
 ];
 
 export default function AllDocuments() {
@@ -133,10 +182,10 @@ export default function AllDocuments() {
                     />
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Name</th>
-                  <th className="px-6 py-3 text-center text-sm font-medium text-gray-900">Publication Date</th>
-                  <th className="px-6 py-3 text-center text-sm font-medium text-gray-900">Status</th>
-                  <th className="px-6 py-3 text-center text-sm font-medium text-gray-900">Publisher</th>
-                  <th className="px-6 py-3 text-center text-sm font-medium text-gray-900">Actions</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Publication Date</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Status</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Publisher</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -151,27 +200,32 @@ export default function AllDocuments() {
                       />
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900 max-w-md">
-                        {document.name}
+                      <div className="text-sm font-medium max-w-md">
+                        <Link
+                          to={`/documents/${document.id}`}
+                          className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                        >
+                          {document.name}
+                        </Link>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-6 py-4">
                       <div className="text-sm text-gray-600">
                         {document.publicationDate}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-6 py-4">
                       <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(document.status)}`}>
                         {document.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-6 py-4">
                       <div className="text-sm text-gray-600">
                         {document.publisher}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex items-center justify-center space-x-3">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-3">
                         <button className="text-gray-400 hover:text-gray-600 transition-colors">
                           <Eye className="w-4 h-4" />
                         </button>
