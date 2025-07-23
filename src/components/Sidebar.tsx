@@ -48,11 +48,11 @@ export function Sidebar({ className }: SidebarProps) {
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-white font-medium text-sm">AS</span>
+              <span className="text-white font-medium text-sm">RM</span>
             </div>
             <div>
-              <div className="text-sm font-medium text-gray-900">Andrew Smith</div>
-              <div className="text-xs text-gray-500 uppercase tracking-wide">ORANGE ANALYST</div>
+              <div className="text-sm font-medium text-gray-900">Ragini Mittal</div>
+              <div className="text-xs text-gray-500 uppercase tracking-wide">ANALYST</div>
             </div>
           </div>
         </div>
@@ -91,13 +91,12 @@ export function Sidebar({ className }: SidebarProps) {
               )}
             </div>
 
-            {/* AI Chat Bot */}
+            {/* Chat Bot */}
             <button className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50 transition-colors mb-2">
               <div className="flex items-center space-x-3">
                 <MessageSquare className="w-4 h-4" />
-                <span>AI Chat Bot</span>
+                <span>Chat Bot</span>
               </div>
-              <ChevronDown className="w-4 h-4" />
             </button>
 
             {/* Tags */}
@@ -106,10 +105,10 @@ export function Sidebar({ className }: SidebarProps) {
               <span>Tags</span>
             </button>
 
-            {/* SupportUs */}
+            {/* Support */}
             <button className="w-full flex items-center px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50 transition-colors mb-6">
               <Heart className="w-4 h-4 mr-3" />
-              <span>SupportUs</span>
+              <span>Support</span>
             </button>
 
             {/* Settings Section */}
@@ -120,7 +119,6 @@ export function Sidebar({ className }: SidebarProps) {
                 <Settings className="w-4 h-4" />
                 <span>Settings</span>
               </div>
-              <ChevronDown className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -133,7 +131,7 @@ export function Sidebar({ className }: SidebarProps) {
           </button>
           <Link to="/login" className="w-full flex items-center px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
             <LogOut className="w-4 h-4 mr-3" />
-            <span>Go to Login</span>
+            <span>Logout Account</span>
           </Link>
         </div>
       </div>

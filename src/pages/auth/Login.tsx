@@ -58,24 +58,23 @@ export default function Login() {
     <div className="min-h-screen flex">
       {/* Left Side - Login Form */}
       <div className="flex-1 flex flex-col justify-center px-6 py-12 bg-white sm:px-8 lg:px-12 xl:px-16">
-        <div className="mx-auto w-full max-w-sm">
+        <div className="mx-auto w-full max-w-sm text-sm">
           {/* Logo */}
           <div className="mb-12">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">A</span>
+              <div className="w-6 h-6 bg-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-xs">R</span>
               </div>
               <div>
-                <div className="text-lg font-semibold text-gray-900">Accela</div>
-                <div className="text-xs text-gray-500">compliance</div>
-                <div className="text-xs text-gray-400">UI & Accessibility</div>
+                <div className="text-base font-semibold text-gray-900">RAISE-AI</div>
+                <div className="text-[12px] text-gray-500">Regulatory Action Intelligence & Summarization Engine</div>
               </div>
             </div>
           </div>
 
           {/* Sign In Form */}
           <div>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Sign In</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Sign In</h2>
             
             <p className="text-sm text-gray-600 mb-8">
               Don't have an account?{" "}
@@ -84,10 +83,10 @@ export default function Login() {
               </Link>
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email Field */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">
                   E-mail
                 </label>
                 <input
@@ -96,24 +95,23 @@ export default function Login() {
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
-                    // Clear email error when user starts typing
                     if (errors.email) {
                       setErrors(prev => ({ ...prev, email: undefined }));
                     }
                   }}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 text-gray-900 placeholder-gray-500 ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 text-gray-900 placeholder-gray-500 text-xs ${
                     errors.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
                   }`}
                   placeholder="Enter your email"
                 />
                 {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                  <p className="mt-1 text-xs text-red-600">{errors.email}</p>
                 )}
               </div>
 
               {/* Password Field */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">
                   Password
                 </label>
                 <div className="relative">
@@ -123,12 +121,11 @@ export default function Login() {
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
-                      // Clear password error when user starts typing
                       if (errors.password) {
                         setErrors(prev => ({ ...prev, password: undefined }));
                       }
                     }}
-                    className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 text-gray-900 placeholder-gray-500 ${
+                    className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 text-gray-900 placeholder-gray-500 text-xs ${
                       errors.password ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
                     }`}
                     placeholder="Enter your password"
@@ -136,23 +133,23 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-4"
+                    className="absolute inset-y-0 right-0 flex items-center pr-2"
                   >
                     {showPassword ? (
-                      <EyeOff className="h-5 w-5 text-gray-400" />
+                      <EyeOff className="h-4 w-4 text-gray-400" />
                     ) : (
-                      <Eye className="h-5 w-5 text-gray-400" />
+                      <Eye className="h-4 w-4 text-gray-400" />
                     )}
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                  <p className="mt-1 text-xs text-red-600">{errors.password}</p>
                 )}
               </div>
 
               {/* Role Selection Dropdown */}
               <div>
-                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="role" className="block text-xs font-medium text-gray-700 mb-1">
                   Role
                 </label>
                 <div className="relative">
@@ -160,30 +157,30 @@ export default function Login() {
                     id="role"
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 text-gray-900 appearance-none cursor-pointer"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 text-gray-900 appearance-none cursor-pointer text-xs"
                   >
                     <option value="employee">Employee</option>
                     <option value="admin">Admin</option>
                   </select>
-                  <ChevronDown className="absolute inset-y-0 right-0 flex items-center pr-4 h-5 w-5 text-gray-400 pointer-events-none" />
+                  <ChevronDown className="absolute inset-y-0 right-0 flex items-center pr-2 h-4 w-4 text-gray-400 pointer-events-none" />
                 </div>
               </div>
 
               {/* Remember Me & Forgot Password */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between text-xs">
                 <label className="flex items-center">
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="h-3 w-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
-                  <span className="ml-2 text-sm text-gray-600">Remember me</span>
+                  <span className="ml-2 text-xs text-gray-600">Remember me</span>
                 </label>
 
                 <Link
                   to="/forgot-password"
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-xs text-blue-600 hover:text-blue-700 font-medium"
                 >
                   Forgot Password?
                 </Link>
@@ -191,15 +188,15 @@ export default function Login() {
 
               {/* General Error Message */}
               {errors.general && (
-                <div className="rounded-md bg-red-50 p-4">
-                  <div className="text-sm text-red-700">{errors.general}</div>
+                <div className="rounded-md bg-red-50 p-2">
+                  <div className="text-xs text-red-700">{errors.general}</div>
                 </div>
               )}
 
               {/* Sign In Button */}
               <button
                 type="submit"
-                className="w-full bg-blue-900 hover:bg-blue-800 text-white font-medium py-3 px-4 rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-blue-900 hover:bg-blue-800 text-white font-medium py-2 px-3 rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
                 disabled={!email.trim() || !password.trim()}
               >
                 Sign in as {role.charAt(0).toUpperCase() + role.slice(1)}
@@ -228,9 +225,9 @@ export default function Login() {
         </div>
 
         {/* Content */}
-        <div className="flex flex-col justify-center items-center text-center px-12 relative z-10">
+        <div className="flex flex-col justify-center items-center text-center px-12 relative z-10 h-full w-full">
           {/* 3D Illustration Placeholder */}
-          <div className="mb-12 relative">
+          <div className="mb-12 relative flex flex-col items-center justify-center">
             {/* Main cylindrical base */}
             <div className="w-48 h-32 bg-gradient-to-b from-purple-500 to-purple-600 rounded-full relative shadow-2xl">
               {/* Glowing top */}
@@ -266,18 +263,12 @@ export default function Login() {
 
           {/* Text Content */}
           <h2 className="text-2xl font-semibold text-white mb-4">
-            Presenting additional features
+            Presenting RAISE-AI
           </h2>
           <p className="text-blue-100 leading-relaxed max-w-md mb-8">
-            Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500
+            Upload your pdf and see the magic!
           </p>
 
-          {/* Navigation Dots */}
-          <div className="flex space-x-2">
-            <div className="w-2 h-2 bg-white rounded-full"></div>
-            <div className="w-2 h-2 bg-white/40 rounded-full"></div>
-            <div className="w-2 h-2 bg-white/40 rounded-full"></div>
-          </div>
         </div>
 
         {/* Background decorative elements */}

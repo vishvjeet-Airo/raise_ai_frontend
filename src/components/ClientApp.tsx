@@ -18,7 +18,7 @@ function RouterContent() {
 
   return (
     <Routes>
-      <Route path="/" element={<Index />} />
+      <Route path="/" element={<AllDocuments />} />
       <Route path="/login" element={<Login />} />
       <Route path="/upload" element={<Upload />} />
       <Route path="/documents" element={<AllDocuments />} />
