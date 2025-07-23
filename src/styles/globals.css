@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /**
+   * Tailwind CSS theme
+   * tailwind.config.ts expects the following color variables to be expressed as HSL values.
+   * A different format will require also updating the theme in tailwind.config.ts.
+  */
+  :root {
+    --background: 248 250 252;
+    --foreground: 51 65 85;
+
+    --card: 255 255 255;
+    --card-foreground: 51 65 85;
+
+    --popover: 255 255 255;
+    --popover-foreground: 51 65 85;
+
+    --primary: 59 130 246;
+    --primary-foreground: 248 250 252;
+
+    --secondary: 241 245 249;
+    --secondary-foreground: 51 65 85;
+
+    --muted: 241 245 249;
+    --muted-foreground: 100 116 139;
+
+    --accent: 147 197 253;
+    --accent-foreground: 30 58 138;
+
+    --destructive: 239 68 68;
+    --destructive-foreground: 248 250 252;
+
+    --border: 226 232 240;
+    --input: 226 232 240;
+    --ring: 59 130 246;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 255 255 255;
+    --sidebar-foreground: 51 65 85;
+    --sidebar-primary: 59 130 246;
+    --sidebar-primary-foreground: 255 255 255;
+    --sidebar-accent: 248 250 252;
+    --sidebar-accent-foreground: 51 65 85;
+    --sidebar-border: 226 232 240;
+    --sidebar-ring: 59 130 246;
+
+    --chart-red: 239 68 68;
+    --chart-blue: 59 130 246;
+    --chart-gray: 156 163 175;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

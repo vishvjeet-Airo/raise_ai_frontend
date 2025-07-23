@@ -1,0 +1,1 @@
+self.__REACT_LOADABLE_MANIFEST="{\"pages\\\\_app.tsx -> ../components/ClientApp\":{\"id\":\"pages\\\\_app.tsx -> ../components/ClientApp\",\"files\":[\"static/chunks/src_components_ClientApp_tsx.js\"]}}"
