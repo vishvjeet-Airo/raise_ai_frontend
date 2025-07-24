@@ -37,30 +37,72 @@ export default function DocumentDetail() {
               All Documents
             </Link>
             <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-900">Master Circular - Guarantees and Co-acceptances</span>
+            <span className="text-[#1F4A75] font-semibold">Master Circular - Guarantees and Co-acceptances</span>
           </div>
 
           {/* Document Header */}
           <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900 mb-2">
-                  Document : Master Circular - Guarantees and Co-acceptances
-                </h1>
-                <div className="flex items-center space-x-6 text-sm text-gray-600">
-                  <span>14 May 2026 | Reserve Bank of India | Reserve Bank of India</span>
-                  <span>April 2026</span>
-                  <span>Effective April 1 2026</span>
-                </div>
-                <div className="mt-3">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    Checked & Validated
-                  </span>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm text-gray-600 mb-1">Human validation Required</div>
-              </div>
+            <h1
+              style={{
+                color: '#444444',
+                fontFamily: 'Poppins, sans-serif',
+                fontWeight: 500,
+                fontStyle: 'normal',
+                fontSize: '16px',
+                lineHeight: '100%',
+                letterSpacing: '0%'
+              }}
+            >
+              Document : Master Circular - Guarantees and Co-acceptances
+            </h1>
+            <div className="mb-2">
+              <span
+                style={{
+                  color: '#4B8B74',
+                  fontFamily: 'Poppins, sans-serif',
+                  fontWeight: 500,
+                  fontStyle: 'normal',
+                  fontSize: '12px',
+                  lineHeight: '100%',
+                  letterSpacing: '0%'
+                }}
+              >
+                14 May 2025 | Reserve Bank of India | Reserve Bank Of India
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className="inline-flex items-center text-xs font-medium"
+                style={{
+                  background: '#69FEC8',
+                  width: '152px',
+                  height: '28px',
+                  borderRadius: '2px',
+                
+                  opacity: 1,
+                  paddingLeft: '12px',
+                  paddingRight: '12px',
+                  paddingTop: '4px',
+                  paddingBottom: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start'
+                }}
+              >
+                <Check className="w-4 h-4 mr-1 text-green-800" /> Parsed & Validated
+              </span>
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border" style={{ border: '0.4px solid #C9C9C9' }}>
+                AP DIR Circular No.1
+              </span>
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border" style={{ border: '0.4px solid #C9C9C9' }}>
+                Reserve Bank of India
+              </span>
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border" style={{ border: '0.4px solid #C9C9C9' }}>
+                April, 2025
+              </span>
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border" style={{ border: '0.4px solid #C9C9C9' }}>
+                Effective: April 3, 2025
+              </span>
             </div>
           </div>
 
