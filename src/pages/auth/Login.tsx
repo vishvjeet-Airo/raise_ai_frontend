@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { Eye, EyeOff, HelpCircle, ChevronDown } from "lucide-react";
+import { Eye, EyeOff, HelpCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("employee");
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState<{
     email?: string;
@@ -46,11 +45,10 @@ export default function Login() {
     if (validateForm()) {
       // Clear any previous errors
       setErrors({});
-      console.log("Login attempt:", { email, password, role, rememberMe });
+      console.log("Login attempt:", { email, password, rememberMe });
 
       // Here you would typically make an API call to authenticate
-      // For demo purposes, we'll show a simple success message
-      alert(`Login successful!\nEmail: ${email}\nRole: ${role}`);
+      alert(`Login successful!\nEmail: ${email}`);
     }
   };
 
@@ -147,25 +145,6 @@ export default function Login() {
                 )}
               </div>
 
-              {/* Role Selection Dropdown */}
-              <div>
-                <label htmlFor="role" className="block text-xs font-medium text-gray-700 mb-1">
-                  Role
-                </label>
-                <div className="relative">
-                  <select
-                    id="role"
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 text-gray-900 appearance-none cursor-pointer text-xs"
-                  >
-                    <option value="employee">Employee</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                  <ChevronDown className="absolute inset-y-0 right-0 flex items-center pr-2 h-4 w-4 text-gray-400 pointer-events-none" />
-                </div>
-              </div>
-
               {/* Remember Me & Forgot Password */}
               <div className="flex items-center justify-between text-xs">
                 <label className="flex items-center">
@@ -199,7 +178,7 @@ export default function Login() {
                 className="w-full bg-blue-900 hover:bg-blue-800 text-white font-medium py-2 px-3 rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
                 disabled={!email.trim() || !password.trim()}
               >
-                Sign in as {role.charAt(0).toUpperCase() + role.slice(1)}
+                Sign in
               </button>
             </form>
           </div>
@@ -268,7 +247,6 @@ export default function Login() {
           <p className="text-blue-100 leading-relaxed max-w-md mb-8">
             Upload your pdf and see the magic!
           </p>
-
         </div>
 
         {/* Background decorative elements */}
@@ -278,3 +256,4 @@ export default function Login() {
     </div>
   );
 }
+           
