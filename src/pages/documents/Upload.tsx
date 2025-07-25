@@ -214,37 +214,62 @@ export default function Upload() {
   return (
     <div className="flex h-screen bg-slate-50">
       <Sidebar />
-      
+  
       <div className="flex-1 p-8">
         <div className="max-w-4xl">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-2xl font-semibold text-gray-900 mb-2">Upload Document</h1>
-            <p className="text-gray-600">Select and upload the files of your choice</p>
-          </div>
-
-          {/* Upload Area */}
-          <div className="text-center mb-6 relative transition-colors"
-               onDragEnter={handleDrag}
-               onDragLeave={handleDrag}
-               onDragOver={handleDrag}
-               onDrop={handleDrop}
-               style={{
-                 width: '854px',
-                 height: '350px',
-                 
-                 borderRadius: '26px',
-                 border: '2px dashed #CBD0DC',
-                 strokeDasharray: '18, 18',
-                 gap: '10px',
-                 padding: '48px',
-                 display: 'flex',
-                 alignItems: 'center',
-                 justifyContent: 'center',
-                 borderColor: dragActive ? '#3b82f6' : '#CBD0DC',
-                 backgroundColor: dragActive ? '#eff6ff' : '#FFFFFF'
-               }}>
+          <h1
+              style={{
+                font: 'Poppins',
+                fontWeight: 500,
+                fontStyle: 'normal',
+                fontSize: '20px',
+                lineHeight: '100%',
+                letterSpacing: '0%',
+                color: '#4F4F4F', // equivalent to Tailwind's text-gray-900
+                marginBottom: '8px' // equivalent to mb-2
+              }}
+            >
+              Upload Document
+            </h1>
+            <h1
+              style={{
+                font: 'Inter',
+                fontWeight: 500,
+                fontStyle: 'medium',
+                fontSize: '16px',
+                lineHeight: '100%',
+                letterSpacing: '0%',
+                color: '#A9ACB4'
+              }}
+            >
+              Select and upload the files of your choice
+            </h1>
             
+          </div>
+  
+          {/* Upload Area */}
+          <div
+            className="text-center mb-6 relative transition-colors"
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            style={{
+              width: '854px',
+              height: '350px',
+              borderRadius: '26px',
+              border: '2px dashed #CBD0DC',
+              backgroundColor: dragActive ? '#eff6ff' : '#FFFFFF',
+              padding: '48px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderColor: dragActive ? '#3b82f6' : '#CBD0DC',
+              backgroundClip: 'padding-box',
+            }}
+          >
             <input
               ref={fileInputRef}
               type="file"
@@ -253,7 +278,7 @@ export default function Upload() {
               onChange={handleFileSelect}
               className="hidden"
             />
-
+  
             <div className="flex flex-col items-center">
               <img 
                 src="https://cdn.builder.io/api/v1/image/assets%2F853aa9fa4b60476e8ae787cacab84e05%2F602cf35a7f7c4616b61809985a0f38c4?format=webp&width=800"
@@ -261,11 +286,20 @@ export default function Upload() {
                 className="mb-4"
                 style={{ width: '66px', height: '66px' }}
               />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 style={{
+                font: 'Inter',
+                fontWeight: 500,
+                fontSize: '20px',
+                lineHeight: '100%',
+                letterSpacing: '0%',
+                textAlign: 'center',
+                color: '#4F4F4F', // text-gray-900 equivalent
+                marginBottom: '8px', // mb-2 equivalent (assuming 1 unit = 4px)
+              }}>
                 Choose a file or drag & drop it here
               </h3>
-              <p className="text-gray-500 mb-6">
-                JPEG, PNG, PDF, and MP4 formats, up to 50MB
+              <p className="text-gray-500 mb-6 font=Inter">
+                PDF format up to 50MB
               </p>
               <button
                 onClick={handleBrowseFile}
@@ -281,7 +315,8 @@ export default function Upload() {
                   paddingLeft: '33px',
                   gap: '10px',
                   backgroundColor: '#FFFFFF',
-                  color: '#000000',
+                  font: 'Poppins',
+                  color: '#54575C',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
@@ -296,8 +331,7 @@ export default function Upload() {
           <div className="mb-6">
             <p className="text-sm text-gray-600 mb-2">Max 3 files 20MB each</p>
             <p className="text-sm text-gray-500">
-              <span className="font-medium">Supported formats:</span> Markdown (MD), PDF, Text (TXT), OpenDocument Text (ODT), OpenDocument Presentation (ODP), 
-              Electronic publication (EPUB), Rich Text Format (RTF), Microsoft OpenXML (DOCX), Microsoft PowerPoint OpenXML (PPTX)
+              <span className="font-medium">Supported format:</span> PDF
             </p>
           </div>
 

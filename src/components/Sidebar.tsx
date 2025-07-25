@@ -48,10 +48,10 @@ export function Sidebar({ className }: SidebarProps) {
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-white font-medium text-sm">RM</span>
+              <span className="text-white font-medium text-sm">AS</span>
             </div>
             <div>
-              <div className="text-sm font-medium text-gray-900">Ragini Mittal</div>
+              <div className="text-sm font-medium text-gray-900">Andrew Smith</div>
               <div className="text-xs text-gray-500 uppercase tracking-wide">ANALYST</div>
             </div>
           </div>
