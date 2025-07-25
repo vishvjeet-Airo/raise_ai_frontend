@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "export": "next export",
     "lint": "next lint",
     "test": "jest",
     "typecheck": "tsc --noEmit"
@@ -15,6 +16,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2",
+    "serverless-http": "^3.2.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { Sidebar } from "@/components/Sidebar";
+import { toast } from "sonner";
 import { Cloud, X, FileText } from "lucide-react";
 
 interface UploadFile {
@@ -25,6 +26,8 @@ export default function Upload() {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
+
+  const supportedFileTypes = ["pdf"];
 
   const simulateUpload = (file: File) => {
     const fileId = Math.random().toString(36).substr(2, 9);
@@ -77,10 +80,6 @@ export default function Upload() {
           if (allDone) {
             setIsUploading(false);
             setAllCompleted(true);
-            setTimeout(() => {
-              setAllCompleted(false);
-              setUploadedFiles([]);
-            }, 2000);
           }
           return prev;
         });
@@ -104,16 +103,26 @@ export default function Upload() {
     setDragActive(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      Array.from(e.dataTransfer.files).slice(0, 3).forEach(file => {
-        simulateUpload(file);
+      Array.from(e.dataTransfer.files).forEach(file => {
+        const fileExtension = file.name.split('.').pop()?.toLowerCase();
+        if (fileExtension && supportedFileTypes.includes(fileExtension)) {
+          simulateUpload(file);
+        } else {
+          toast.warning(`Unsupported file type. Only PDF files are allowed.`);
+        }
       });
     }
-  }, []);
+  }, [simulateUpload, supportedFileTypes]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      Array.from(e.target.files).slice(0, 3).forEach(file => {
-        simulateUpload(file);
+      Array.from(e.target.files).forEach(file => {
+        const fileExtension = file.name.split('.').pop()?.toLowerCase();
+        if (fileExtension && supportedFileTypes.includes(fileExtension)) {
+          simulateUpload(file);
+        } else {
+          toast.warning(`Unsupported file type. Only PDF files are allowed.`);
+        }
       });
     }
   };
@@ -132,8 +141,74 @@ export default function Upload() {
     setAllCompleted(false);
   };
 
-  const handleSubmit = () => {
-    console.log('Submitting files:', uploadedFiles);
+  const handleSubmit = async () => {
+    if (uploadedFiles.length === 0) {
+      toast.info('No files selected for submission.');
+      return;
+    }
+
+    const formData = new FormData();
+    let hasFilesToSubmit = false;
+
+    for (const uploadedFile of uploadedFiles) {
+      // At this point, only supported PDF files should be in uploadedFiles
+      // and their simulation should be completed.
+      if (uploadedFile.status === 'completed') {
+        formData.append('files', uploadedFile.file);
+        hasFilesToSubmit = true;
+      } else {
+        toast.info(`File ${uploadedFile.file.name} is still processing. Please wait or remove it.`);
+      }
+    }
+
+    if (!hasFilesToSubmit) {
+      toast.info('No completed PDF files found for submission.');
+      setAllCompleted(false);
+      setUploadedFiles([]);
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:8000/api/documents/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const responseData = await response.json();
+        const results = responseData.results; // Access the nested results array
+
+        if (Array.isArray(results)) {
+          let allSuccess = true;
+          results.forEach((result: any) => {
+            if (result.success) {
+              toast.success(`File ${result.filename} uploaded successfully!`);
+            } else {
+              allSuccess = false;
+              toast.error(`Failed to upload ${result.filename}: ${result.detail}`);
+            }
+          });
+          if (allSuccess && results.length > 1) {
+            toast.success('All selected PDF files submitted successfully!');
+          } else if (results.length === 0) {
+            toast.error('No response from server for submitted files.');
+          }
+        } else {
+          console.error('Backend response is not an array:', responseData);
+          toast.error('Unexpected response from server. Check console for details.');
+        }
+      } else {
+        console.error('API upload failed:', response.statusText);
+        toast.error(`API upload failed: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error during API upload:', error);
+      toast.error('Error during API upload. Check console for details.');
+    }
+
+    // Clear the list after submission, regardless of success/failure of individual files
+    setAllCompleted(false);
+    setUploadedFiles([]);
   };
 
   return (
@@ -157,7 +232,7 @@ export default function Upload() {
                style={{
                  width: '854px',
                  height: '350px',
-                 backgroundColor: '#FFFFFF',
+                 
                  borderRadius: '26px',
                  border: '2px dashed #CBD0DC',
                  strokeDasharray: '18, 18',
