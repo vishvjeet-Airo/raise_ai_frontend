@@ -1,20 +1,32 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Index from "@/pages/dashboard/Index";
 import Login from "@/pages/auth/Login";
 import Upload from "@/pages/documents/Upload";
 import AllDocuments from "@/pages/documents/AllDocuments";
 import DocumentDetail from "@/pages/documents/DocumentDetail";
 import NotFound from "@/pages/error/NotFound";
+import Cookies from 'js-cookie';
 
 // Router content component
 function RouterContent() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Log route changes for debugging
     console.log("React Router navigated to:", location.pathname);
-  }, [location]);
+
+    // Redirect logic for root path
+    if (location.pathname === '/') {
+      const token = Cookies.get('access_token');
+      if (token) {
+        navigate('/documents', { replace: true });
+      } else {
+        navigate('/login', { replace: true });
+      }
+    }
+  }, [location, navigate]);
 
   return (
     <Routes>
