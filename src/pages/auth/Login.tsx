@@ -1,54 +1,82 @@
 import { useState } from "react";
+import Cookies from 'js-cookie';
+import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, HelpCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+
+async function loginUser({ username, password }: { username: string; password: string }) {
+  const params = new URLSearchParams();
+  params.append('grant_type', 'password');
+  params.append('username', username);
+  params.append('password', password);
+  params.append('scope', '');
+  params.append('client_id', 'string');
+  params.append('client_secret', ''); // You can set this if needed
+
+  const response = await fetch('http://localhost:8000/api/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'accept': 'application/json',
+    },
+    body: params.toString(),
+  });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return response.json();
+}
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState<{
-    email?: string;
+    username?: string;
     password?: string;
     general?: string;
   }>({});
-
-  // Email validation function
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const [apiResponse, setApiResponse] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   // Form validation
   const validateForm = () => {
-    const newErrors: { email?: string; password?: string } = {};
+    const newErrors: { username?: string; password?: string } = {};
 
-    if (!email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!validateEmail(email)) {
-      newErrors.email = "pls add valid email adress";
+    if (!username.trim()) {
+      newErrors.username = "Username is required";
     }
 
     if (!password.trim()) {
       newErrors.password = "Password is required";
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (validateForm()) {
-      // Clear any previous errors
       setErrors({});
-      console.log("Login attempt:", { email, password, rememberMe });
-
-      // Here you would typically make an API call to authenticate
-      alert(`Login successful!\nEmail: ${email}`);
+      setLoading(true);
+      setApiResponse(null);
+      try {
+        const data = await loginUser({ username, password });
+        // Store access token in cookie (if present)
+        if (data.access_token) {
+          Cookies.set('access_token', data.access_token, { path: '/', sameSite: 'strict' });
+        }
+        setApiResponse(JSON.stringify(data, null, 2));
+        // Redirect to all documents page
+        navigate('/documents');
+      } catch (err: any) {
+        setApiResponse(err.message || 'Login failed');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -84,26 +112,47 @@ export default function Login() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email Field */}
               <div>
-                <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">
-                  E-mail
+                <label
+                  htmlFor="username"
+                  style={{
+                    color: '#718096',
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: '16px',
+                    lineHeight: '20px',
+                    letterSpacing: '-0.15px'
+                  }}
+                  className="mb-1"
+                >
+                  Username
                 </label>
                 <input
-                  id="email"
-                  type="email"
-                  value={email}
+                  id="username"
+                  type="text"
+                  value={username}
                   onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (errors.email) {
-                      setErrors(prev => ({ ...prev, email: undefined }));
+                    setUsername(e.target.value);
+                    if (errors.username) {
+                      setErrors(prev => ({ ...prev, username: undefined }));
                     }
                   }}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 text-gray-900 placeholder-gray-500 text-xs ${
-                    errors.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
-                  }`}
-                  placeholder="Enter your email"
+                  style={{
+                    width: '428px',
+                    height: '20px',
+                    left: '-1px',
+                    opacity: 1,
+                    gap: '8px',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: errors.username ? '1px solid #F56565' : '1px solid #E2E8F0',
+                    background: '#F7FAFC',
+                    color: '#2D3748',
+                    fontSize: '14px'
+                  }}
+                  placeholder="Enter your username"
                 />
-                {errors.email && (
-                  <p className="mt-1 text-xs text-red-600">{errors.email}</p>
+                {errors.username && (
+                  <p className="mt-1 text-xs text-red-600">{errors.username}</p>
                 )}
               </div>
 
@@ -175,11 +224,34 @@ export default function Login() {
               {/* Sign In Button */}
               <button
                 type="submit"
-                className="w-full bg-blue-900 hover:bg-blue-800 text-white font-medium py-2 px-3 rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-                disabled={!email.trim() || !password.trim()}
+                style={{
+                  background: '#052E65',
+                  width: '482px',
+                  height: '46px',
+                  margin: '32px auto 0 auto',
+                  opacity: 1,
+                  borderRadius: '12px',
+                  paddingLeft: '24px',
+                  paddingRight: '24px',
+                  gap: '8px',
+                  color: 'white',
+                  fontWeight: 500,
+                  fontSize: '16px',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer'
+                }}
+                disabled={!username.trim() || !password.trim() || loading}
               >
-                Sign in
+                {loading ? 'Signing in...' : 'Sign in'}
               </button>
+              {apiResponse && (
+                <div className="mt-4 p-2 bg-gray-100 rounded text-xs text-gray-800 whitespace-pre-wrap">
+                  {apiResponse}
+                </div>
+              )}
             </form>
           </div>
         </div>
