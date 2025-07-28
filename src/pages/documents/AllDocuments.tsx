@@ -8,7 +8,7 @@ interface Document {
   id: string;
   name: string;
   publicationDate: string;
-  status: 'Published' | 'Reviewed' | 'Processing';
+  status: 'Processed';
   publisher: string;
 }
 
@@ -18,28 +18,28 @@ const documentsData: Document[] = [
     id: "1",
     name: "Master Circular - Guarantees and Co-acceptances",
     publicationDate: "12 / 04 / 2025",
-    status: "Published",
+    status: "Processed",
     publisher: "RBI"
   },
   {
     id: "2", 
     name: "Master Circular - Housing Finance",
     publicationDate: "15 / 04 / 2025",
-    status: "Published", 
+    status: "Processed", 
     publisher: "RBI"
   },
   {
     id: "3",
     name: "Master Circular - Bank Finance to Non-banking Financial Companies (NBFCs)",
     publicationDate: "05 / 04 / 2025",
-    status: "Reviewed",
+    status: "Processed",
     publisher: "RBI"
   },
   {
     id: "4",
     name: "Master Circular - Credit facilities to Scheduled Castes (SCs) & Scheduled Tribes (STs)",
     publicationDate: "23 / 04 / 2025",
-    status: "Reviewed",
+    status: "Processed",
     publisher: "RBI"
   }
 ];
@@ -84,16 +84,13 @@ export default function AllDocuments() {
 
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'Published':
-        return 'bg-blue-500 text-white';
-      case 'Reviewed':
-        return 'bg-green-500 text-white';
-      case 'Processing':
-        return 'bg-blue-400 text-white';
+      case 'Processed':
+        return 'bg-[#2DA1DB] text-white';
       default:
-        return 'bg-gray-500 text-white';
+        return '';
     }
   };
+  
 
   const filteredDocuments = documentsData.filter(doc =>
     doc.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -131,7 +128,7 @@ export default function AllDocuments() {
                 />
               </div>
               <button
-                style={{ width: 78, height: 32, borderColor: '#E11D48', color: '#E11D48' }}
+                style={{ width: 78, height: 32, borderColor: '#1F4A75', color: '#1F4A75' }}
                 className="border bg-white rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center text-sm font-medium"
               >
                 Delete All

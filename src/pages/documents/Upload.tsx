@@ -199,7 +199,7 @@ export default function Upload() {
         }
       } else {
         console.error('API upload failed:', response.statusText);
-        toast.error(`API upload failed: ${response.statusText}`);
+        toast.error(`API upload failed`);
       }
     } catch (error) {
       console.error('Error during API upload:', error);
