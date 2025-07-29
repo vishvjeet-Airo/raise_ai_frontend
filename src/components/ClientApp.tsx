@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-ro
 import Index from "@/pages/dashboard/Index";
 import Login from "@/pages/auth/Login";
 import ForgotPassword from "@/pages/auth/forgot-password";
+import ResetPassword from "@/pages/auth/reset-password";
 import Upload from "@/pages/documents/Upload";
 import AllDocuments from "@/pages/documents/AllDocuments";
 import DocumentDetail from "@/pages/documents/DocumentDetail";
@@ -33,6 +34,7 @@ function RouterContent() {
       <Route path="/" element={<AllDocuments />} />
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/upload" element={<Upload />} />
       <Route path="/documents" element={<AllDocuments />} />
       <Route path="/documents/:id" element={<DocumentDetail />} />

@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Link } from 'react-router-dom';
-import { HelpCircle } from "lucide-react";
+import { HelpCircle, CheckCircle2 } from "lucide-react";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState<{ email?: string; general?: string; }>(
     {}
   );
-  const [apiResponse, setApiResponse] = useState<string | null>(null);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -32,7 +32,7 @@ export default function ForgotPassword() {
     if (validateForm()) {
       setErrors({});
       setLoading(true);
-      setApiResponse(null);
+      setShowSuccessMessage(false);
       try {
         const response = await fetch(`http://localhost:8000/api/users/request-password-reset?email=${encodeURIComponent(email)}`, {
           method: 'POST',
@@ -46,8 +46,7 @@ export default function ForgotPassword() {
           throw new Error(errorData.detail || 'Failed to send reset email');
         }
 
-        const data = await response.json();
-        setApiResponse(data.message);
+        setShowSuccessMessage(true);
 
       } catch (err: any) {
         const errorMsg = err.message || "An error occurred";
@@ -91,77 +90,81 @@ export default function ForgotPassword() {
               Forgot Password
             </h2>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Email Field */}
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-xs font-medium text-gray-700 mb-1"
-                >
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (errors.email) {
-                      setErrors((prev) => ({ ...prev, email: undefined }));
-                    }
-                  }}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 text-gray-900 placeholder-gray-500 text-xs ${
-                    errors.email
-                      ? "border-red-300 focus:ring-red-500"
-                      : "border-gray-200"
-                  }`}
-                  placeholder="Enter your email"
-                />
-                {errors.email && (
-                  <p className="mt-1 text-xs text-red-600">{errors.email}</p>
+            {!showSuccessMessage ? (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Email Field */}
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-xs font-medium text-gray-700 mb-1"
+                  >
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errors.email) {
+                        setErrors((prev) => ({ ...prev, email: undefined }));
+                      }
+                    }}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 text-gray-900 placeholder-gray-500 text-xs ${
+                      errors.email
+                        ? "border-red-300 focus:ring-red-500"
+                        : "border-gray-200"
+                    }`}
+                    placeholder="Enter your email"
+                  />
+                  {errors.email && (
+                    <p className="mt-1 text-xs text-red-600">{errors.email}</p>
+                  )}
+                </div>
+
+                {/* General Error Message */}
+                {errors.general && (
+                  <div className="rounded-md bg-red-50 p-2">
+                    <div className="text-xs text-red-700">{errors.general}</div>
+                  </div>
                 )}
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  style={{
+                    background: "#052E65",
+                    width: "100%",
+                    height: "46px",
+                    margin: "32px auto 0 auto",
+                    opacity: 1,
+                    borderRadius: "12px",
+                    paddingLeft: "24px",
+                    paddingRight: "24px",
+                    gap: "8px",
+                    color: "white",
+                    fontWeight: 500,
+                    fontSize: "16px",
+                    border: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                  }}
+                  disabled={!email.trim() || loading}
+                >
+                  {loading ? "Sending..." : "Send Reset Link"}
+                </button>
+              </form>
+            ) : (
+              <div className="text-center bg-green-50 border border-green-200 rounded-lg p-6 my-4">
+                <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-800">Link Sent!</h3>
+                <p className="text-gray-600 mt-2">
+                  A password reset link has been sent to your email address. Please check your inbox.
+                </p>
               </div>
-
-              {/* General Error Message */}
-              {errors.general && (
-                <div className="rounded-md bg-red-50 p-2">
-                  <div className="text-xs text-red-700">{errors.general}</div>
-                </div>
-              )}
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                style={{
-                  background: "#052E65",
-                  width: "100%",
-                  height: "46px",
-                  margin: "32px auto 0 auto",
-                  opacity: 1,
-                  borderRadius: "12px",
-                  paddingLeft: "24px",
-                  paddingRight: "24px",
-                  gap: "8px",
-                  color: "white",
-                  fontWeight: 500,
-                  fontSize: "16px",
-                  border: "none",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                }}
-                disabled={!email.trim() || loading}
-              >
-                {loading ? "Sending..." : "Send Reset Link"}
-              </button>
-
-              {apiResponse && (
-                <div className="mt-4 p-2 bg-gray-100 rounded text-xs text-gray-800 whitespace-pre-wrap">
-                  {apiResponse}
-                </div>
-              )}
-            </form>
+            )}
 
             <div className="mt-4 text-center text-xs">
               <Link
@@ -173,14 +176,6 @@ export default function ForgotPassword() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Mobile Support Button */}
-      <div className="lg:hidden fixed top-4 right-4 z-10">
-        <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors bg-white rounded-full px-3 py-2 shadow-md">
-          <HelpCircle className="w-4 h-4" />
-          <span className="text-sm">Support</span>
-        </button>
       </div>
 
       {/* Right Side - Feature Presentation */}
@@ -294,7 +289,7 @@ export default function ForgotPassword() {
 
             {/* Error Title */}
             <h3 className="text-xl font-semibold text-gray-900 text-center mb-4">
-              Error
+              Request Failed
             </h3>
 
             {/* Error Message */}
