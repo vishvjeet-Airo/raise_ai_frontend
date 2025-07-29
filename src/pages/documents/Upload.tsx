@@ -14,7 +14,6 @@ interface UploadFile {
 
 // Helper function to create the custom dashed border SVG
 const getDashedBorderSVG = (color: string) => {
-  // Set corner radius (rx, ry) to 0 for sharp edges
   const svg = `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="none" rx="0" ry="0" stroke="${color}" stroke-width="3" stroke-dasharray="10, 10" stroke-dashoffset="0" stroke-linecap="round"/></svg>`;
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 };
@@ -54,37 +53,44 @@ export default function Upload() {
 
     const interval = setInterval(() => {
       setUploadedFiles(prev => prev.map(f => {
-        if (f.id === fileId && f.status === 'uploading') {
+        if (f.id === fileId) {
           const newProgress = Math.min(f.progress + Math.random() * 15, 100);
           const uploadedBytes = (file.size * newProgress) / 100;
-          const isComplete = newProgress >= 100;
-          
-          if(isComplete) {
-             clearInterval(interval);
-          }
           
           return {
             ...f,
             progress: newProgress,
             size: formatFileSize(uploadedBytes),
-            status: isComplete ? 'completed' : 'uploading'
+            status: newProgress >= 100 ? 'completed' : 'uploading'
           };
         }
         return f;
       }));
     }, 200);
 
-    // Check for completion status after a delay
-     setTimeout(() => {
-        setUploadedFiles(prev => {
-            const allDone = prev.every(f => f.status === 'completed');
-            if (allDone) {
-                setIsUploading(false);
-                setAllCompleted(true);
-            }
-            return prev;
+    setTimeout(() => {
+      clearInterval(interval);
+      setUploadedFiles(prev => {
+        const finalFiles = prev.map(f => {
+          if (f.id === fileId) {
+            return {
+              ...f,
+              progress: 100,
+              size: formatFileSize(file.size),
+              status: 'completed'
+            };
+          }
+          return f;
         });
-    }, 2500 + Math.random() * 1000);
+
+        const allDone = finalFiles.every(f => f.status === 'completed');
+        if (allDone) {
+          setIsUploading(false);
+          setAllCompleted(true);
+        }
+        return finalFiles;
+      });
+    }, 2000 + Math.random() * 2000);
   };
 
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -108,11 +114,11 @@ export default function Upload() {
         if (fileExtension && supportedFileTypes.includes(fileExtension)) {
           simulateUpload(file);
         } else {
-          toast.warning(`Unsupported file type: .${fileExtension}`);
+          toast.warning(`Unsupported file type. Only PDF files are allowed.`);
         }
       });
     }
-  }, []);
+  }, [simulateUpload, supportedFileTypes]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -121,7 +127,7 @@ export default function Upload() {
         if (fileExtension && supportedFileTypes.includes(fileExtension)) {
           simulateUpload(file);
         } else {
-          toast.warning(`Unsupported file type: .${fileExtension}`);
+          toast.warning(`Unsupported file type. Only PDF files are allowed.`);
         }
       });
     }
@@ -142,7 +148,70 @@ export default function Upload() {
   };
 
   const handleSubmit = async () => {
-    // ... (Your handleSubmit logic remains the same)
+    if (uploadedFiles.length === 0) {
+      toast.info('No files selected for submission.');
+      return;
+    }
+
+    const formData = new FormData();
+    let hasFilesToSubmit = false;
+
+    for (const uploadedFile of uploadedFiles) {
+      if (uploadedFile.status === 'completed') {
+        formData.append('files', uploadedFile.file);
+        hasFilesToSubmit = true;
+      } else {
+        toast.info(`File ${uploadedFile.file.name} is still processing. Please wait or remove it.`);
+      }
+    }
+
+    if (!hasFilesToSubmit) {
+      toast.info('No completed PDF files found for submission.');
+      setAllCompleted(false);
+      setUploadedFiles([]);
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:8000/api/documents/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const responseData = await response.json();
+        const results = responseData.results;
+
+        if (Array.isArray(results)) {
+          let allSuccess = true;
+          results.forEach((result: any) => {
+            if (result.success) {
+              toast.success(`File ${result.filename} uploaded successfully!`);
+            } else {
+              allSuccess = false;
+              toast.error(`Failed to upload ${result.filename}: ${result.detail}`);
+            }
+          });
+          if (allSuccess && results.length > 1) {
+            toast.success('All selected PDF files submitted successfully!');
+          } else if (results.length === 0) {
+            toast.error('No response from server for submitted files.');
+          }
+        } else {
+          console.error('Backend response is not an array:', responseData);
+          toast.error('Unexpected response from server. Check console for details.');
+        }
+      } else {
+        console.error('API upload failed:', response.statusText);
+        toast.error(`API upload failed`);
+      }
+    } catch (error) {
+      console.error('Error during API upload:', error);
+      toast.error('Error during API upload. Check console for details.');
+    }
+
+    setAllCompleted(false);
+    setUploadedFiles([]);
   };
 
   return (
@@ -150,14 +219,14 @@ export default function Upload() {
       <Sidebar />
   
       <div className="flex-1 p-6 overflow-y-auto">
-        <div className="bg-[#FBFBFB] rounded-xl p-8 h-full">
+        <div className="bg-[#FBFBFB] rounded-xl p-8 min-h-full">
             <div className="max-w-4xl">
               {/* Header */}
               <div className="mb-8">
-                <h1 className="font-poppins text-xl font-medium leading-none tracking-normal text-[#4F4F4F] mb-2">
+                <h1 className="font-poppins text-xl font-medium leading-none text-[#4F4F4F] mb-2">
                   Upload Document
                 </h1>
-                <p className="font-sans text-sm font-medium leading-none tracking-normal text-gray-400">
+                <p className="font-sans text-base font-medium leading-none text-[#A9ACB4]">
                   Select and upload the files of your choice
                 </p>
               </div>
@@ -167,12 +236,10 @@ export default function Upload() {
                 className="relative flex flex-col items-center justify-center w-full min-h-[350px] p-12 text-center bg-white transition-colors duration-300"
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
+                onDragOver={handleDrop}
                 style={{
                   backgroundImage: getDashedBorderSVG(dragActive ? '#3b82f6' : '#CBD0DC'),
                   backgroundRepeat: 'no-repeat',
-                  backgroundColor: dragActive ? '#eff6ff' : '#FFFFFF',
                 }}
               >
                 <input
@@ -184,22 +251,21 @@ export default function Upload() {
                   className="hidden"
                 />
     
-                {/* === MODIFICATION HERE === */}
                 <img 
                   src="/upload.png" 
                   alt="Upload icon" 
                   className="w-16 h-16 mb-4" 
                 />
                 
-                <h3 className="text-xl font-medium text-gray-700 mb-2">
+                <h3 className="text-xl font-medium text-[#4F4F4F] mb-2">
                   Choose a file or drag & drop it here
                 </h3>
                 <p className="text-sm text-gray-500 mb-6">
-                  JPEG, PNG, PDG, and MP4 formats, up to 50MB
+                  PDF format up to 50MB
                 </p>
                 <button
                   onClick={handleBrowseFile}
-                  className="px-8 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-8 py-2 text-sm font-poppins text-[#54575C] bg-white border border-[#CBD0DC] rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Browse File
                 </button>
@@ -208,8 +274,8 @@ export default function Upload() {
               {/* File Restrictions */}
               <div className="mt-6 text-sm">
                 <p className="text-gray-600 mb-2">Max 3 files 20MB each</p>
-                <p className="text-[#767575]">
-                  <span className="font-medium text-gray-600">Supported formats:</span> PDF
+                <p className="text-gray-500">
+                  <span className="font-medium">Supported format:</span> PDF
                 </p>
               </div>
 
@@ -218,7 +284,48 @@ export default function Upload() {
                 <div className="space-y-4 my-8">
                   {uploadedFiles.map((file) => (
                     <div key={file.id} className="bg-white rounded-lg border border-gray-200 p-4">
-                      {/* ... file upload progress UI ... */}
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <img 
+                            src="/documentupload.png"
+                            alt="File type icon" 
+                            className="w-10 h-10"
+                          />
+                          <div>
+                            <p className="font-medium text-gray-900 text-sm">{file.file.name}</p>
+                            <p className="text-xs text-gray-500">
+                              {file.size} of {file.totalSize}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => removeFile(file.id)}
+                          className="text-gray-400 hover:text-gray-600"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                      
+                      {file.status === 'uploading' && (
+                        <div className="flex items-center space-x-3">
+                          <div className="flex-1 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${file.progress}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-xs text-gray-600">Uploading...</span>
+                        </div>
+                      )}
+                      
+                      {file.status === 'completed' && (
+                        <div className="flex items-center space-x-3">
+                          <div className="flex-1 bg-[#2DA1DB] rounded-full h-2">
+                            <div className="bg-[#2DA1DB] h-2 rounded-full w-full"></div>
+                          </div>
+                          <span className="text-xs text-[#000000]">Completed</span>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -230,11 +337,11 @@ export default function Upload() {
                   <button
                     onClick={handleCancel}
                     disabled={isUploading && !allCompleted}
-                    className={`px-6 py-2 border border-gray-300 rounded-lg font-medium transition-all duration-500 ${
+                    className={`px-4 py-2 border rounded-lg font-medium transition-all duration-500 text-sm ${
                       isUploading && !allCompleted
-                        ? 'opacity-30 cursor-not-allowed text-gray-400 bg-gray-50'
+                        ? 'opacity-50 cursor-not-allowed text-gray-400 bg-gray-100 border-gray-300'
                         : allCompleted
-                        ? 'opacity-100 text-gray-900 hover:bg-gray-50 border-gray-400'
+                        ? 'opacity-100 text-[#1F4A75] bg-white border-[#1F4A75] hover:bg-gray-50'
                         : 'opacity-0 pointer-events-none'
                     }`}
                   >
@@ -243,12 +350,12 @@ export default function Upload() {
                   <button
                     onClick={handleSubmit}
                     disabled={isUploading && !allCompleted}
-                    className={`px-6 py-2 rounded-lg font-medium text-white transition-all duration-500 ${
+                    className={`px-4 py-2 rounded-lg font-medium text-white transition-all duration-500 text-sm ${
                       isUploading && !allCompleted
-                        ? 'opacity-30 cursor-not-allowed bg-blue-300'
+                        ? 'opacity-50 cursor-not-allowed bg-blue-300'
                         : allCompleted
                         ? 'opacity-100 bg-[#1F4A75] hover:bg-opacity-90'
-                        : 'opacity-0 pointer-events-none bg-blue-600'
+                        : 'opacity-0 pointer-events-none'
                     }`}
                   >
                     Submit
