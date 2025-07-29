@@ -50,7 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = () => {
           `bg-white border-r border-gray-200 flex flex-col h-screen
            fixed lg:relative left-0 top-0 z-50 transform transition-all duration-300 ease-in-out`,
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
-          isCollapsed ? "w-[88px]" : "w-72",
+          isCollapsed ? "w-[88px]" : "w-64", // Corrected width
           "lg:translate-x-0"
         )}
       >
@@ -59,11 +59,11 @@ export const Sidebar: React.FC<SidebarProps> = () => {
           {/* User Profile Section */}
           <div className={twMerge("p-4 border-b border-gray-200 w-full", isCollapsed ? "px-4" : "px-6")}>
             <div className="flex items-center space-x-3">
-              <img src="\analyst.png" alt="Andrew Smith" className="w-10 h-10 rounded-full" />
+              <img src="/analyst.png" alt="Andrew Smith" className="w-10 h-10 rounded-full" />
               {!isCollapsed && (
                 <div>
-                  <div className="text-sm font-semibold text-gray-900">Andrew Smith</div>
-                  <div className="text-xs text-gray-500 uppercase tracking-wider">Finance Analyst</div>
+                  <div className="font-medium text-sm leading-5 tracking-normal text-black">Andrew Smith</div>
+                  <div className="font-medium text-[10px] leading-[12px] tracking-[0.4px] uppercase text-[#757575]">Finance Analyst</div>
                 </div>
               )}
             </div>
@@ -130,24 +130,45 @@ export const Sidebar: React.FC<SidebarProps> = () => {
                 </Link>
               </li>
             </ul>
+            
+            {/* Separator Line */}
+            {!isCollapsed && <div className="w-[208px] h-[2px] rounded-full bg-[#F6F6F6] mx-auto my-4" />}
+
           </div>
 
           {/* Bottom Section */}
-          <div className={twMerge("p-4 border-t border-gray-200 w-full", isCollapsed ? "px-2" : "px-6")}>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/help" className={twMerge("flex items-center gap-3 p-2 rounded-lg text-sm text-[#718096] hover:bg-gray-100", isCollapsed && "justify-center")}>
-                  <HelpCircle className="w-5 h-5" />
-                  {!isCollapsed && <span>Help</span>}
-                </Link>
-              </li>
-              <li>
-                <Link to="/logout" className={twMerge("flex items-center gap-3 p-2 rounded-lg text-sm text-[#D55F5A] hover:bg-red-50", isCollapsed && "justify-center")}>
-                  <LogOut className="w-5 h-5" />
-                  {!isCollapsed && <span>Logout Account</span>}
-                </Link>
-              </li>
-            </ul>
+          <div className={twMerge("p-4 w-full", isCollapsed ? "px-2" : "px-6")}>
+            {!isCollapsed ? (
+              // Expanded view
+              <ul className="space-y-1">
+                <li>
+                  <Link to="/help" className="flex items-center gap-3 p-2 text-sm font-medium leading-5 tracking-tightest text-[#757575] hover:bg-gray-100 rounded-lg">
+                    <HelpCircle className="w-5 h-5" />
+                    <span>Help</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/logout" className="flex items-center gap-3 p-2 text-sm font-medium leading-5 tracking-tightest text-[#D55F5A] hover:bg-red-50 rounded-lg">
+                    <LogOut className="w-5 h-5" />
+                    <span>Logout Account</span>
+                  </Link>
+                </li>
+              </ul>
+            ) : (
+              // Collapsed view
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/help" className="flex justify-center p-2 rounded-lg text-[#757575] hover:bg-gray-100">
+                    <HelpCircle className="w-5 h-5" />
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/logout" className="flex justify-center p-2 rounded-lg text-[#D55F5A] hover:bg-red-50">
+                    <LogOut className="w-5 h-5" />
+                  </Link>
+                </li>
+              </ul>
+            )}
           </div>
         </div>
 

@@ -13,14 +13,23 @@ interface Document {
 }
 
 // Sample PDF URL for demo purposes
-const samplePdfUrl = "/master-circular.pdf"; 
+const samplePdfUrl = "/master-circular.pdf";
 
+// Updated hardcoded data array based on the provided image
 const documentsData: Document[] = [
   { id: "1", name: "Master Circular - Guarantees and Co-acceptances", publicationDate: "12 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
-  { id: "2", name: "Master Circular - Housing Finance", publicationDate: "15 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
-  { id: "3", name: "Master Circular - Bank Finance to Non-banking Financial Companies (NBFCs)", publicationDate: "05 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
-  { id: "4", name: "Master Circular - Credit facilities to Scheduled Castes (SCs) & Scheduled Tribes (STs)", publicationDate: "23 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl }
+  { id: "2", name: "Master Circular - Housing Finance", publicationDate: "13 / 02 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
+  { id: "3", name: "Master Circular - Bank Finance to Non-Banking Financial Companies (NBFCs)", publicationDate: "02 / 06 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
+  { id: "4", name: "Master Circular - Credit facilities to Scheduled Castes (SCs) & Scheduled Tribes (STs)", publicationDate: "23 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
+  { id: "5", name: "Master Circular on SHG-Bank Linkage Programme", publicationDate: "14 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
+  { id: "6", name: "Master Circular - Management of Advances - UCBs", publicationDate: "08 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
+  { id: "7", name: "Master Circular - Guarantees and Co-acceptances", publicationDate: "09 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
+  { id: "8", name: "Master Circular - Credit facilities to Scheduled Castes (SCs) & Scheduled Tribes (STs)", publicationDate: "23 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
+  { id: "9", name: "Master Circular on SHG-Bank Linkage Programme", publicationDate: "14 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
+  { id: "10", name: "Master Circular - Management of Advances - UCBs", publicationDate: "08 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
+  { id: "11", name: "Master Circular - Guarantees and Co-acceptances", publicationDate: "09 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl }
 ];
+
 
 // Modal component for viewing the document
 const DocumentViewerModal = ({ document, onClose }: { document: Document; onClose: () => void; }) => {
@@ -39,7 +48,6 @@ const DocumentViewerModal = ({ document, onClose }: { document: Document; onClos
             <X className="w-6 h-6" />
           </button>
         </div>
-        {/* Add padding to this container to create the gap */}
         <div className="flex-1 p-4 bg-white">
           <iframe
             src={pdfUrl}
@@ -84,7 +92,9 @@ export default function AllDocuments() {
   };
 
   const getStatusStyle = (status: string) => {
-    return status === 'Processed' ? 'bg-[#2DA1DB] text-white' : '';
+    if (status === 'Processed') return 'bg-[#2DA1DB] text-white';
+    if (status === 'Processing') return 'bg-yellow-500 text-white';
+    return '';
   };
 
   const filteredDocuments = documentsData.filter(doc =>
@@ -103,14 +113,14 @@ export default function AllDocuments() {
 
   return (
     <>
-      <div className="flex h-screen bg-white">
+      <div className="flex h-screen bg-white overflow-hidden">
         <Sidebar />
         
         <div className="flex-1 p-6 overflow-y-auto">
-          <div className="bg-[#F6F6F6] rounded-xl p-8 h-full">
+          <div className="bg-[#FBFBFB] rounded-xl py-8">
               <div className="max-w-full">
                 {/* Header, Search, and Actions */}
-                <div className="flex items-center mb-8 w-full">
+                <div className="flex items-center mb-8 w-full px-8">
                   <h1 className="font-poppins text-base font-medium leading-none tracking-normal text-[#4F4F4F]">
                       All Documents
                   </h1>
@@ -159,8 +169,7 @@ export default function AllDocuments() {
                 </div>
 
                 {/* Documents Table */}
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <table className="w-full">
+                <div className="bg-white rounded-b-lg border border-gray-200 overflow-hidden">                  <table className="w-full">
                     <thead className="bg-[#E5F6F0]">
                       <tr className="h-[43px]">
                         <th className="w-12 px-6">
@@ -172,7 +181,7 @@ export default function AllDocuments() {
                           />
                         </th>
                         <th className="px-8 text-left font-poppins text-xs font-medium text-[#4F4F4F]">Name</th>
-                        <th className="px-8 text-center font-poppins text-xs font-medium text-[#4F4F4F]">Publication Date</th>
+                        <th className="px-8 text-center font-poppins text-xs font-medium text-[#4F4F4F] whitespace-nowrap">Publication Date</th>
                         <th className="px-8 text-center font-poppins text-xs font-medium text-[#4F4F4F]">Status</th>
                         <th className="px-8 text-center font-poppins text-xs font-medium text-[#4F4F4F]">Publisher</th>
                         <th className="px-8 text-center font-poppins text-xs font-medium text-[#4F4F4F]">Actions</th>
@@ -180,7 +189,7 @@ export default function AllDocuments() {
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {filteredDocuments.map((document) => (
-                        <tr key={document.id} className="hover:bg-gray-50 transition-colors font-poppins text-xs font-medium text-[#4F4F4F]">
+                        <tr key={document.id} className="hover:bg-gray-50 transition-colors font-poppins text-xs font-medium text-[#767575]">
                           <td className="px-6 py-4">
                             <input
                               type="checkbox"

@@ -150,7 +150,7 @@ export default function Upload() {
       <Sidebar />
   
       <div className="flex-1 p-6 overflow-y-auto">
-        <div className="bg-[#F6F6F6] rounded-xl p-8 h-full">
+        <div className="bg-[#FBFBFB] rounded-xl p-8 h-full">
             <div className="max-w-4xl">
               {/* Header */}
               <div className="mb-8">
