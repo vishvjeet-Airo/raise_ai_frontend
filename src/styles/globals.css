@@ -92,6 +92,9 @@
   }
 }
 
+/* src/styles/globals.css */
+
+
 @layer base {
   * {
     @apply border-border;
@@ -100,4 +103,18 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@layer utilities {
+  .text-body {
+    @apply font-inter text-[14px] font-medium leading-[20px] tracking-[-0.02em];
+  }
+  .sidebar-btn {
+    @apply font-inter font-medium text-[14px] leading-[20px] tracking-tightest 
+           rounded-[8px] px-[12px] py-[10px]
+           flex items-center justify-between gap-[12px] bg-[#EFEFF1] 
+           text-[#718096] hover:bg-gray-200 transition-colors;
+  }
+  
+  
 }

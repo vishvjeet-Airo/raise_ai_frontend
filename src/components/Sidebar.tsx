@@ -1,14 +1,30 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { ChevronDown, FileText, Upload, MessageSquare, Tag, Heart, Settings, HelpCircle, LogOut, Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { twMerge } from "tailwind-merge";
+import {
+  BarChartHorizontal,
+  ChevronDown,
+  ChevronLeft,
+  HelpCircle,
+  LogOut,
+  Menu,
+  MessageCircle,
+  X,
+} from "lucide-react";
 
-interface SidebarProps {
-  className?: string;
-}
+// It's good practice to define props, even if they are empty for now.
+// This makes the component easier to extend later.
+interface SidebarProps {}
 
-export function Sidebar({ className }: SidebarProps) {
+export const Sidebar: React.FC<SidebarProps> = () => {
   const [documentsExpanded, setDocumentsExpanded] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const location = useLocation();
+
+  // We add the 'string' type to the 'path' argument.
+  const isActive = (path: string): boolean => location.pathname === path;
+  const isDocumentsSectionActive = isActive("/documents") || isActive("/upload");
 
   return (
     <>
@@ -28,161 +44,141 @@ export function Sidebar({ className }: SidebarProps) {
         />
       )}
 
-      {/* Sidebar */}
-      {sidebarOpen && (
-        <div className={`
-          w-64 bg-white border-r border-gray-200 flex flex-col h-screen
-          lg:relative lg:translate-x-0
-          fixed left-0 top-0 z-50 transform transition-transform duration-300 ease-in-out
-          ${className}
-        `}>
-          {/* Desktop/Mobile Close Button */}
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="absolute top-4 right-4 w-7 h-7 rounded-full bg-white shadow flex items-center justify-center z-50 border border-gray-200 hover:bg-gray-100"
-            style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}
-          >
-            <ChevronLeft className="w-5 h-5 text-gray-700" />
-          </button>
+      {/* Sidebar Container */}
+      <div
+        className={twMerge(
+          `bg-white border-r border-gray-200 flex flex-col h-screen
+           fixed lg:relative left-0 top-0 z-50 transform transition-all duration-300 ease-in-out`,
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+          isCollapsed ? "w-[88px]" : "w-64", // Corrected width
+          "lg:translate-x-0"
+        )}
+      >
+        <div className={twMerge("flex flex-col h-full", isCollapsed ? "items-center" : "")}>
 
           {/* User Profile Section */}
-          <div className="p-4 border-b" style={{ borderBottom: '1px solid #F6F6F6' }}>
+          <div className={twMerge("p-4 border-b border-gray-200 w-full", isCollapsed ? "px-4" : "px-6")}>
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-medium text-sm">RM</span>
-              </div>
-              <div>
-                <div
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    color: '#757575',
-                    fontWeight: 500,
-                    fontSize: '10px',
-                    lineHeight: '12px',
-                    letterSpacing: '0.4px',
-                    textTransform: 'uppercase',
-                    verticalAlign: 'middle',
-                    marginBottom: '2px',
-                  }}
-                >
-                  ANALYST
+              <img src="/analyst.png" alt="Andrew Smith" className="w-10 h-10 rounded-full" />
+              {!isCollapsed && (
+                <div>
+                  <div className="font-medium text-sm leading-5 tracking-normal text-black">Andrew Smith</div>
+                  <div className="font-medium text-[10px] leading-[12px] tracking-[0.4px] uppercase text-[#757575]">Finance Analyst</div>
                 </div>
-                <div
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    color: '#000000',
-                    fontWeight: 500,
-                    fontSize: '14px',
-                    lineHeight: '20px',
-                    letterSpacing: '0px',
-                  }}
-                >
-                  Ragini Mittal
-                </div>
-              </div>
+              )}
             </div>
           </div>
-          <div
-            style={{
-              width: '208px',
-              height: '2px',
-              background: '#F6F6F6',
-              borderRadius: '2px',
-              opacity: 1,
-              margin: '0 auto',
-            }}
-          />
+
+          {/* Desktop Collapse Button */}
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="hidden lg:flex absolute -right-3 top-8 z-10 w-6 h-6 bg-white border-2 border-gray-200 rounded-full items-center justify-center text-gray-500 hover:bg-gray-100"
+          >
+            <ChevronLeft className={`w-4 h-4 transition-transform ${isCollapsed ? 'rotate-180' : ''}`} />
+          </button>
 
           {/* Navigation Menu */}
-          <div className="flex-1 py-6">
-            <div className="px-4">
-              <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-4">WORK</div>
-              
+          <div className={twMerge("flex-1 py-6 w-full", isCollapsed ? "px-4" : "px-6")}>
+            {!isCollapsed && <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4">MAIN</div>}
+            
+            <ul className="space-y-2">
               {/* Documents Section */}
-              <div className="mb-2">
+              <li>
                 <button
-                  onClick={() => setDocumentsExpanded(!documentsExpanded)}
-                  className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  onClick={() => !isCollapsed && setDocumentsExpanded(!documentsExpanded)}
+                  className={twMerge(
+                    "w-full flex items-center justify-between p-2 rounded-lg transition-colors text-sm font-medium tracking-tightest",
+                    isDocumentsSectionActive ? "bg-[#F0F5FF] text-[#052E65]" : "text-[#718096] hover:bg-gray-100",
+                    isCollapsed && "justify-center"
+                  )}
                 >
-                  <div className="flex items-center space-x-3">
-                    <FileText className="w-4 h-4" />
-                    <span>Documents</span>
+                  <div className="flex items-center gap-3">
+                    <img src="/document.png" alt="Documents" className="w-5 h-5" />
+                    {!isCollapsed && <span>Documents</span>}
                   </div>
-                  <ChevronDown 
-                    className={`w-4 h-4 transition-transform ${documentsExpanded ? 'rotate-180' : ''}`} 
-                  />
+                  {!isCollapsed && (
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform ${documentsExpanded ? "rotate-180" : ""}`}
+                    />
+                  )}
                 </button>
-                
-                {documentsExpanded && (
-                  <div className="ml-7 mt-2 space-y-1">
-                    <Link to="/documents" className="block px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
+
+                {documentsExpanded && !isCollapsed && (
+                  <div className="mt-2 pl-7 ml-[10px] border-l-2 border-gray-200 space-y-1">
+                    <Link to="/documents" className={twMerge("block p-2 rounded-lg w-full text-xs font-medium tracking-tightest text-[#718096] hover:bg-gray-100", isActive("/documents") && "bg-[#F6F6F6]")}>
                       All Documents
                     </Link>
-                    <div className="flex items-center justify-between px-3 py-2">
-                      <Link to="/upload" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-                        Upload
-                      </Link>
-                    </div>
+                    <Link to="/upload" className={twMerge("block p-2 rounded-lg w-full text-xs font-medium tracking-tightest text-[#718096] hover:bg-gray-100", isActive("/upload") && "bg-[#F6F6F6]")}>
+                      Upload
+                    </Link>
                   </div>
                 )}
-              </div>
-
-              {/* Chat Bot */}
-              <button className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50 transition-colors mb-2">
-                <div className="flex items-center space-x-3">
-                  <MessageSquare className="w-4 h-4" />
-                  <span>Chat Bot</span>
-                </div>
-              </button>
-
-              {/* Tags */}
-              <button className="w-full flex items-center px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50 transition-colors mb-2">
-                <Tag className="w-4 h-4 mr-3" />
-                <span>Tags</span>
-              </button>
-
-              {/* Support */}
-              <button className="w-full flex items-center px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50 transition-colors mb-6">
-                <Heart className="w-4 h-4 mr-3" />
-                <span>Support</span>
-              </button>
-
-              {/* Settings Section */}
-              <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-4">SETTINGS</div>
+              </li>
               
-              <button className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50 transition-colors mb-6">
-                <div className="flex items-center space-x-3">
-                  <Settings className="w-4 h-4" />
-                  <span>Settings</span>
-                </div>
-              </button>
-            </div>
+              {/* AI Chat Bot Section */}
+              <li>
+                <Link
+                  to="/chatbot"
+                  className={twMerge(
+                    "w-full flex items-center gap-3 p-2 rounded-lg text-sm font-medium tracking-tightest",
+                    isActive("/chatbot") ? "bg-[#F0F5FF] text-[#052E65]" : "text-[#718096] hover:bg-gray-100",
+                    isCollapsed && "justify-center"
+                  )}
+                >
+                  <img src="/chatbot.png" alt="AI Chat Bot" className="w-5 h-5" />
+                  {!isCollapsed && <span>AI Chat Bot</span>}
+                </Link>
+              </li>
+            </ul>
+            
+            {/* Separator Line */}
+            {!isCollapsed && <div className="w-[208px] h-[2px] rounded-full bg-[#F6F6F6] mx-auto my-4" />}
+
           </div>
 
           {/* Bottom Section */}
-          <div className="p-4 border-t border-gray-200 space-y-2">
-            <button className="w-full flex items-center px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
-              <HelpCircle className="w-4 h-4 mr-3" />
-              <span>Help</span>
-            </button>
-            <Link to="/login" className="w-full flex items-center px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
-              <LogOut className="w-4 h-4 mr-3" />
-              <span>Logout Account</span>
-            </Link>
+          <div className={twMerge("p-4 w-full", isCollapsed ? "px-2" : "px-6")}>
+            {!isCollapsed ? (
+              // Expanded view
+              <ul className="space-y-1">
+                <li>
+                  <Link to="/help" className="flex items-center gap-3 p-2 text-sm font-medium leading-5 tracking-tightest text-[#757575] hover:bg-gray-100 rounded-lg">
+                    <HelpCircle className="w-5 h-5" />
+                    <span>Help</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/logout" className="flex items-center gap-3 p-2 text-sm font-medium leading-5 tracking-tightest text-[#D55F5A] hover:bg-red-50 rounded-lg">
+                    <LogOut className="w-5 h-5" />
+                    <span>Logout Account</span>
+                  </Link>
+                </li>
+              </ul>
+            ) : (
+              // Collapsed view
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/help" className="flex justify-center p-2 rounded-lg text-[#757575] hover:bg-gray-100">
+                    <HelpCircle className="w-5 h-5" />
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/logout" className="flex justify-center p-2 rounded-lg text-[#D55F5A] hover:bg-red-50">
+                    <LogOut className="w-5 h-5" />
+                  </Link>
+                </li>
+              </ul>
+            )}
           </div>
         </div>
-      )}
 
-      {/* Sidebar Open Button */}
-      {!sidebarOpen && (
         <button
-          onClick={() => setSidebarOpen(true)}
-          className="fixed top-6 left-2 z-50 w-8 h-8 rounded-full bg-white shadow flex items-center justify-center border border-gray-200 hover:bg-gray-100"
-          style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}
+          onClick={() => setSidebarOpen(false)}
+          className="lg:hidden absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700"
         >
-          <ChevronRight className="w-5 h-5 text-gray-700" />
+          <X className="w-5 h-5" />
         </button>
-      )}
+      </div>
     </>
   );
-}
+};

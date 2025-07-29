@@ -1,6 +1,10 @@
 import type { Config } from "tailwindcss";
 
-export default {
+// Use 'require' for CommonJS dependencies for better compatibility with build tools.
+const defaultTheme = require('tailwindcss/defaultTheme');
+const tailwindcssAnimate = require('tailwindcss-animate');
+
+const config: Config = {
   darkMode: ["class"],
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -17,7 +21,7 @@ export default {
       },
     },
     extend: {
-            colors: {
+      colors: {
         border: "rgb(var(--border))",
         input: "rgb(var(--input))",
         ring: "rgb(var(--ring))",
@@ -74,27 +78,28 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
+      letterSpacing: {
+        tightest: "-0.02em", // for -2% tracking
+      },
+      fontFamily: {
+        sans: ['Inter', ...defaultTheme.fontFamily.sans],
+        poppins: ['var(--font-poppins)', 'sans-serif'],
+      },
     },
   },
-  plugins: [require("tailwindcss-animate")],
-} satisfies Config;
+  plugins: [tailwindcssAnimate],
+};
+
+export default config;

@@ -7,9 +7,25 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ClientApp from "../components/ClientApp";
 
+// 1. Import the fonts
+import { Inter, Poppins } from "next/font/google";
+
 const queryClient = new QueryClient();
 
-// Next.js App component wrapper - this will handle ALL routes due to rewrites
+// 2. Configure the fonts
+const inter = Inter({
+  subsets: ["latin"],
+  variable: '--font-inter', // We'll keep using variables as per your tailwind.config
+});
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["500"],
+  variable: '--font-poppins', // We'll keep using variables
+});
+
+
+// Next.js App component wrapper
 export default function App({ Component, pageProps }: AppProps) {
   const [mounted, setMounted] = useState(false);
 
@@ -34,12 +50,16 @@ export default function App({ Component, pageProps }: AppProps) {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <ClientApp />
-      </TooltipProvider>
-    </QueryClientProvider>
+    // 3. Apply the font variables to a main wrapper tag
+    <main className={`${inter.variable} ${poppins.variable} font-sans`}>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          {/* Your ClientApp component will now inherit the fonts */}
+          <ClientApp />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </main>
   );
 }

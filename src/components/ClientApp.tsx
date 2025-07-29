@@ -9,6 +9,9 @@ import AllDocuments from "@/pages/documents/AllDocuments";
 import DocumentDetail from "@/pages/documents/DocumentDetail";
 import NotFound from "@/pages/error/NotFound";
 
+import ChatBot from "@/pages/chatbot";
+
+
 // Router content component
 function RouterContent() {
   const location = useLocation();
@@ -38,6 +41,7 @@ function RouterContent() {
       <Route path="/upload" element={<Upload />} />
       <Route path="/documents" element={<AllDocuments />} />
       <Route path="/documents/:id" element={<DocumentDetail />} />
+      <Route path="/chatbot" element={<ChatBot />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
