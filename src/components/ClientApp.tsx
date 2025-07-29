@@ -2,12 +2,15 @@ import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Index from "@/pages/dashboard/Index";
 import Login from "@/pages/auth/Login";
+import ForgotPassword from "@/pages/auth/forgot-password";
+import ResetPassword from "@/pages/auth/reset-password";
 import Upload from "@/pages/documents/Upload";
 import AllDocuments from "@/pages/documents/AllDocuments";
 import DocumentDetail from "@/pages/documents/DocumentDetail";
 import NotFound from "@/pages/error/NotFound";
-import Cookies from 'js-cookie';
+
 import ChatBot from "@/pages/chatbot";
+
 
 // Router content component
 function RouterContent() {
@@ -20,7 +23,7 @@ function RouterContent() {
 
     // Redirect logic for root path
     if (location.pathname === '/') {
-      const token = Cookies.get('access_token');
+      const token = localStorage.getItem('access_token');
       if (token) {
         navigate('/documents', { replace: true });
       } else {
@@ -33,6 +36,8 @@ function RouterContent() {
     <Routes>
       <Route path="/" element={<AllDocuments />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/upload" element={<Upload />} />
       <Route path="/documents" element={<AllDocuments />} />
       <Route path="/documents/:id" element={<DocumentDetail />} />
