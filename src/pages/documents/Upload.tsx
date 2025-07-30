@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "@/lib/config";
 import { useState, useRef, useCallback } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { toast } from "sonner";
@@ -61,7 +62,7 @@ export default function Upload() {
             ...f,
             progress: newProgress,
             size: formatFileSize(uploadedBytes),
-            status: newProgress >= 100 ? 'completed' : 'uploading'
+            status: (newProgress >= 100 ? 'completed' : 'uploading') as "uploading" | "completed" | "error"
           };
         }
         return f;
@@ -77,7 +78,7 @@ export default function Upload() {
               ...f,
               progress: 100,
               size: formatFileSize(file.size),
-              status: 'completed'
+              status: 'completed' as "uploading" | "completed" | "error"
             };
           }
           return f;
@@ -173,7 +174,7 @@ export default function Upload() {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/api/documents/upload', {
+      const response = await fetch(`${API_BASE_URL}api/documents/upload`, {
         method: 'POST',
         body: formData,
       });
