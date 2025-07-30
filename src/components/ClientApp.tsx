@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, Outlet, Navigate } from "react-router-dom";
 import Index from "@/pages/dashboard/Index";
 import Login from "@/pages/auth/Login";
 import ForgotPassword from "@/pages/auth/forgot-password";
@@ -8,8 +8,29 @@ import Upload from "@/pages/documents/Upload";
 import AllDocuments from "@/pages/documents/AllDocuments";
 import DocumentDetail from "@/pages/documents/DocumentDetail";
 import NotFound from "@/pages/error/NotFound";
-
 import ChatBot from "@/pages/chatbot";
+
+// Custom hook to get the authentication token
+const useAuth = () => {
+  // Check for the token directly in the hook
+  const token = localStorage.getItem('access_token');
+  return token;
+};
+
+// Protected route component
+const ProtectedRoute = () => {
+  const token = useAuth();
+  const location = useLocation();
+
+  return token ? <Outlet /> : <Navigate to="/login" state={{ from: location }} replace />;
+};
+
+// Public route component
+const PublicRoute = () => {
+  const token = useAuth();
+
+  return token ? <Navigate to="/documents" replace /> : <Outlet />;
+};
 
 
 // Router content component
@@ -34,14 +55,22 @@ function RouterContent() {
 
   return (
     <Routes>
-      <Route path="/" element={<AllDocuments />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/upload" element={<Upload />} />
-      <Route path="/documents" element={<AllDocuments />} />
-      <Route path="/documents/:id" element={<DocumentDetail />} />
-      <Route path="/chatbot" element={<ChatBot />} />
+      {/* Public Routes */}
+      <Route element={<PublicRoute />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+      </Route>
+
+      {/* Protected Routes */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/documents" element={<AllDocuments />} />
+        <Route path="/upload" element={<Upload />} />
+        <Route path="/documents/:id" element={<DocumentDetail />} />
+        <Route path="/chatbot" element={<ChatBot />} />
+      </Route>
+
+      {/* Fallback Route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
