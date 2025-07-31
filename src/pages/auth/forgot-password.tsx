@@ -230,9 +230,9 @@ export default function ForgotPassword() {
         style={{ background: "#052E65" }}
       >
         {/* Support Button */}
-        <div class="absolute top-6 left-12 z-10">
+        <div className="absolute top-6 left-12 z-10">
           <button
-            class="flex items-center space-x-2 transition-colors"
+            className="flex items-center space-x-2 transition-colors"
             style={{
               width: "120px",
               height: "30px",
@@ -248,7 +248,7 @@ export default function ForgotPassword() {
             <img
               src="/mdoutlinesupportagent.png"
               alt="Support Agent"
-              class="w-4 h-4"
+              className="w-4 h-4"
             />
             <span>Support</span>
           </button>

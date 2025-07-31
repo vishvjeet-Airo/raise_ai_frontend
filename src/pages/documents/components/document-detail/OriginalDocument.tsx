@@ -2,7 +2,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Eye, Download, FileText } from "lucide-react";
 
-export default function OriginalDocument() {
+interface OriginalDocumentProps {
+  blob_url: string;
+  file_name: string;
+  onPreviewClick: () => void;
+}
+
+export default function OriginalDocument({ blob_url, file_name, onPreviewClick }: OriginalDocumentProps) {
+  const handleDownload = () => {
+    window.open(blob_url, '_blank');
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -15,17 +25,16 @@ export default function OriginalDocument() {
               <FileText className="w-4 h-4 text-red-600" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium">Master Circular - Guarantees and</p>
-              <p className="text-sm text-gray-600">Co-acceptances</p>
+              <p className="text-sm font-medium">{file_name}</p>
             </div>
           </div>
 
           <div className="flex space-x-2">
-            <Button size="sm" variant="outline" className="flex-1">
+            <Button size="sm" variant="outline" className="flex-1" onClick={onPreviewClick}>
               <Eye className="w-3 h-3 mr-1" />
               Preview
             </Button>
-            <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+            <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={handleDownload}>
               <Download className="w-3 h-3 mr-1" />
               Download
             </Button>
