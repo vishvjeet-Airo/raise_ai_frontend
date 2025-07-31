@@ -111,7 +111,6 @@ export default function ForgotPassword() {
                 marginBottom: '24px'
               }}
             >
-              Don't have an account?
             </p>
 
             {!showSuccessMessage ? (
