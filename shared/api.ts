@@ -1,3 +1,5 @@
+import { API_BASE_URL } from "@/lib/config";
+
 /**
  * Shared code between client and server
  * Useful to share types between client and server
@@ -16,7 +18,7 @@ export const uploadDocument = async (file: File, name: string) => {
   formData.append("file", file);
   formData.append("name", name);
 
-  const response = await fetch("http://localhost:8000/api/documents/upload", {
+  const response = await fetch(`${API_BASE_URL}api/documents/upload`, {
     method: "POST",
     body: formData,
   });
