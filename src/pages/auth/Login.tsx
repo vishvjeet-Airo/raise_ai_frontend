@@ -123,7 +123,7 @@ export default function Login() {
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: '20px',
+                fontSize: '18px',
                 lineHeight: '100%',
                 letterSpacing: '0%',
                 color: '#585858',
@@ -137,7 +137,7 @@ export default function Login() {
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 400,
-                fontSize: '14px',
+                fontSize: '13px',
                 lineHeight: '140%',
                 color: '#A0AEC0',
                 marginBottom: '24px'
@@ -275,10 +275,10 @@ export default function Login() {
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
                     style={{
-                      width: '16px',
-                      height: '16px',
+                      width: '15px',
+                      height: '15px',
                       accentColor: '#3182CE',
-                      marginRight: '8px'
+                      marginRight: '7px'
                     }}
                   />
                   <span
@@ -319,7 +319,7 @@ export default function Login() {
                 style={{
                   background: '#052E65',
                   width: '100%',
-                  height: '48px',
+                  height: '38px',
                   marginTop: '24px',
                   borderRadius: '12px',
                   color: 'white',
@@ -346,14 +346,15 @@ export default function Login() {
           </div>
         </div>
       </div>
-
-      {/* Mobile Support Button */}
-      <div className="lg:hidden fixed top-4 right-4 z-10">
-        <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors bg-white rounded-full px-3 py-2 shadow-md">
-          <HelpCircle className="w-4 h-4" />
-          <span className="text-sm">Support</span>
-        </button>
-      </div>
+      
+        {/* Mobile Support Button */}
+        <div className="lg:hidden fixed top-4 right-4 z-10">
+          <button className="flex items-center space-x-1 text-[10px] text-gray-600 hover:text-gray-900 transition-colors bg-white rounded-full px-2 py-1 shadow-md">
+            <HelpCircle className="w-3 h-3" />
+            <span className="text-[8px]">Support</span>
+          </button>
+        </div>
+ 
 
       {/* Right Side - Feature Presentation */}
       <div className="hidden lg:flex flex-1 relative overflow-hidden" style={{ background: '#052E65' }}>
@@ -367,7 +368,7 @@ export default function Login() {
               fontFamily: 'Inter, sans-serif',
               fontWeight: 500,
               fontStyle: 'normal',
-              fontSize: '20px',
+              fontSize: '17px',
               lineHeight: '150%',
               letterSpacing: '0%',
               color: '#F7FAFC'
@@ -376,7 +377,7 @@ export default function Login() {
             <img 
               src="/mdoutlinesupportagent.png" 
               alt="Support Agent" 
-              className="w-5 h-5"
+              className="w-4 h-4"
             />
             <span>Support</span>
           </button>
@@ -385,13 +386,13 @@ export default function Login() {
         {/* Content */}
         <div className="flex flex-col justify-center items-center text-center px-12 relative z-10 h-full w-full">
           {/* Frame Image */}
-          <div className="mb-8 relative flex flex-col items-center justify-center">
+          <div className="mt-9 mb-7 relative flex flex-col items-center justify-center">
             <img 
               src="/frame.png" 
               alt="Frame" 
               width="411"
               height="509"
-              className="w-[411px] h-[509px]"
+              className="w-[290px] h-[390px]"
             />
           </div>
 
@@ -401,9 +402,9 @@ export default function Login() {
               width: '542px',
               height: '34px',
               fontFamily: 'Inter, sans-serif',
-              fontWeight: 600,
+              fontWeight: 540,
               fontStyle: 'normal',
-              fontSize: '36px',
+              fontSize: '26px',
               lineHeight: '100%',
               letterSpacing: '0%',
               color: '#F7FAFC',
@@ -419,7 +420,7 @@ export default function Login() {
               fontFamily: 'Inter, sans-serif',
               fontWeight: 400,
               fontStyle: 'normal',
-              fontSize: '20px',
+              fontSize: '15px',
               lineHeight: '138%',
               letterSpacing: '0%',
               textAlign: 'center',

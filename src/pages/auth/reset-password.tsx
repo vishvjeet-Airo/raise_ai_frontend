@@ -139,7 +139,7 @@ export default function ResetPassword() {
           style={{
             fontFamily: 'Inter, sans-serif',
             fontWeight: 500,
-            fontSize: '20px',
+            fontSize: '18px',
             lineHeight: '100%',
             letterSpacing: '0%',
             color: '#585858',
@@ -153,7 +153,7 @@ export default function ResetPassword() {
           style={{
             fontFamily: 'Inter, sans-serif',
             fontWeight: 400,
-            fontSize: '14px',
+            fontSize: '13px',
             lineHeight: '140%',
             color: '#A0AEC0',
             marginBottom: '24px'
@@ -310,7 +310,7 @@ export default function ResetPassword() {
             style={{
               background: '#052E65',
               width: '100%',
-              height: '48px',
+              height: '38px',
               marginTop: '24px',
               borderRadius: '12px',
               color: 'white',
@@ -359,13 +359,13 @@ export default function ResetPassword() {
         {/* Content */}
         <div className="flex flex-col justify-center items-center text-center px-12 relative z-10 h-full w-full">
           {/* Frame Image */}
-          <div className="mb-8 relative flex flex-col items-center justify-center">
+          <div className="mt-9 mb-7 relative flex flex-col items-center justify-center">
             <img 
               src="/frame.png" 
               alt="Frame" 
               width="411"
               height="509"
-              className="w-[411px] h-[509px]"
+              className="w-[290px] h-[390px]"
             />
           </div>
 
@@ -375,9 +375,9 @@ export default function ResetPassword() {
               width: '542px',
               height: '34px',
               fontFamily: 'Inter, sans-serif',
-              fontWeight: 600,
+              fontWeight: 540,
               fontStyle: 'normal',
-              fontSize: '36px',
+              fontSize: '26px',
               lineHeight: '100%',
               letterSpacing: '0%',
               color: '#F7FAFC',
@@ -393,7 +393,7 @@ export default function ResetPassword() {
               fontFamily: 'Inter, sans-serif',
               fontWeight: 400,
               fontStyle: 'normal',
-              fontSize: '20px',
+              fontSize: '15px',
               lineHeight: '138%',
               letterSpacing: '0%',
               textAlign: 'center',
