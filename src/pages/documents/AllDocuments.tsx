@@ -235,7 +235,7 @@ export default function AllDocuments() {
                         placeholder="Search"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-[300px] h-8 pl-3 pr-9 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-[300px] h-8 pl-3 pr-9 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:border-[#1F4A75] "
                       />
                     </div>
                     <button className="h-8 px-4 border border-[#1F4A75] text-[#1F4A75] bg-white rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors">
@@ -309,9 +309,9 @@ export default function AllDocuments() {
                           </td>
                           <td className="px-8 py-4 text-center">{document.publicationDate}</td>
                           <td className="px-8 py-4 text-center">
-                            <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(document.status)}`}>
-                              {document.status}
-                            </span>
+                          <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(document.status)}`}>
+                              {document.status === 'COMPLETED' ? 'Processed' : document.status}
+                          </span>
                           </td>
                           <td className="px-8 py-4 text-center">{document.publisher}</td>
                           <td className="px-8 py-4">
