@@ -21,22 +21,15 @@ export const Sidebar: React.FC<SidebarProps> = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
-<<<<<<< HEAD
-  const navigate = useNavigate();
-=======
   const navigate = useNavigate(); // Hook for navigation
->>>>>>> main
 
   // We add the 'string' type to the 'path' argument.
   const isActive = (path: string): boolean => location.pathname === path;
   const isDocumentsSectionActive = isActive("/documents") || isActive("/upload");
 
   const handleLogout = () => {
-<<<<<<< HEAD
     localStorage.removeItem("access_token");
-=======
     // Navigate to the login page
->>>>>>> main
     navigate("/login");
   };
 
@@ -162,11 +155,7 @@ export const Sidebar: React.FC<SidebarProps> = () => {
                   </Link>
                 </li>
                 <li>
-<<<<<<< HEAD
-                  <button onClick={handleLogout} className="flex items-center gap-3 p-2 text-sm font-medium leading-5 tracking-tightest text-[#D55F5A] hover:bg-red-50 rounded-lg w-full">
-=======
                   <button onClick={handleLogout} className={twMerge("w-full flex items-center gap-3 p-2 text-sm font-medium leading-5 tracking-tightest text-[#D55F5A] hover:bg-red-50 rounded-lg")}>
->>>>>>> main
                     <LogOut className="w-5 h-5" />
                     <span>Logout Account</span>
                   </button>
@@ -181,11 +170,7 @@ export const Sidebar: React.FC<SidebarProps> = () => {
                   </Link>
                 </li>
                 <li>
-<<<<<<< HEAD
-                  <button onClick={handleLogout} className="flex justify-center p-2 rounded-lg text-[#D55F5A] hover:bg-red-50 w-full">
-=======
                   <button onClick={handleLogout} className="flex justify-center p-2 rounded-lg text-[#D55F5A] hover:bg-red-50">
->>>>>>> main
                     <LogOut className="w-5 h-5" />
                   </button>
                 </li>
