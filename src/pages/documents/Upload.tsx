@@ -25,6 +25,7 @@ export default function Upload() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [allCompleted, setAllCompleted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatFileSize = (bytes: number) => {
@@ -154,6 +155,9 @@ export default function Upload() {
       return;
     }
 
+    setIsSubmitting(true);
+    toast.info("Submitting files, please wait...");
+
     const formData = new FormData();
     let hasFilesToSubmit = false;
 
@@ -209,6 +213,10 @@ export default function Upload() {
     } catch (error) {
       console.error('Error during API upload:', error);
       toast.error('Error during API upload. Check console for details.');
+    }
+    finally {
+      // --- Add this finally block ---
+      setIsSubmitting(false);
     }
 
     setAllCompleted(false);
@@ -350,18 +358,28 @@ export default function Upload() {
                   </button>
                   <button
                     onClick={handleSubmit}
-                    disabled={isUploading && !allCompleted}
-                    className={`px-4 py-2 rounded-lg font-medium text-white transition-all duration-500 text-sm ${
-                      isUploading && !allCompleted
-                        ? 'opacity-50 cursor-not-allowed bg-blue-300'
-                        : allCompleted
-                        ? 'opacity-100 bg-[#1F4A75] hover:bg-opacity-90'
-                        : 'opacity-0 pointer-events-none'
+                    disabled={(isUploading && !allCompleted) || isSubmitting}
+                    className={`px-4 py-2 rounded-lg font-medium text-white transition-all duration-500 text-sm flex items-center justify-center ${
+                        isSubmitting
+                            ? 'bg-blue-400 cursor-not-allowed'
+                            : (isUploading && !allCompleted)
+                                ? 'opacity-50 cursor-not-allowed bg-blue-300'
+                                : allCompleted
+                                    ? 'opacity-100 bg-[#1F4A75] hover:bg-opacity-90'
+                                    : 'opacity-0 pointer-events-none'
                     }`}
                   >
-                    Submit
-                  </button>
-                </div>
+                   {/* --- Add conditional text/spinner --- */}
+                  {isSubmitting ? (
+                      <>
+                          <Cloud className="mr-2 h-4 w-4 animate-pulse" />
+                          Submitting...
+                      </>
+                  ) : (
+                      'Submit'
+                  )}
+              </button>
+          </div>
               )}
               
             </div>
