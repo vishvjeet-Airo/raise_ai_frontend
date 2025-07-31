@@ -6,7 +6,7 @@ import { Search, ChevronDown, Eye, Copy, Download, X } from "lucide-react";
 interface Document {
   id: string;
   name: string;
-  publicationDate: string;
+  publicationDate: string; // "DD / MM / YYYY"
   status: 'Processed';
   publisher: string;
   url: string; // URL for the document to be viewed
@@ -64,9 +64,9 @@ const DocumentViewerModal = ({ document, onClose }: { document: Document; onClos
 export default function AllDocuments() {
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("recent");
+  const [sortBy, setSortBy] = useState("recent"); // Default sort is 'recent'
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
-  const [viewingDocument, setViewingDocument] = useState<Document | null>(null); // State for the modal
+  const [viewingDocument, setViewingDocument] = useState<Document | null>(null);
   const sortMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -97,9 +97,29 @@ export default function AllDocuments() {
     return '';
   };
 
+  // 1. Filter documents based on search term
   const filteredDocuments = documentsData.filter(doc =>
     doc.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // 2. Sort the filtered documents
+  const sortedDocuments = [...filteredDocuments].sort((a, b) => {
+    // Helper function to parse 'DD / MM / YYYY' string to a Date object
+    const parseDate = (dateString: string): Date => {
+      const [day, month, year] = dateString.split(' / ').map(Number);
+      // Month is 0-indexed in JavaScript's Date object (0=Jan, 11=Dec)
+      return new Date(year, month - 1, day);
+    };
+
+    const dateA = parseDate(a.publicationDate);
+    const dateB = parseDate(b.publicationDate);
+
+    if (sortBy === 'oldest') {
+      return dateA.getTime() - dateB.getTime(); // Ascending for oldest first
+    }
+    // Default to 'recent'
+    return dateB.getTime() - dateA.getTime(); // Descending for recent first
+  });
 
   const Tick = ({ show }: { show: boolean }) => (
     <span className="inline-block w-5 text-lg text-blue-700 mr-2">
@@ -126,7 +146,7 @@ export default function AllDocuments() {
                   </h1>
                   <div className="flex items-center gap-3 ml-auto">
                     <div className="relative">
-                      <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-[#707070] w-4 h-4" />
                       <input
                         type="text"
                         placeholder="Search"
@@ -135,7 +155,7 @@ export default function AllDocuments() {
                         className="w-[300px] h-8 pl-3 pr-9 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
-                    <button className="h-8 px-4 border border-[#1F4A75] text-[#1F4A75] bg-white rounded-lg hover:bg-red-50 text-sm font-medium transition-colors">
+                    <button className="h-8 px-4 border border-[#1F4A75] text-[#1F4A75] bg-white rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors">
                       Delete All
                     </button>
                     <div className="relative">
@@ -149,14 +169,14 @@ export default function AllDocuments() {
                       {sortMenuOpen && (
                         <div ref={sortMenuRef} className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-100 z-20">
                           <button
-                            className={`flex items-center w-full px-4 py-3 text-left text-gray-900 text-base font-normal hover:bg-gray-100 rounded-t-lg ${sortBy === "recent" ? "bg-gray-50" : ""}`}
+                            className={`flex items-center align-middle w-full px-4 py-3 text-left font-roboto font-normal text-base leading-6 tracking-wide text-[#4F4F4F] hover:bg-gray-100 rounded-t-lg ${sortBy === "recent" ? "bg-gray-50" : ""}`}
                             onClick={() => { setSortBy("recent"); setSortMenuOpen(false); }}
                           >
                             <Tick show={sortBy === "recent"} />
                             <span>Recent Publication</span>
                           </button>
                           <button
-                            className={`flex items-center w-full px-4 py-3 text-left text-gray-900 text-base font-normal hover:bg-gray-100 rounded-b-lg ${sortBy === "oldest" ? "bg-gray-50" : ""}`}
+                            className={`flex items-center align-middle w-full px-4 py-3 text-left font-roboto font-normal text-base leading-6 tracking-wide text-[#4F4F4F] hover:bg-gray-100 rounded-t-lg ${sortBy === "recent" ? "bg-gray-50" : ""}`}
                             onClick={() => { setSortBy("oldest"); setSortMenuOpen(false); }}
                           >
                             <Tick show={sortBy === "oldest"} />
@@ -188,7 +208,8 @@ export default function AllDocuments() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {filteredDocuments.map((document) => (
+                      {/* 3. Map over the newly sorted array */}
+                      {sortedDocuments.map((document) => (
                         <tr key={document.id} className="hover:bg-gray-50 transition-colors font-poppins text-xs font-medium text-[#767575]">
                           <td className="px-6 py-4">
                             <input
@@ -231,3 +252,5 @@ export default function AllDocuments() {
     </>
   );
 }
+
+
