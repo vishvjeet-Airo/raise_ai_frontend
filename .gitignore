@@ -26,9 +26,10 @@ dist-ssr
 .config/
 
 # Next.js
-.next
+.next/
 out
 build
+.env
 .env.local
 .env.development.local
 .env.test.local
