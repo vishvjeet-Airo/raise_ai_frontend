@@ -1,35 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
-import { Search, ChevronDown, Eye, Copy, Download, X } from "lucide-react";
+import { Search, ChevronDown, Eye, Download, X, Loader2, Trash2 } from "lucide-react";
+import { API_BASE_URL } from "@/lib/config";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 
 interface Document {
   id: string;
   name: string;
   publicationDate: string; // "DD / MM / YYYY"
-  status: 'Processed';
+  status: 'Processed' | 'COMPLETED' | 'PENDING' | 'FAILED';
   publisher: string;
   url: string; // URL for the document to be viewed
+  file_name: string;
 }
-
-// Sample PDF URL for demo purposes
-const samplePdfUrl = "/master-circular.pdf";
-
-// Updated hardcoded data array based on the provided image
-const documentsData: Document[] = [
-  { id: "1", name: "Master Circular - Guarantees and Co-acceptances", publicationDate: "12 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
-  { id: "2", name: "Master Circular - Housing Finance", publicationDate: "13 / 02 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
-  { id: "3", name: "Master Circular - Bank Finance to Non-Banking Financial Companies (NBFCs)", publicationDate: "02 / 06 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
-  { id: "4", name: "Master Circular - Credit facilities to Scheduled Castes (SCs) & Scheduled Tribes (STs)", publicationDate: "23 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
-  { id: "5", name: "Master Circular on SHG-Bank Linkage Programme", publicationDate: "14 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
-  { id: "6", name: "Master Circular - Management of Advances - UCBs", publicationDate: "08 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
-  { id: "7", name: "Master Circular - Guarantees and Co-acceptances", publicationDate: "09 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
-  { id: "8", name: "Master Circular - Credit facilities to Scheduled Castes (SCs) & Scheduled Tribes (STs)", publicationDate: "23 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
-  { id: "9", name: "Master Circular on SHG-Bank Linkage Programme", publicationDate: "14 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
-  { id: "10", name: "Master Circular - Management of Advances - UCBs", publicationDate: "08 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl },
-  { id: "11", name: "Master Circular - Guarantees and Co-acceptances", publicationDate: "09 / 04 / 2025", status: "Processed", publisher: "RBI", url: samplePdfUrl }
-];
-
 
 // Modal component for viewing the document
 const DocumentViewerModal = ({ document, onClose }: { document: Document; onClose: () => void; }) => {
@@ -61,13 +45,101 @@ const DocumentViewerModal = ({ document, onClose }: { document: Document; onClos
 };
 
 
+const DeleteConfirmationDialog = ({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void; }) => (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg">
+      <h2 className="text-lg font-bold mb-4">Are you sure?</h2>
+      <p className="mb-4">This action cannot be undone.</p>
+      <div className="flex justify-end space-x-4">
+        <button onClick={onCancel} className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300">Cancel</button>
+        <button onClick={onConfirm} className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600">Delete</button>
+      </div>
+    </div>
+  </div>
+);
+
+
 export default function AllDocuments() {
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("recent"); // Default sort is 'recent'
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [viewingDocument, setViewingDocument] = useState<Document | null>(null);
+  const [downloading, setDownloading] = useState<string | null>(null);
+  const [deletingDocument, setDeletingDocument] = useState<Document | null>(null);
   const sortMenuRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
+
+  const { data: documents = [], isLoading, isError, error } = useQuery<Document[], Error>({
+    queryKey: ["documents"],
+    queryFn: async () => {
+      const response = await fetch(`${API_BASE_URL}/api/documents`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch documents');
+      }
+      const data = await response.json();
+      return data.map((doc: any) => ({
+        id: doc.id.toString(),
+        name: doc.title || 'No Title',
+        publicationDate: new Date(doc.uploaded_at).toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        }),
+        status: doc.status,
+        publisher: (doc.extracted_fields && doc.extracted_fields.issuer) || 'N/A',
+        url: doc.blob_url,
+        file_name: doc.file_name,
+      }));
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (fileName: string) => {
+      const response = await fetch(`${API_BASE_URL}/api/documents/delete`, {
+        method: 'DELETE',
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          file_names: [fileName],
+        }),
+      });
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.error("Deletion failed with body:", errorBody);
+        throw new Error('Failed to delete document');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+    },
+  });
+
+  const handleDelete = (document: Document) => {
+    setDeletingDocument(document);
+  };
+
+  const confirmDelete = () => {
+    if (deletingDocument) {
+      deleteMutation.mutate(deletingDocument.file_name, {
+        onSettled: () => {
+          setDeletingDocument(null);
+        },
+      });
+    }
+  };
+
+  const handleDownload = (docToDownload: Document) => {
+    const link = document.createElement('a');
+    link.href = docToDownload.url;
+    link.download = docToDownload.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -82,7 +154,10 @@ export default function AllDocuments() {
   }, [sortMenuOpen]);
 
   const handleSelectAll = (checked: boolean) => {
-    setSelectedDocuments(checked ? documentsData.map(doc => doc.id) : []);
+    setSelectedDocuments(checked ? documents.map(doc => doc.id) : []);
+    if (!documents || documents.length === 0) {
+      setSelectedDocuments([]);
+    }
   };
 
   const handleSelectDocument = (documentId: string, checked: boolean) => {
@@ -92,13 +167,13 @@ export default function AllDocuments() {
   };
 
   const getStatusStyle = (status: string) => {
-    if (status === 'Processed') return 'bg-[#2DA1DB] text-white';
-    if (status === 'Processing') return 'bg-yellow-500 text-white';
-    return '';
+    if (status === 'Processed' || status === 'COMPLETED') return 'bg-[#2DA1DB] text-white';
+    if (status === 'Processing' || status === 'PENDING') return 'bg-yellow-500 text-white';
+    return 'bg-red-500 text-white';
   };
 
   // 1. Filter documents based on search term
-  const filteredDocuments = documentsData.filter(doc =>
+  const filteredDocuments = documents.filter(doc =>
     doc.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -106,7 +181,7 @@ export default function AllDocuments() {
   const sortedDocuments = [...filteredDocuments].sort((a, b) => {
     // Helper function to parse 'DD / MM / YYYY' string to a Date object
     const parseDate = (dateString: string): Date => {
-      const [day, month, year] = dateString.split(' / ').map(Number);
+      const [day, month, year] = dateString.split('/').map(Number);
       // Month is 0-indexed in JavaScript's Date object (0=Jan, 11=Dec)
       return new Date(year, month - 1, day);
     };
@@ -130,6 +205,14 @@ export default function AllDocuments() {
       )}
     </span>
   );
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
+
+  if (isError) {
+    return <div className="flex justify-center items-center h-screen text-red-500">Error: {error.message}</div>;
+  }
 
   return (
     <>
@@ -195,7 +278,7 @@ export default function AllDocuments() {
                         <th className="w-12 px-6">
                           <input
                             type="checkbox"
-                            checked={selectedDocuments.length === documentsData.length && documentsData.length > 0}
+                            checked={selectedDocuments.length === documents.length && documents.length > 0}
                             onChange={(e) => handleSelectAll(e.target.checked)}
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
@@ -234,8 +317,10 @@ export default function AllDocuments() {
                           <td className="px-8 py-4">
                             <div className="flex items-center justify-center space-x-3 text-[#1F4A75]">
                               <button onClick={() => setViewingDocument(document)} className="transition-colors"><Eye className="w-4 h-4" /></button>
-                              <button className="transition-colors"><Copy className="w-4 h-4" /></button>
-                              <button className="transition-colors"><Download className="w-4 h-4" /></button>
+                              <button onClick={() => handleDelete(document)} className="transition-colors"><Trash2 className="w-4 h-4" /></button>
+                              <button onClick={() => handleDownload(document)} className="transition-colors" disabled={downloading === document.id}>
+                                {downloading === document.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -249,8 +334,7 @@ export default function AllDocuments() {
       </div>
       {/* Conditionally render the modal */}
       {viewingDocument && <DocumentViewerModal document={viewingDocument} onClose={() => setViewingDocument(null)} />}
+      {deletingDocument && <DeleteConfirmationDialog onConfirm={confirmDelete} onCancel={() => setDeletingDocument(null)} />}
     </>
   );
 }
-
-
