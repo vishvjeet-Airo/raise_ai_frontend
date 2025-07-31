@@ -42,12 +42,13 @@ export default function Login() {
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
-  // Form validation
   const validateForm = () => {
     const newErrors: { username?: string; password?: string } = {};
 
     if (!username.trim()) {
-      newErrors.username = "Username is required";
+      newErrors.username = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(username)) {
+      newErrors.username = "Please enter a valid email address.";
     }
 
     if (!password.trim()) {
@@ -56,6 +57,14 @@ export default function Login() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEmail = e.target.value;
+    setUsername(newEmail);
+    if (errors.username) {
+        setErrors(prev => ({ ...prev, username: undefined }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,8 +84,16 @@ export default function Login() {
         // Redirect to all documents page
         navigate('/documents');
       } catch (err: any) {
-        const errorMsg = err.message || 'Login failed';
-        setErrorMessage(errorMsg);
+        let finalErrorMessage = 'Login failed. Please check your credentials and try again.';
+        if (err.message) {
+            const lowerCaseError = err.message.toLowerCase();
+            if (lowerCaseError.includes('does not exist') || lowerCaseError.includes('user not found')) {
+                finalErrorMessage = "User isn't registered. Please sign up first.";
+            } else if (lowerCaseError.includes('incorrect username or password')) {
+                finalErrorMessage = 'Incorrect Password , Please try again';
+            }
+        }
+        setErrorMessage(finalErrorMessage);
         setShowErrorModal(true);
       } finally {
         setLoading(false);
@@ -88,13 +105,13 @@ export default function Login() {
     <div className="min-h-screen flex">
       {/* Left Side - Login Form */}
       <div className="flex-1 flex flex-col justify-center px-6 py-12 bg-white sm:px-8 lg:px-12 xl:px-16">
-        <div className="mx-auto w-full max-w-sm text-sm">
+        <div className="mx-auto w-full max-w-[360px] text-sm">
           {/* Logo */}
-          <div className="mb-12">
-            <img 
-              src="/accelacompliance-logo.png" 
-              alt="AccelaCompliance" 
-              width="220" 
+          <div className="mb-16">
+            <img
+              src="/accelacompliance-logo.png"
+              alt="AccelaCompliance"
+              width="220"
               height="41"
               className="w-[220px] h-[41px]"
             />
@@ -102,27 +119,49 @@ export default function Login() {
 
           {/* Sign In Form */}
           <div>
-            <h2 
+            <h2
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: '20px',
+                fontSize: '18px',
                 lineHeight: '100%',
                 letterSpacing: '0%',
                 color: '#585858',
-                marginBottom: '8px'
+                marginBottom: '4px'
               }}
             >
-              Sign In
+              Sign in
             </h2>
-            
 
+            <p
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: '13px',
+                lineHeight: '140%',
+                color: '#A0AEC0',
+                marginBottom: '24px'
+              }}
+            >
+              Don't have an account?
+            </p>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Username Field */}
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Email Field */}
               <div>
-                <label htmlFor="username" className="block text-xs font-medium text-gray-700 mb-1">
-                  Username
+                <label
+                  htmlFor="username"
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: '14px',
+                    lineHeight: '100%',
+                    color: '#718096',
+                    marginBottom: '8px',
+                    display: 'block'
+                  }}
+                >
+                  E-mail
                 </label>
                 <input
                   id="username"
@@ -134,10 +173,27 @@ export default function Login() {
                       setErrors(prev => ({ ...prev, username: undefined }));
                     }
                   }}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 text-gray-900 placeholder-gray-500 text-xs ${
-                    errors.username ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
-                  }`}
+                  style={{
+                    width: '100%',
+                    height: '48px',
+                    padding: '12px 16px',
+                    border: errors.username ? '1px solid #E53E3E' : '1px solid #E2E8F0',
+                    borderRadius: '8px',
+                    background: '#F7FAFC',
+                    fontSize: '14px',
+                    fontFamily: 'Inter, sans-serif',
+                    color: '#2D3748',
+                    outline: 'none'
+                  }}
                   placeholder="Enter your username"
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#3182CE';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(49, 130, 206, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = errors.username ? '#E53E3E' : '#E2E8F0';
+                    e.target.style.boxShadow = 'none';
+                  }}
                 />
                 {errors.username && (
                   <p className="mt-1 text-xs text-red-600">{errors.username}</p>
@@ -146,7 +202,18 @@ export default function Login() {
 
               {/* Password Field */}
               <div>
-                <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="password"
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: '14px',
+                    lineHeight: '100%',
+                    color: '#718096',
+                    marginBottom: '8px',
+                    display: 'block'
+                  }}
+                >
                   Password
                 </label>
                 <div className="relative">
@@ -160,15 +227,33 @@ export default function Login() {
                         setErrors(prev => ({ ...prev, password: undefined }));
                       }
                     }}
-                    className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 text-gray-900 placeholder-gray-500 text-xs ${
-                      errors.password ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
-                    }`}
+                    style={{
+                      width: '100%',
+                      height: '48px',
+                      padding: '12px 16px',
+                      paddingRight: '48px',
+                      border: errors.password ? '1px solid #E53E3E' : '1px solid #E2E8F0',
+                      borderRadius: '8px',
+                      background: '#F7FAFC',
+                      fontSize: '14px',
+                      fontFamily: 'Inter, sans-serif',
+                      color: '#2D3748',
+                      outline: 'none'
+                    }}
                     placeholder="Enter your password"
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#3182CE';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(49, 130, 206, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = errors.password ? '#E53E3E' : '#E2E8F0';
+                      e.target.style.boxShadow = 'none';
+                    }}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-2"
+                    className="absolute inset-y-0 right-0 flex items-center pr-4"
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4 text-gray-400" />
@@ -183,20 +268,39 @@ export default function Login() {
               </div>
 
               {/* Remember Me & Forgot Password */}
-              <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center justify-between" style={{ marginTop: '20px', marginBottom: '20px' }}>
                 <label className="flex items-center">
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-3 w-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    style={{
+                      width: '15px',
+                      height: '15px',
+                      accentColor: '#3182CE',
+                      marginRight: '7px'
+                    }}
                   />
-                  <span className="ml-2 text-xs text-gray-600">Remember me</span>
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '14px',
+                      color: '#718096'
+                    }}
+                  >
+                    Remember me
+                  </span>
                 </label>
 
                 <Link
                   to="/forgot-password"
-                  className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '14px',
+                    color: '#3182CE',
+                    textDecoration: 'underline',
+                    fontWeight: 500
+                  }}
                 >
                   Forgot Password?
                 </Link>
@@ -215,21 +319,19 @@ export default function Login() {
                 style={{
                   background: '#052E65',
                   width: '100%',
-                  height: '46px',
-                  margin: '32px auto 0 auto',
-                  opacity: 1,
+                  height: '38px',
+                  marginTop: '24px',
                   borderRadius: '12px',
-                  paddingLeft: '24px',
-                  paddingRight: '24px',
-                  gap: '8px',
                   color: 'white',
                   fontWeight: 500,
                   fontSize: '16px',
+                  fontFamily: 'Inter, sans-serif',
                   border: 'none',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  opacity: (!username.trim() || !password.trim() || loading) ? 0.6 : 1
                 }}
                 disabled={!username.trim() || !password.trim() || loading}
               >
@@ -244,14 +346,15 @@ export default function Login() {
           </div>
         </div>
       </div>
-
-      {/* Mobile Support Button */}
-      <div className="lg:hidden fixed top-4 right-4 z-10">
-        <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors bg-white rounded-full px-3 py-2 shadow-md">
-          <HelpCircle className="w-4 h-4" />
-          <span className="text-sm">Support</span>
-        </button>
-      </div>
+      
+        {/* Mobile Support Button */}
+        <div className="lg:hidden fixed top-4 right-4 z-10">
+          <button className="flex items-center space-x-1 text-[10px] text-gray-600 hover:text-gray-900 transition-colors bg-white rounded-full px-2 py-1 shadow-md">
+            <HelpCircle className="w-3 h-3" />
+            <span className="text-[8px]">Support</span>
+          </button>
+        </div>
+ 
 
       {/* Right Side - Feature Presentation */}
       <div className="hidden lg:flex flex-1 relative overflow-hidden" style={{ background: '#052E65' }}>
@@ -265,7 +368,7 @@ export default function Login() {
               fontFamily: 'Inter, sans-serif',
               fontWeight: 500,
               fontStyle: 'normal',
-              fontSize: '20px',
+              fontSize: '17px',
               lineHeight: '150%',
               letterSpacing: '0%',
               color: '#F7FAFC'
@@ -274,7 +377,7 @@ export default function Login() {
             <img 
               src="/mdoutlinesupportagent.png" 
               alt="Support Agent" 
-              className="w-5 h-5"
+              className="w-4 h-4"
             />
             <span>Support</span>
           </button>
@@ -283,13 +386,13 @@ export default function Login() {
         {/* Content */}
         <div className="flex flex-col justify-center items-center text-center px-12 relative z-10 h-full w-full">
           {/* Frame Image */}
-          <div className="mb-8 relative flex flex-col items-center justify-center">
+          <div className="mt-9 mb-7 relative flex flex-col items-center justify-center">
             <img 
               src="/frame.png" 
               alt="Frame" 
               width="411"
               height="509"
-              className="w-[411px] h-[509px]"
+              className="w-[290px] h-[390px]"
             />
           </div>
 
@@ -299,9 +402,9 @@ export default function Login() {
               width: '542px',
               height: '34px',
               fontFamily: 'Inter, sans-serif',
-              fontWeight: 600,
+              fontWeight: 540,
               fontStyle: 'normal',
-              fontSize: '36px',
+              fontSize: '26px',
               lineHeight: '100%',
               letterSpacing: '0%',
               color: '#F7FAFC',
@@ -317,7 +420,7 @@ export default function Login() {
               fontFamily: 'Inter, sans-serif',
               fontWeight: 400,
               fontStyle: 'normal',
-              fontSize: '20px',
+              fontSize: '15px',
               lineHeight: '138%',
               letterSpacing: '0%',
               textAlign: 'center',
@@ -372,4 +475,3 @@ export default function Login() {
     </div>
   );
 }
-           

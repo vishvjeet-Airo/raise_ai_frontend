@@ -135,24 +135,48 @@ export default function ResetPassword() {
 
     return (
       <div>
-        <h2 
+        <h2
           style={{
             fontFamily: 'Inter, sans-serif',
             fontWeight: 500,
-            fontSize: '20px',
+            fontSize: '18px',
             lineHeight: '100%',
             letterSpacing: '0%',
             color: '#585858',
-            marginBottom: '8px'
+            marginBottom: '4px'
           }}
         >
           Reset Password
         </h2>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
+
+        <p
+          style={{
+            fontFamily: 'Inter, sans-serif',
+            fontWeight: 400,
+            fontSize: '13px',
+            lineHeight: '140%',
+            color: '#A0AEC0',
+            marginBottom: '24px'
+          }}
+        >
+          Don't have an account?
+        </p>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* New Password Field */}
           <div>
-            <label htmlFor="new-password" className="block text-xs font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="new-password"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '14px',
+                lineHeight: '100%',
+                color: '#718096',
+                marginBottom: '8px',
+                display: 'block'
+              }}
+            >
               New Password
             </label>
             <div className="relative">
@@ -166,15 +190,33 @@ export default function ResetPassword() {
                     setErrors(prev => ({ ...prev, newPassword: undefined }));
                   }
                 }}
-                className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 text-gray-900 placeholder-gray-500 text-xs ${
-                  errors.newPassword ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
-                }`}
+                style={{
+                  width: '100%',
+                  height: '48px',
+                  padding: '12px 16px',
+                  paddingRight: '48px',
+                  border: errors.newPassword ? '1px solid #E53E3E' : '1px solid #E2E8F0',
+                  borderRadius: '8px',
+                  background: '#F7FAFC',
+                  fontSize: '14px',
+                  fontFamily: 'Inter, sans-serif',
+                  color: '#2D3748',
+                  outline: 'none'
+                }}
                 placeholder="Enter your new password"
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3182CE';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(49, 130, 206, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = errors.newPassword ? '#E53E3E' : '#E2E8F0';
+                  e.target.style.boxShadow = 'none';
+                }}
               />
               <button
                 type="button"
                 onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-2"
+                className="absolute inset-y-0 right-0 flex items-center pr-4"
               >
                 {showNewPassword ? (
                   <EyeOff className="h-4 w-4 text-gray-400" />
@@ -190,7 +232,18 @@ export default function ResetPassword() {
 
           {/* Confirm New Password Field */}
           <div>
-            <label htmlFor="confirm-password" className="block text-xs font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="confirm-password"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '14px',
+                lineHeight: '100%',
+                color: '#718096',
+                marginBottom: '8px',
+                display: 'block'
+              }}
+            >
               Confirm New Password
             </label>
             <div className="relative">
@@ -204,15 +257,33 @@ export default function ResetPassword() {
                     setErrors(prev => ({ ...prev, confirmPassword: undefined }));
                   }
                 }}
-                className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 text-gray-900 placeholder-gray-500 text-xs ${
-                  errors.confirmPassword ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
-                }`}
+                style={{
+                  width: '100%',
+                  height: '48px',
+                  padding: '12px 16px',
+                  paddingRight: '48px',
+                  border: errors.confirmPassword ? '1px solid #E53E3E' : '1px solid #E2E8F0',
+                  borderRadius: '8px',
+                  background: '#F7FAFC',
+                  fontSize: '14px',
+                  fontFamily: 'Inter, sans-serif',
+                  color: '#2D3748',
+                  outline: 'none'
+                }}
                 placeholder="Confirm your new password"
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3182CE';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(49, 130, 206, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = errors.confirmPassword ? '#E53E3E' : '#E2E8F0';
+                  e.target.style.boxShadow = 'none';
+                }}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-2"
+                className="absolute inset-y-0 right-0 flex items-center pr-4"
               >
                 {showConfirmPassword ? (
                   <EyeOff className="h-4 w-4 text-gray-400" />
@@ -239,21 +310,19 @@ export default function ResetPassword() {
             style={{
               background: '#052E65',
               width: '100%',
-              height: '46px',
-              margin: '32px auto 0 auto',
-              opacity: 1,
+              height: '38px',
+              marginTop: '24px',
               borderRadius: '12px',
-              paddingLeft: '24px',
-              paddingRight: '24px',
-              gap: '8px',
               color: 'white',
               fontWeight: 500,
               fontSize: '16px',
+              fontFamily: 'Inter, sans-serif',
               border: 'none',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              opacity: (!newPassword.trim() || !confirmPassword.trim() || loading) ? 0.6 : 1
             }}
             disabled={!newPassword.trim() || !confirmPassword.trim() || loading}
           >
@@ -268,13 +337,13 @@ export default function ResetPassword() {
     <div className="min-h-screen flex">
       {/* Left Side - Reset Password Form */}
       <div className="flex-1 flex flex-col justify-center px-6 py-12 bg-white sm:px-8 lg:px-12 xl:px-16">
-        <div className="mx-auto w-full max-w-sm text-sm">
+        <div className="mx-auto w-full max-w-[360px] text-sm">
           {/* Logo */}
-          <div className="mb-12">
-            <img 
-              src="/accelacompliance-logo.png" 
-              alt="AccelaCompliance" 
-              width="220" 
+          <div className="mb-16">
+            <img
+              src="/accelacompliance-logo.png"
+              alt="AccelaCompliance"
+              width="220"
               height="41"
               className="w-[220px] h-[41px]"
             />
@@ -290,13 +359,13 @@ export default function ResetPassword() {
         {/* Content */}
         <div className="flex flex-col justify-center items-center text-center px-12 relative z-10 h-full w-full">
           {/* Frame Image */}
-          <div className="mb-8 relative flex flex-col items-center justify-center">
+          <div className="mt-9 mb-7 relative flex flex-col items-center justify-center">
             <img 
               src="/frame.png" 
               alt="Frame" 
               width="411"
               height="509"
-              className="w-[411px] h-[509px]"
+              className="w-[290px] h-[390px]"
             />
           </div>
 
@@ -306,9 +375,9 @@ export default function ResetPassword() {
               width: '542px',
               height: '34px',
               fontFamily: 'Inter, sans-serif',
-              fontWeight: 600,
+              fontWeight: 540,
               fontStyle: 'normal',
-              fontSize: '36px',
+              fontSize: '26px',
               lineHeight: '100%',
               letterSpacing: '0%',
               color: '#F7FAFC',
@@ -324,7 +393,7 @@ export default function ResetPassword() {
               fontFamily: 'Inter, sans-serif',
               fontWeight: 400,
               fontStyle: 'normal',
-              fontSize: '20px',
+              fontSize: '15px',
               lineHeight: '138%',
               letterSpacing: '0%',
               textAlign: 'center',
@@ -396,4 +465,3 @@ export default function ResetPassword() {
     </div>
   );
 }
-
