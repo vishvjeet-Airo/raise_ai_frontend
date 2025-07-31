@@ -91,7 +91,7 @@ export default function ForgotPassword() {
               style={{
                 fontFamily: "Inter, sans-serif",
                 fontWeight: 500,
-                fontSize: "20px",
+                fontSize: "18px",
                 lineHeight: "100%",
                 letterSpacing: "0%",
                 color: "#585858",
@@ -105,7 +105,7 @@ export default function ForgotPassword() {
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 400,
-                fontSize: '14px',
+                fontSize: '13px',
                 lineHeight: '140%',
                 color: '#A0AEC0',
                 marginBottom: '24px'
@@ -177,7 +177,7 @@ export default function ForgotPassword() {
                   style={{
                     background: "#052E65",
                     width: "100%",
-                    height: "48px",
+                    height: "38px",
                     marginTop: "24px",
                     borderRadius: "12px",
                     color: "white",
@@ -230,16 +230,16 @@ export default function ForgotPassword() {
         style={{ background: "#052E65" }}
       >
         {/* Support Button */}
-        <div className="absolute top-6 left-12 z-10">
+        <div class="absolute top-6 left-12 z-10">
           <button
-            className="flex items-center space-x-2 transition-colors"
+            class="flex items-center space-x-2 transition-colors"
             style={{
               width: "120px",
               height: "30px",
               fontFamily: "Inter, sans-serif",
               fontWeight: 500,
               fontStyle: "normal",
-              fontSize: "20px",
+              fontSize: "17px",
               lineHeight: "150%",
               letterSpacing: "0%",
               color: "#F7FAFC",
@@ -248,7 +248,7 @@ export default function ForgotPassword() {
             <img
               src="/mdoutlinesupportagent.png"
               alt="Support Agent"
-              className="w-5 h-5"
+              class="w-4 h-4"
             />
             <span>Support</span>
           </button>
@@ -257,13 +257,13 @@ export default function ForgotPassword() {
         {/* Content */}
         <div className="flex flex-col justify-center items-center text-center px-12 relative z-10 h-full w-full">
           {/* Frame Image */}
-          <div className="mb-8 relative flex flex-col items-center justify-center">
+          <div className="mt-9 mb-7 relative flex flex-col items-center justify-center">
             <img
               src="/frame.png"
               alt="Frame"
               width="411"
               height="509"
-              className="w-[411px] h-[509px]"
+              className="w-[290px] h-[390px]"
             />
           </div>
 
@@ -273,9 +273,9 @@ export default function ForgotPassword() {
               width: "542px",
               height: "34px",
               fontFamily: "Inter, sans-serif",
-              fontWeight: 600,
+              fontWeight: 540,
               fontStyle: "normal",
-              fontSize: "36px",
+              fontSize: "26px",
               lineHeight: "100%",
               letterSpacing: "0%",
               color: "#F7FAFC",
@@ -291,7 +291,7 @@ export default function ForgotPassword() {
               fontFamily: "Inter, sans-serif",
               fontWeight: 400,
               fontStyle: "normal",
-              fontSize: "20px",
+              fontSize: "15px",
               lineHeight: "138%",
               letterSpacing: "0%",
               textAlign: "center",
