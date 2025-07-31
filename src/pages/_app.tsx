@@ -8,7 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ClientApp from "../components/ClientApp";
 
 // 1. Import the fonts
-import { Inter, Poppins } from "next/font/google";
+import { Inter, Poppins, Montserrat} from "next/font/google";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +22,13 @@ const poppins = Poppins({
   subsets: ["latin"],
   weight: ["500"],
   variable: '--font-poppins', // We'll keep using variables
+});
+
+// Add Montserrat
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  weight: ['500'], // Add the weights you need
+  variable: '--font-montserrat',
 });
 
 
