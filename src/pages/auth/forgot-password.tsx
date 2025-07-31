@@ -5,57 +5,67 @@ import { HelpCircle, CheckCircle2 } from "lucide-react";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const [errors, setErrors] = useState<{ email?: string; general?: string; }>(
-    {}
-  );
+  const [errors, setErrors] = useState<{ email?: string; general?: string; }>({});
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Form validation
-  const validateForm = () => {
-    const newErrors: { email?: string } = {};
-
-    if (!email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Email address is invalid";
+  const validateEmail = (email: string) => {
+    if (email.trim() && !/\S+@\S+\.\S+/.test(email)) {
+      setErrors({ email: "Please enter a valid email address." });
+    } else {
+      setErrors({});
     }
+  };
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+    validateEmail(newEmail);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (validateForm()) {
-      setErrors({});
-      setLoading(true);
-      setShowSuccessMessage(false);
-      try {
-        const response = await fetch(`${API_BASE_URL}api/users/request-password-reset?email=${encodeURIComponent(email)}`, {
-          method: 'POST',
-          headers: {
-            'accept': 'application/json',
-          },
-        });
+    if (!email.trim()) {
+      setErrors({ email: "Email is required" });
+      return;
+    }
+    if (errors.email) {
+      return;
+    }
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.detail || 'Failed to send reset email');
-        }
+    setLoading(true);
+    setShowSuccessMessage(false);
+    try {
+      const response = await fetch(`${API_BASE_URL}api/users/request-password-reset?email=${encodeURIComponent(email)}`, {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+        },
+      });
 
-        setShowSuccessMessage(true);
-
-      } catch (err: any) {
-        const errorMsg = err.message || "An error occurred";
-        setErrorMessage(errorMsg);
-        setShowErrorModal(true);
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to send reset email');
       }
+
+      setShowSuccessMessage(true);
+
+    } catch (err: any) {
+      let finalErrorMessage = 'Failed to send reset email. Please try again.';
+      if (err.message) {
+          if (err.message.toLowerCase().includes('user not found')) {
+              finalErrorMessage = 'Email not registered. Please sign up first.';
+          } else if (!err.message.includes('Failed to fetch')) {
+              finalErrorMessage = err.message;
+          }
+      }
+      setErrorMessage(finalErrorMessage);
+      setShowErrorModal(true);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -63,9 +73,9 @@ export default function ForgotPassword() {
     <div className="min-h-screen flex">
       {/* Left Side - Forgot Password Form */}
       <div className="flex-1 flex flex-col justify-center px-6 py-12 bg-white sm:px-8 lg:px-12 xl:px-16">
-        <div className="mx-auto w-full max-w-sm text-sm">
+        <div className="mx-auto w-full max-w-[360px] text-sm">
           {/* Logo */}
-          <div className="mb-12">
+          <div className="mb-16">
             <img
               src="/accelacompliance-logo.png"
               alt="AccelaCompliance"
@@ -85,38 +95,69 @@ export default function ForgotPassword() {
                 lineHeight: "100%",
                 letterSpacing: "0%",
                 color: "#585858",
-                marginBottom: "8px",
+                marginBottom: "4px",
               }}
             >
               Forgot Password
             </h2>
 
+            <p
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: '14px',
+                lineHeight: '140%',
+                color: '#A0AEC0',
+                marginBottom: '24px'
+              }}
+            >
+              Don't have an account?
+            </p>
+
             {!showSuccessMessage ? (
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Email Field */}
                 <div>
                   <label
                     htmlFor="email"
-                    className="block text-xs font-medium text-gray-700 mb-1"
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: '14px',
+                      lineHeight: '100%',
+                      color: '#718096',
+                      marginBottom: '8px',
+                      display: 'block'
+                    }}
                   >
-                    Email
+                    E-mail
                   </label>
                   <input
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      if (errors.email) {
-                        setErrors((prev) => ({ ...prev, email: undefined }));
-                      }
+                    onChange={handleEmailChange}
+                    style={{
+                      width: '100%',
+                      height: '48px',
+                      padding: '12px 16px',
+                      border: errors.email ? '1px solid #E53E3E' : '1px solid #E2E8F0',
+                      borderRadius: '8px',
+                      background: '#F7FAFC',
+                      fontSize: '14px',
+                      fontFamily: 'Inter, sans-serif',
+                      color: '#2D3748',
+                      outline: 'none'
                     }}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 text-gray-900 placeholder-gray-500 text-xs ${
-                      errors.email
-                        ? "border-red-300 focus:ring-red-500"
-                        : "border-gray-200"
-                    }`}
                     placeholder="Enter your email"
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#3182CE';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(49, 130, 206, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = errors.email ? '#E53E3E' : '#E2E8F0';
+                      e.target.style.boxShadow = 'none';
+                    }}
                   />
                   {errors.email && (
                     <p className="mt-1 text-xs text-red-600">{errors.email}</p>
@@ -136,23 +177,21 @@ export default function ForgotPassword() {
                   style={{
                     background: "#052E65",
                     width: "100%",
-                    height: "46px",
-                    margin: "32px auto 0 auto",
-                    opacity: 1,
+                    height: "48px",
+                    marginTop: "24px",
                     borderRadius: "12px",
-                    paddingLeft: "24px",
-                    paddingRight: "24px",
-                    gap: "8px",
                     color: "white",
                     fontWeight: 500,
                     fontSize: "16px",
+                    fontFamily: "Inter, sans-serif",
                     border: "none",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     cursor: "pointer",
+                    opacity: (!email.trim() || !!errors.email || loading) ? 0.6 : 1
                   }}
-                  disabled={!email.trim() || loading}
+                  disabled={!email.trim() || !!errors.email || loading}
                 >
                   {loading ? "Sending..." : "Send Reset Link"}
                 </button>
@@ -167,10 +206,16 @@ export default function ForgotPassword() {
               </div>
             )}
 
-            <div className="mt-4 text-center text-xs">
+            <div className="mt-6 text-center">
               <Link
                 to="/login"
-                className="text-blue-600 hover:text-blue-700 font-medium"
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: '14px',
+                  color: '#3182CE',
+                  textDecoration: 'underline',
+                  fontWeight: 500
+                }}
               >
                 Back to Sign In
               </Link>
