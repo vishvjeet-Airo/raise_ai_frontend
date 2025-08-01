@@ -159,7 +159,6 @@ export default function ResetPassword() {
             marginBottom: '24px'
           }}
         >
-          Don't have an account?
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
