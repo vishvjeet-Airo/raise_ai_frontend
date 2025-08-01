@@ -69,8 +69,9 @@ export const Sidebar: React.FC<SidebarProps> = () => {
               <img src="/analyst.png" alt="Andrew Smith" className="w-10 h-10 rounded-full" />
               {!isCollapsed && (
                 <div>
-                  <div className="font-medium text-sm leading-5 tracking-normal text-black">Andrew Smith</div>
                   <div className="font-medium text-[10px] leading-[12px] tracking-[0.4px] uppercase text-[#757575]">Finance Analyst</div>
+                  <div className="font-medium text-sm leading-5 tracking-normal text-black">Andrew Smith</div>
+                  
                 </div>
               )}
             </div>

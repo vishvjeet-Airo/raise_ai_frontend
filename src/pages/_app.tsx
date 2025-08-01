@@ -6,8 +6,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ClientApp from "../components/ClientApp";
-
-// 1. Import the fonts
 import { Inter, Poppins, Montserrat} from "next/font/google";
 
 const queryClient = new QueryClient();

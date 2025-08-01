@@ -1,14 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
-import { Search, ChevronDown, Eye, Download, X, Loader2, Trash2 } from "lucide-react";
+// Added ChevronUp for sorting indicator
+import { Search, ArrowDown, ArrowUp, Eye, Download, X, Loader2, Trash2 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/config";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+
 
 interface Document {
   id: string;
   name: string;
-  publicationDate: string; // "DD / MM / YYYY"
+  publicationDate: string; // "DD/MM/YYYY"
+  uploadedAtDate: Date;
   status: 'Processed' | 'COMPLETED' | 'PENDING' | 'FAILED';
   publisher: string;
   url: string; // URL for the document to be viewed
@@ -62,12 +65,11 @@ const DeleteConfirmationDialog = ({ onConfirm, onCancel }: { onConfirm: () => vo
 export default function AllDocuments() {
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("recent"); // Default sort is 'recent'
-  const [sortMenuOpen, setSortMenuOpen] = useState(false);
+  // 'sortBy' state now toggles between 'recent' and 'oldest'
+  const [sortBy, setSortBy] = useState("recent");
   const [viewingDocument, setViewingDocument] = useState<Document | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
   const [deletingDocument, setDeletingDocument] = useState<Document | null>(null);
-  const sortMenuRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   const { data: documents = [], isLoading, isError, error } = useQuery<Document[], Error>({
@@ -78,19 +80,23 @@ export default function AllDocuments() {
         throw new Error('Failed to fetch documents');
       }
       const data = await response.json();
-      return data.map((doc: any) => ({
+      return data.map((doc: any) => {
+        const uploadedDate = new Date(doc.uploaded_at); 
+        return{
         id: doc.id.toString(),
         name: doc.title || 'No Title',
-        publicationDate: new Date(doc.uploaded_at).toLocaleDateString('en-GB', {
+        publicationDate: uploadedDate.toLocaleDateString('en-GB', {
           day: '2-digit',
           month: '2-digit',
           year: 'numeric',
         }),
+        uploadedAtDate: uploadedDate, 
         status: doc.status,
-        publisher: (doc.extracted_fields && doc.extracted_fields.issuer) || 'N/A',
+        publisher: doc.issuing_authority || 'N/A',
         url: doc.blob_url,
         file_name: doc.file_name,
-      }));
+        };
+      });
     },
   });
 
@@ -140,18 +146,10 @@ export default function AllDocuments() {
     document.body.removeChild(link);
   };
   
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (sortMenuRef.current && !sortMenuRef.current.contains(event.target as Node)) {
-        setSortMenuOpen(false);
-      }
-    }
-    if (sortMenuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [sortMenuOpen]);
+  // NEW: Handler to toggle the sort order for the date column
+  const handleDateSortToggle = () => {
+    setSortBy(currentSort => (currentSort === 'recent' ? 'oldest' : 'recent'));
+  };
 
   const handleSelectAll = (checked: boolean) => {
     setSelectedDocuments(checked ? documents.map(doc => doc.id) : []);
@@ -172,39 +170,22 @@ export default function AllDocuments() {
     return 'bg-red-500 text-white';
   };
 
-  // 1. Filter documents based on search term
   const filteredDocuments = documents.filter(doc =>
     doc.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // 2. Sort the filtered documents
+  // The existing sorting logic works perfectly with the new toggle handler.
   const sortedDocuments = [...filteredDocuments].sort((a, b) => {
-    // Helper function to parse 'DD / MM / YYYY' string to a Date object
-    const parseDate = (dateString: string): Date => {
-      const [day, month, year] = dateString.split('/').map(Number);
-      // Month is 0-indexed in JavaScript's Date object (0=Jan, 11=Dec)
-      return new Date(year, month - 1, day);
-    };
-
-    const dateA = parseDate(a.publicationDate);
-    const dateB = parseDate(b.publicationDate);
-
-    if (sortBy === 'oldest') {
-      return dateA.getTime() - dateB.getTime(); // Ascending for oldest first
-    }
-    // Default to 'recent'
-    return dateB.getTime() - dateA.getTime(); // Descending for recent first
+      // We compare the Date objects directly, no string parsing needed!
+      const dateA = a.uploadedAtDate.getTime();
+      const dateB = b.uploadedAtDate.getTime();
+  
+      if (sortBy === 'oldest') {
+        return dateA - dateB; // Ascending for oldest first
+      }
+      // Default to 'recent'
+      return dateB - dateA; // Descending for recent first
   });
-
-  const Tick = ({ show }: { show: boolean }) => (
-    <span className="inline-block w-5 text-lg text-blue-700 mr-2">
-      {show && (
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M4 8.5L7 11.5L12 5.5" stroke="#1F4A75" strokeWidth="2" strokeLinecap="round"/>
-        </svg>
-      )}
-    </span>
-  );
 
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
@@ -238,36 +219,6 @@ export default function AllDocuments() {
                         className="w-[300px] h-8 pl-3 pr-9 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:border-[#1F4A75] "
                       />
                     </div>
-                    <button className="h-8 px-4 border border-[#1F4A75] text-[#1F4A75] bg-white rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors">
-                      Delete All
-                    </button>
-                    <div className="relative">
-                      <button
-                        className="h-8 px-4 flex items-center space-x-2 bg-[#1F4A75] text-white rounded-lg hover:bg-[#18375a] text-sm font-medium transition-colors"
-                        onClick={() => setSortMenuOpen(open => !open)}
-                      >
-                        <span>Sort By</span>
-                        <ChevronDown className="w-3 h-3" />
-                      </button>
-                      {sortMenuOpen && (
-                        <div ref={sortMenuRef} className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-100 z-20">
-                          <button
-                            className={`flex items-center align-middle w-full px-4 py-3 text-left font-roboto font-normal text-base leading-6 tracking-wide text-[#4F4F4F] hover:bg-gray-100 rounded-t-lg ${sortBy === "recent" ? "bg-gray-50" : ""}`}
-                            onClick={() => { setSortBy("recent"); setSortMenuOpen(false); }}
-                          >
-                            <Tick show={sortBy === "recent"} />
-                            <span>Recent Publication</span>
-                          </button>
-                          <button
-                            className={`flex items-center align-middle w-full px-4 py-3 text-left font-roboto font-normal text-base leading-6 tracking-wide text-[#4F4F4F] hover:bg-gray-100 rounded-t-lg ${sortBy === "recent" ? "bg-gray-50" : ""}`}
-                            onClick={() => { setSortBy("oldest"); setSortMenuOpen(false); }}
-                          >
-                            <Tick show={sortBy === "oldest"} />
-                            <span>Oldest Publication</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 </div>
 
@@ -284,14 +235,25 @@ export default function AllDocuments() {
                           />
                         </th>
                         <th className="px-8 text-left font-poppins text-xs font-medium text-[#4F4F4F]">Name</th>
-                        <th className="px-8 text-center font-poppins text-xs font-medium text-[#4F4F4F] whitespace-nowrap">Publication Date</th>
+                        {/* MODIFIED: Clickable header for date sorting */}
+                        <th 
+                          className="px-8 text-center font-poppins text-xs font-medium text-[#4F4F4F] whitespace-nowrap cursor-pointer select-none"
+                          onClick={handleDateSortToggle}
+                        >
+                          <div className="flex items-center justify-center">
+                            <span>Date of Upload</span>
+                            {/* Conditionally render arrow icon based on sortBy state */}
+                            {sortBy === 'recent' 
+                              ? <ArrowDown className="w-4 h-4 ml-1" /> 
+                              : <ArrowUp className="w-4 h-4 ml-1" />}
+                          </div>
+                        </th>
                         <th className="px-8 text-center font-poppins text-xs font-medium text-[#4F4F4F]">Status</th>
                         <th className="px-8 text-center font-poppins text-xs font-medium text-[#4F4F4F]">Publisher</th>
                         <th className="px-8 text-center font-poppins text-xs font-medium text-[#4F4F4F]">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {/* 3. Map over the newly sorted array */}
                       {sortedDocuments.map((document) => (
                         <tr key={document.id} className="hover:bg-gray-50 transition-colors font-poppins text-xs font-medium text-[#767575]">
                           <td className="px-6 py-4">
