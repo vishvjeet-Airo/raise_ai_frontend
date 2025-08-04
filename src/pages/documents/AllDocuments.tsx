@@ -12,6 +12,7 @@ interface Document {
   name: string;
   publicationDate: string; // "DD/MM/YYYY"
   uploadedAtDate: Date;
+  uploaded_at: string;
   status: 'Processed' | 'COMPLETED' | 'PENDING' | 'FAILED';
   publisher: string;
   url: string; // URL for the document to be viewed
@@ -81,7 +82,8 @@ export default function AllDocuments() {
       }
       const data = await response.json();
       return data.map((doc: any) => {
-        const uploadedDate = new Date(doc.uploaded_at); 
+        const uploadedDate = new Date(doc.publication_date);
+        const uploadedAtDate = doc.uploaded_at ? new Date(doc.uploaded_at) : null;
         return{
         id: doc.id.toString(),
         name: doc.title || 'No Title',
@@ -90,7 +92,12 @@ export default function AllDocuments() {
           month: '2-digit',
           year: 'numeric',
         }),
-        uploadedAtDate: uploadedDate, 
+        uploadedAtDate: uploadedDate,
+        uploaded_at: uploadedAtDate ? uploadedAtDate.toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        }) : 'N/A',
         status: doc.status,
         publisher: doc.issuing_authority || 'N/A',
         url: doc.blob_url,
@@ -241,7 +248,7 @@ export default function AllDocuments() {
                           onClick={handleDateSortToggle}
                         >
                           <div className="flex items-center justify-center">
-                            <span>Date of Upload</span>
+                            <span>Issued Date</span>
                             {/* Conditionally render arrow icon based on sortBy state */}
                             {sortBy === 'recent' 
                               ? <ArrowDown className="w-4 h-4 ml-1" /> 
@@ -250,6 +257,7 @@ export default function AllDocuments() {
                         </th>
                         <th className="px-8 text-center font-poppins text-xs font-medium text-[#4F4F4F]">Status</th>
                         <th className="px-8 text-center font-poppins text-xs font-medium text-[#4F4F4F]">Publisher</th>
+                        <th className="px-8 text-center font-poppins text-xs font-medium text-[#4F4F4F]">Uploaded At</th>
                         <th className="px-8 text-center font-poppins text-xs font-medium text-[#4F4F4F]">Actions</th>
                       </tr>
                     </thead>
@@ -276,12 +284,13 @@ export default function AllDocuments() {
                           </span>
                           </td>
                           <td className="px-8 py-4 text-center">{document.publisher}</td>
+                          <td className="px-8 py-4 text-center">{document.uploaded_at}</td>
                           <td className="px-8 py-4">
                             <div className="flex items-center justify-center space-x-3 text-[#1F4A75]">
                               <button onClick={() => setViewingDocument(document)} className="transition-colors"><Eye className="w-4 h-4" /></button>
                               <button onClick={() => handleDelete(document)} className="transition-colors"><Trash2 className="w-4 h-4" /></button>
                               <button onClick={() => handleDownload(document)} className="transition-colors" disabled={downloading === document.id}>
-                                {downloading === document.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                                {downloading === document.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} 
                               </button>
                             </div>
                           </td>

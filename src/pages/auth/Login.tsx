@@ -12,7 +12,7 @@ async function loginUser({ username, password }: { username: string; password: s
   params.append('client_id', 'string');
   params.append('client_secret', ''); // You can set this if needed
 
-  const response = await fetch(`${API_BASE_URL}api/auth/login`, {
+  const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
