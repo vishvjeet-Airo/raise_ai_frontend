@@ -12,7 +12,7 @@ async function loginUser({ username, password }: { username: string; password: s
   params.append('client_id', 'string');
   params.append('client_secret', ''); // You can set this if needed
 
-  const response = await fetch(`${API_BASE_URL}api/auth/login`, {
+  const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -375,7 +375,7 @@ export default function Login() {
             }}
           >
             <img 
-              src="/mdoutlinesupportagent.png" 
+              src="/MdOutlineSupportAgent.png" 
               alt="Support Agent" 
               className="w-4 h-4"
             />
@@ -388,7 +388,7 @@ export default function Login() {
           {/* Frame Image */}
           <div className="mt-9 mb-7 relative flex flex-col items-center justify-center">
             <img 
-              src="/frame.png" 
+              src="/Frame.png" 
               alt="Frame" 
               width="411"
               height="509"

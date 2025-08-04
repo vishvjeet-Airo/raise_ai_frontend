@@ -4,7 +4,7 @@ import { Sidebar } from "@/components/Sidebar";
 
 
 export default function ChatBot() {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   
   const [inputMessage, setInputMessage] = useState("");
 
@@ -19,32 +19,18 @@ export default function ChatBot() {
   ];
 
   const handleSendMessage = () => {
-    if (inputMessage.trim()) {
-      const newMessage = {
-        id: Date.now().toString(),
-        type: 'user',
-        content: inputMessage,
-        timestamp: new Date()
-      };
-      setMessages([...messages, newMessage]);
-      setInputMessage("");
-    }
+    
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  const formatMessageContent = (content) => {
-    return content.split('\n').map((line, index) => (
-      <React.Fragment key={index}>
-        {line}
-        {index < content.split('\n').length - 1 && <br />}
-      </React.Fragment>
-    ));
+ 
+  interface Message {
+    id: string;
+    type: 'user' | 'bot'; // Assuming these are the possible types
+    content: string;
+    timestamp: Date;
+  }
+  const formatMessageContent = (content: string) => {
+   
   };
 
   return (
@@ -102,7 +88,6 @@ export default function ChatBot() {
                   <textarea
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
                     placeholder="Ask any questions about your documents"
                     rows={1}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976D2] focus:border-transparent resize-none"

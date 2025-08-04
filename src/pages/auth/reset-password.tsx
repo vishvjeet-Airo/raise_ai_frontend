@@ -38,7 +38,7 @@ export default function ResetPassword() {
       }
 
       try {
-        const response = await fetch(`${API_BASE_URL}api/auth/validate-reset-token?token=${token}`);
+        const response = await fetch(`${API_BASE_URL}/api/auth/validate-reset-token?token=${token}`);
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.detail || "Failed to validate token.");
@@ -77,7 +77,7 @@ export default function ResetPassword() {
       setErrors({});
       setLoading(true);
       try {
-        const response = await fetch(`${API_BASE_URL}api/auth/reset-password`, {
+        const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
