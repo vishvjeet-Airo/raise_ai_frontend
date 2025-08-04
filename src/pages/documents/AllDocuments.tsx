@@ -208,8 +208,8 @@ export default function AllDocuments() {
         <Sidebar />
         
         <div className="flex-1 p-6 overflow-y-auto">
-          <div className="bg-[#FBFBFB] rounded-xl py-8">
-              <div className="max-w-full">
+        <div className="bg-[#FBFBFB] rounded-xl px-6 py-6 my-6 min-h-[calc(100vh-64px)]">
+                <div className="w-full">
                 {/* Header, Search, and Actions */}
                 <div className="flex items-center mb-8 w-full px-8">
                   <h1 className="font-poppins text-base font-medium leading-none tracking-normal text-[#4F4F4F]">
@@ -230,73 +230,80 @@ export default function AllDocuments() {
                 </div>
 
                 {/* Documents Table */}
-                <div className="bg-white rounded-b-lg border border-gray-200 overflow-hidden">                  <table className="w-full">
+                <div className="bg-white rounded-b-lg border border-gray-200 overflow-hidden">                  
+                  <table className="w-full">
                     <thead className="bg-[#E5F6F0]">
-                      <tr className="h-[43px]">
-                        <th className="w-12 px-6">
-                          <input
-                            type="checkbox"
-                            checked={selectedDocuments.length === documents.length && documents.length > 0}
-                            onChange={(e) => handleSelectAll(e.target.checked)}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                        </th>
-                        <th className="px-8 text-left font-poppins text-xs font-medium text-[#4F4F4F]">Name</th>
-                        {/* MODIFIED: Clickable header for date sorting */}
-                        <th 
-                          className="px-8 text-center font-poppins text-xs font-medium text-[#4F4F4F] whitespace-nowrap cursor-pointer select-none"
-                          onClick={handleDateSortToggle}
-                        >
-                          <div className="flex items-center justify-center">
-                            <span>Issued Date</span>
-                            {/* Conditionally render arrow icon based on sortBy state */}
-                            {sortBy === 'recent' 
-                              ? <ArrowDown className="w-4 h-4 ml-1" /> 
-                              : <ArrowUp className="w-4 h-4 ml-1" />}
-                          </div>
-                        </th>
-                        <th className="px-8 text-center font-poppins text-xs font-medium text-[#4F4F4F]">Status</th>
-                        <th className="px-8 text-center font-poppins text-xs font-medium text-[#4F4F4F]">Publisher</th>
-                        <th className="px-8 text-center font-poppins text-xs font-medium text-[#4F4F4F]">Uploaded At</th>
-                        <th className="px-8 text-center font-poppins text-xs font-medium text-[#4F4F4F]">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {sortedDocuments.map((document) => (
-                        <tr key={document.id} className="hover:bg-gray-50 transition-colors font-poppins text-xs font-medium text-[#767575]">
-                          <td className="px-6 py-4">
-                            <input
-                              type="checkbox"
-                              checked={selectedDocuments.includes(document.id)}
-                              onChange={(e) => handleSelectDocument(document.id, e.target.checked)}
-                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                            />
-                          </td>
-                          <td className="px-8 py-4 max-w-md">
-                            <Link to={`/documents/${document.id}`} className="hover:underline">
-                              {document.name}
-                            </Link>
-                          </td>
-                          <td className="px-8 py-4 text-center">{document.publicationDate}</td>
-                          <td className="px-8 py-4 text-center">
-                          <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(document.status)}`}>
-                              {document.status === 'COMPLETED' ? 'Processed' : document.status}
-                          </span>
-                          </td>
-                          <td className="px-8 py-4 text-center">{document.publisher}</td>
-                          <td className="px-8 py-4 text-center">{document.uploaded_at}</td>
-                          <td className="px-8 py-4">
-                            <div className="flex items-center justify-center space-x-3 text-[#1F4A75]">
-                              <button onClick={() => setViewingDocument(document)} className="transition-colors"><Eye className="w-4 h-4" /></button>
-                              <button onClick={() => handleDelete(document)} className="transition-colors"><Trash2 className="w-4 h-4" /></button>
-                              <button onClick={() => handleDownload(document)} className="transition-colors" disabled={downloading === document.id}>
-                                {downloading === document.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} 
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
+                    <tr className="h-[43px]">
+                      <th className="w-12 px-6">
+                        <input
+                          type="checkbox"
+                          checked={selectedDocuments.length === documents.length && documents.length > 0}
+                          onChange={(e) => handleSelectAll(e.target.checked)}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </th>
+                      <th className="px-8 text-left text-xs font-medium text-[#4F4F4F]">Name</th>
+                      
+                      <th
+                        className="px-8 text-center text-xs font-medium text-[#4F4F4F] cursor-pointer"
+                        onClick={handleDateSortToggle}
+                      >
+                        <div className="flex justify-center items-center whitespace-nowrap">
+                          <span>Upload Date</span>
+                          {sortBy === 'recent' ? <ArrowDown className="w-4 h-4 ml-1" /> : <ArrowUp className="w-4 h-4 ml-1" />}
+                        </div>
+                      </th>
+                      <th
+                        className="px-8 text-center text-xs font-medium text-[#4F4F4F] cursor-pointer"
+                        onClick={handleDateSortToggle}
+                      >
+                        <div className="flex justify-center items-center whitespace-nowrap">
+                          <span>Issue Date</span>
+                          {sortBy === 'recent' ? <ArrowDown className="w-4 h-4 ml-1" /> : <ArrowUp className="w-4 h-4 ml-1" />}
+                        </div>
+                      </th>
+                      <th className="px-8 text-center text-xs font-medium text-[#4F4F4F]">Status</th>
+                      <th className="px-8 text-center text-xs font-medium text-[#4F4F4F]">Publisher</th>
+                      <th className="px-8 text-center text-xs font-medium text-[#4F4F4F]">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                  {sortedDocuments.map((document) => (
+                    <tr key={document.id} className="hover:bg-gray-50 transition-colors text-xs font-medium text-[#767575]">
+                      <td className="px-6 py-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedDocuments.includes(document.id)}
+                          onChange={(e) => handleSelectDocument(document.id, e.target.checked)}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </td>
+                      <td className="px-8 py-4 max-w-md">
+                        <Link to={`/documents/${document.id}`} className="hover:underline">
+                          {document.name}
+                        </Link>
+                      </td>
+                      <td className="px-8 py-4 text-center">{document.uploaded_at}</td>
+                      <td className="px-8 py-4 text-center">{document.publicationDate}</td>
+                      <td className="px-8 py-4 text-center">
+                        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(document.status)}`}>
+                          {document.status === 'COMPLETED' ? 'Processed' : document.status}
+                        </span>
+                      </td>
+                      <td className="px-8 py-4 text-center">{document.publisher}</td>
+                      <td className="px-8 py-4">
+                        <div className="flex items-center justify-center space-x-3 text-[#1F4A75]">
+                          <button onClick={() => setViewingDocument(document)} className="transition-colors"><Eye className="w-4 h-4" /></button>
+                          <button onClick={() => handleDelete(document)} className="transition-colors"><Trash2 className="w-4 h-4" /></button>
+                          <button onClick={() => handleDownload(document)} className="transition-colors" disabled={downloading === document.id}>
+                            {downloading === document.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} 
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+
                   </table>
                 </div>
               </div>
