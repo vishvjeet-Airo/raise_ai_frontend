@@ -101,7 +101,7 @@ export const Sidebar: React.FC<SidebarProps> = () => {
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <img src="/document.png" alt="Documents" className="w-5 h-5" />
+                    <img src="/document.png" alt="Documents" className="w-[14px] h-[18px]" />
                     {!isCollapsed && <span>Documents</span>}
                   </div>
                   {!isCollapsed && (
@@ -123,7 +123,7 @@ export const Sidebar: React.FC<SidebarProps> = () => {
                 )}
               </li>
               
-              {/* AI Chat Bot Section */}
+              {/* Chat Bot Section */}
               <li>
                 <Link
                   to="/chatbot"
@@ -133,11 +133,29 @@ export const Sidebar: React.FC<SidebarProps> = () => {
                     isCollapsed && "justify-center"
                   )}
                 >
-                  <img src="/chatbot.png" alt="AI Chat Bot" className="w-5 h-5" />
-                  {!isCollapsed && <span>AI Chat Bot</span>}
+                  {/* Change w-5 h-5 to w-4 h-4 */}
+                  <img src="/chatbot.png" alt="Chat Bot" className="w-[16px] h-[15px]" />
+                  {!isCollapsed && <span>Chat Bot</span>}
+                </Link>
+              </li>
+
+              {/* Action Items Section */}
+              <li>
+                <Link
+                  to="/actionitems"
+                  className={twMerge(
+                    "w-full flex items-center gap-3 p-2 rounded-lg text-sm font-medium tracking-tightest",
+                    isActive("/actionitems") ? "bg-[#F0F5FF] text-[#052E65]" : "text-[#718096] hover:bg-gray-100",
+                    isCollapsed && "justify-center"
+                  )}
+                >
+                  {/* Change w-5 h-5 to w-4 h-4 */}
+                  <img src="/ActionItem.png" alt="Action Items" className="w-[14px] h-[17px]" />
+                  {!isCollapsed && <span>Action Items</span>}
                 </Link>
               </li>
             </ul>
+            
             
             {/* Separator Line */}
             {!isCollapsed && <div className="w-[208px] h-[2px] rounded-full bg-[#F6F6F6] mx-auto my-4" />}
