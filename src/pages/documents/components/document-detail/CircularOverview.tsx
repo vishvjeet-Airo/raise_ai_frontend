@@ -1,39 +1,32 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 export default function CircularOverview() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Circular Overview</CardTitle>
+    <Card className="border-0 shadow-sm">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg font-medium">Overview</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-3 gap-6">
           <div>
-            <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">ISSUING AUTHORITY</div>
-            <div className="text-sm text-gray-700">All authorised dealer Category-I<br />All category bank</div>
+            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">ISSUING AUTHORITY</div>
+            <div className="text-sm text-gray-900">All authorised dealer Category-<br />Ad category bank</div>
           </div>
           <div>
-            <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">REFERENCE NUMBER</div>
-            <div className="text-sm text-gray-700">Treasury, Foreign Exchange, Investment<br />Management, Compliance</div>
+            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">ISSUING DATE</div>
+            <div className="text-sm text-gray-900">12 May 2024</div>
           </div>
           <div>
-            <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">CIRCULAR TYPE</div>
-            <div className="text-sm text-gray-700">Guideline</div>
+            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">CIRCULAR TYPE</div>
+            <div className="text-sm text-gray-900">Guideline</div>
           </div>
           <div>
-            <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">DATE OF ISSUE</div>
-            <div className="text-sm text-gray-700">All authorised dealer Category-I<br />All category bank</div>
+            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">REFERENCE NUMBER</div>
+            <div className="text-sm text-gray-900">322534636</div>
           </div>
-          <div>
-            <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">EFFECTIVE DATE</div>
-            <div className="text-sm text-gray-700">Treasury, Foreign Exchange, Investment<br />Management, Compliance</div>
-          </div>
-          <div>
-            <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">DOCUMENT TYPE</div>
-            <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-              Active
-            </Badge>
+          <div className="col-span-2">
+            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">IMPACT AREAS</div>
+            <div className="text-sm text-gray-900">Treasury, Foreign Exchange, Investment<br />Management, Compliance</div>
           </div>
         </div>
       </CardContent>

@@ -4,7 +4,7 @@ export default function AIGeneratedSummary() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">AI Generated Summary</CardTitle>
+        <CardTitle className="text-lg">Summary</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="border-l-4 border-blue-500 pl-4 bg-blue-50 p-4 rounded-r-lg">
