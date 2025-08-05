@@ -2,17 +2,11 @@ import { Link } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
 import { ChevronRight } from "lucide-react";
 import DocumentHeader from "./components/document-detail/DocumentHeader";
-import ApplicableAndRelevance from "./components/document-detail/ApplicableAndRelevance";
 import CircularOverview from "./components/document-detail/CircularOverview";
 import AIGeneratedSummary from "./components/document-detail/AIGeneratedSummary";
 import KeyObligationsAndActionPoints from "./components/document-detail/KeyObligationsAndActionPoints";
-import KeyDataAndTables from "./components/document-detail/KeyDataAndTables";
-import ChartInvestmentLimits from "./components/document-detail/ChartInvestmentLimits";
-import DepartmentalActionItems from "./components/document-detail/DepartmentalActionItems";
 import HumanValidationRequired from "./components/document-detail/HumanValidationRequired";
-import RiskAndImpactAssessment from "./components/document-detail/RiskAndImpactAssessment";
 import ComparativeInsights from "./components/document-detail/ComparativeInsights";
-import OriginalDocument from "./components/document-detail/OriginalDocument";
 import DocumentTimeline from "./components/document-detail/DocumentTimeline";
 import ReportsAndExports from "./components/document-detail/ReportsAndExports";
 import { useState } from "react";
@@ -51,26 +45,16 @@ export default function DocumentDetail() {
             {/* Left Column - Main Content */}
             <div className="w-[731px] space-y-6">
               <DocumentHeader />
-              <ApplicableAndRelevance />
               <CircularOverview />
               <AIGeneratedSummary />
               <KeyObligationsAndActionPoints />
-              <KeyDataAndTables />
-              <ChartInvestmentLimits />
-              <DepartmentalActionItems />
             </div>
 
             {/* Right Column - Validation & Assessment */}
             <div className="w-[361px] space-y-6">
-              <HumanValidationRequired />
-              <RiskAndImpactAssessment />
-              <ComparativeInsights />
-              <OriginalDocument 
-                blob_url={document.blob_url} 
-                file_name={document.file_name}
-                onPreviewClick={handlePreviewClick}
-              />
               <DocumentTimeline />
+              <HumanValidationRequired />
+              <ComparativeInsights />
               <ReportsAndExports />
             </div>
           </div>
