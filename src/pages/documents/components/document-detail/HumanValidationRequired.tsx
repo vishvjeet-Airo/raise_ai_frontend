@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { ChevronUp, ChevronDown, Plus } from "lucide-react";
 
 interface ValidationChecks {
   verifyTableData: boolean;
@@ -18,79 +18,99 @@ export default function HumanValidationRequired() {
     approveAnalysis: false
   });
 
-  const handleValidationCheck = (key: keyof ValidationChecks) => {
-    setValidationChecks(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedEmail, setSelectedEmail] = useState("Admin Suresh");
+
+  const emailOptions = [
+    { name: "Admin Suresh", email: "", selected: true },
+    { name: "KKumar@gmail.com", email: "KKumar@gmail.com", selected: false },
+    { name: "Bhushantatil@gmail.com", email: "Bhushantatil@gmail.com", selected: false },
+    { name: "Advaitravel@gmail.com", email: "Advaitravel@gmail.com", selected: false }
+  ];
 
   const submitValidation = () => {
     console.log("Submitting validation:", validationChecks);
+    setIsDropdownOpen(false);
+  };
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const selectEmail = (name: string) => {
+    setSelectedEmail(name);
+    setIsDropdownOpen(false);
   };
 
   return (
-    <Card className="bg-yellow-50 border-yellow-200">
+    <Card className="bg-[#FFFFFF]">
       <CardHeader>
-        <CardTitle className="text-lg">Human validation Required</CardTitle>
+        <CardTitle className="font-poppins font-medium text-[16px] leading-[100%] tracking-[0] text-[#3F3F3F]">Human validation Required</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3 mb-6">
-          <label className="flex items-center space-x-3 cursor-pointer">
-            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-              validationChecks.verifyTableData
-                ? 'bg-green-500 border-green-500'
-                : 'border-gray-300'
-            }`}
-            onClick={() => handleValidationCheck('verifyTableData')}>
-              {validationChecks.verifyTableData && <Check className="w-3 h-3 text-white" />}
-            </div>
-            <span className="text-sm text-gray-700">Verify table data Accuracy</span>
-          </label>
+        <div className="relative">
+          <Button
+            onClick={toggleDropdown}
+            className="w-full bg-[#1F4A75] hover:bg-blue-700 flex items-center justify-center gap-2"
+          >
+            <span className="font-montserrat font-medium text-[14px] leading-[100%] tracking-[0] text-[#FFFFFF]">Send Validation</span>
+            {isDropdownOpen ? (
+              <ChevronUp className="w-4 h-4 text-white" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-white" />
+            )}
+          </Button>
 
-          <label className="flex items-center space-x-3 cursor-pointer">
-            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-              validationChecks.confirmDeadlineInterpretation
-                ? 'bg-green-500 border-green-500'
-                : 'border-gray-300'
-            }`}
-            onClick={() => handleValidationCheck('confirmDeadlineInterpretation')}>
-              {validationChecks.confirmDeadlineInterpretation && <Check className="w-3 h-3 text-white" />}
-            </div>
-            <span className="text-sm text-gray-700">Confirm Deadline interpretations</span>
-          </label>
+          {isDropdownOpen && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 p-4">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-medium text-gray-700">Submit To</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-blue-600 border-blue-600 hover:bg-blue-50 text-xs px-3 py-1 h-auto"
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  Add Email
+                </Button>
+              </div>
 
-          <label className="flex items-center space-x-3 cursor-pointer">
-            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-              validationChecks.reviewRiskAssessment
-                ? 'bg-green-500 border-green-500'
-                : 'border-gray-300'
-            }`}
-            onClick={() => handleValidationCheck('reviewRiskAssessment')}>
-              {validationChecks.reviewRiskAssessment && <Check className="w-3 h-3 text-white" />}
-            </div>
-            <span className="text-sm text-gray-700">Review Risk Assessment</span>
-          </label>
+              <div className="space-y-3">
+                {emailOptions.map((option, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                    onClick={() => selectEmail(option.name)}
+                  >
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                      selectedEmail === option.name 
+                        ? 'border-blue-500 bg-blue-500' 
+                        : 'border-gray-300'
+                    }`}>
+                      {selectedEmail === option.name && (
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900">
+                        {option.email || option.name}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-          <label className="flex items-center space-x-3 cursor-pointer">
-            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-              validationChecks.approveAnalysis
-                ? 'bg-green-500 border-green-500'
-                : 'border-gray-300'
-            }`}
-            onClick={() => handleValidationCheck('approveAnalysis')}>
-              {validationChecks.approveAnalysis && <Check className="w-3 h-3 text-white" />}
+              <div className="mt-4 pt-3 border-t border-gray-200">
+                <Button
+                  onClick={submitValidation}
+                  className="w-full bg-[#1F4A75] hover:bg-blue-700"
+                >
+                  <span className="font-montserrat font-medium text-[14px] leading-[100%] tracking-[0] text-[#FFFFFF]">Send Validation</span>
+                </Button>
+              </div>
             </div>
-            <span className="text-sm text-gray-700">Approve AI Analysis</span>
-          </label>
+          )}
         </div>
-
-        <Button
-          onClick={submitValidation}
-          className="w-full bg-blue-600 hover:bg-blue-700"
-        >
-          Submit Validation
-        </Button>
       </CardContent>
     </Card>
   );
