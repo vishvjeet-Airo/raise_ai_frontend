@@ -111,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = () => {
                 </button>
 
                 {documentsExpanded && !isCollapsed && (
-                  <div className="mt-2 pl-7 ml-[10px] border-l-2 border-gray-200 space-y-1">
+                  <div className="mt-2 pl-4 ml-[10px] border-l-2 border-gray-200 space-y-1">
                     <Link to="/documents" className={twMerge("block p-2 rounded-lg w-full text-xs font-medium tracking-tightest text-[#718096] hover:bg-gray-100", isActive("/documents") && "bg-[#F6F6F6]")}>
                       All Documents
                     </Link>
