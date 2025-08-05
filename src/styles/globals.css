@@ -118,3 +118,40 @@
   
   
 }
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  font-size: 0.875rem;
+  border: 1px solid #1F4A75;
+  border-radius: var(--radius); 
+  overflow: hidden; 
+}
+
+/* Styles for ALL table cells (headers and data) */
+.prose th,
+.prose td {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  background-color: #FBFBFB;
+  border-top: 1px solid #1F4A75;
+}
+
+.prose th:not(:last-child),
+.prose td:not(:last-child) {
+  border-right: 1px solid #1F4A75;
+}
+
+/* Specific styles for the table header */
+.prose thead th {
+  font-weight: 600;
+  color: #1F4A75;
+  border-bottom: 2px solid #1F4A75;
+}
+
+/* The very first row in the table (the header) should not have a top border */
+.prose tr:first-child th {
+  border-top: none;
+}
