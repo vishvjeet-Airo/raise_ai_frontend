@@ -33,16 +33,16 @@ export default function DocumentHeader({ fileName, issueDate, publisher, documen
             </p>
             
             <div className="flex gap-3 pt-2">
-              <Button 
+              <Button
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-medium"
                 onClick={onPreviewClick}
               >
                 <FileText className="w-4 h-4 mr-2" />
                 Preview Document
               </Button>
-              
-              <Button 
-                variant="outline" 
+
+              <Button
+                variant="outline"
                 className="border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 text-sm font-medium"
                 onClick={toggleChat}
               >

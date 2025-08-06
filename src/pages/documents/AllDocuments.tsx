@@ -1,11 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
-// Added ChevronUp for sorting indicator
-import { Search, ArrowDown, ArrowUp, Eye, Download, X, Loader2, Trash2 } from "lucide-react";
+// Added AlertTriangle for error states
+import { Search, ArrowDown, ArrowUp, Eye, Download, X, Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { API_BASE_URL } from "@/lib/config";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-
 
 interface Document {
   id: string;
@@ -19,35 +18,116 @@ interface Document {
   file_name: string;
 }
 
-// Modal component for viewing the document
+/**
+ * A modal component for viewing a PDF document.
+ * It fetches the PDF as a blob and creates a local object URL to bypass
+ * 'Content-Disposition: attachment' headers, preventing automatic downloads
+ * and allowing the PDF to be rendered inline within an iframe.
+ * @param {Document} document - The document object containing the URL and name.
+ * @param {function} onClose - The function to call when the modal should be closed.
+ */
 const DocumentViewerModal = ({ document, onClose }: { document: Document; onClose: () => void; }) => {
-  if (!document) return null;
+  const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Append #toolbar=0 to the URL to hide the default PDF toolbar
-  const pdfUrl = `${document.url}#toolbar=0`;
+  useEffect(() => {
+    // This effect runs when the modal is opened or the document changes.
+    if (!document?.url) {
+        setError("Document URL is missing.");
+        setIsLoading(false);
+        return;
+    }
+
+    // Reset states for the new document
+    setIsLoading(true);
+    setError(null);
+    setObjectUrl(null);
+
+    let localUrl: string | null = null;
+
+    const fetchPdfAsBlob = async () => {
+      try {
+        // Fetch the PDF from the blob_url provided by the API.
+        const response = await fetch(document.url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch PDF file: ${response.status} ${response.statusText}`);
+        }
+        // Convert the response into a Blob, which is raw file data.
+        const blob = await response.blob();
+        // Create a temporary, local URL that points to the blob data in memory.
+        localUrl = URL.createObjectURL(blob);
+        setObjectUrl(localUrl);
+      } catch (e: any) {
+        console.error("Error fetching PDF for viewing:", e);
+        setError("Could not load the document for preview.");
+      } finally {
+        // We set loading to false here in the success case, 
+        // but the iframe's onLoad will handle the final visual switch.
+      }
+    };
+
+    fetchPdfAsBlob();
+
+    // This is a cleanup function. It runs when the modal is closed.
+    // It's crucial for revoking the temporary URL to prevent memory leaks.
+    return () => {
+      if (localUrl) {
+        URL.revokeObjectURL(localUrl);
+      }
+    };
+  }, [document]); // Re-run this logic if the document prop changes.
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300"
+      aria-modal="true"
+      role="dialog"
+    >
       <div 
-        className="bg-white shadow-2xl flex flex-col transform transition-transform duration-300 animate-scale-in overflow-hidden w-[562px] h-[90vh]"
+        className="bg-white rounded-lg shadow-2xl flex flex-col transform transition-transform duration-300 animate-scale-in overflow-hidden w-full max-w-4xl h-[90vh]"
       >
-        <div className="flex items-center justify-end p-2 bg-[#1F4A75]">
-          <button onClick={onClose} className="text-white hover:text-white/80 p-1 rounded-full hover:bg-white/20 transition-colors">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between p-3 bg-[#1F4A75] text-white flex-shrink-0">
+          <h3 className="font-semibold text-lg truncate px-2" title={document.name}>{document.name}</h3>
+          <button 
+            onClick={onClose} 
+            className="text-white hover:text-white/80 p-1 rounded-full hover:bg-white/20 transition-colors"
+            aria-label="Close document viewer"
+          >
             <X className="w-6 h-6" />
           </button>
         </div>
-        <div className="flex-1 p-4 bg-white">
-          <iframe
-            src={pdfUrl}
-            title={document.name}
-            className="w-full h-full border-0"
-          />
+        
+        {/* Modal Body with Iframe and Loading/Error states */}
+        <div className="flex-1 bg-gray-200 relative">
+          {(isLoading || !objectUrl) && !error && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white">
+              <Loader2 className="w-8 h-8 animate-spin text-[#1F4A75]" />
+              <span className="ml-3 text-gray-600">Loading document...</span>
+            </div>
+          )}
+          {error && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white text-red-600">
+              <AlertTriangle className="w-10 h-10 mb-2" />
+              <p>{error}</p>
+            </div>
+          )}
+          {objectUrl && (
+            <iframe
+              // Use the local object URL here instead of the direct document.url
+              src={`${objectUrl}#toolbar=0&navpanes=0`}
+              title={document.name}
+              className={`w-full h-full border-0 transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+              // The iframe's onLoad event tells us when the PDF is actually rendered.
+              onLoad={() => setIsLoading(false)} 
+            />
+          )}
         </div>
       </div>
     </div>
   );
 };
-
 
 const DeleteConfirmationDialog = ({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void; }) => (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -61,7 +141,6 @@ const DeleteConfirmationDialog = ({ onConfirm, onCancel }: { onConfirm: () => vo
     </div>
   </div>
 );
-
 
 export default function AllDocuments() {
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
@@ -245,23 +324,20 @@ export default function AllDocuments() {
                       <th className="px-8 text-left text-xs font-medium text-[#4F4F4F]">Name</th>
                       
                       <th
-                        className="px-8 text-center text-xs font-medium text-[#4F4F4F] cursor-pointer"
-                        onClick={handleDateSortToggle}
-                      >
-                        <div className="flex justify-center items-center whitespace-nowrap">
-                          <span>Upload Date</span>
-                          {sortBy === 'recent' ? <ArrowDown className="w-4 h-4 ml-1" /> : <ArrowUp className="w-4 h-4 ml-1" />}
-                        </div>
-                      </th>
-                      <th
-                        className="px-8 text-center text-xs font-medium text-[#4F4F4F] cursor-pointer"
-                        onClick={handleDateSortToggle}
-                      >
-                        <div className="flex justify-center items-center whitespace-nowrap">
-                          <span>Issue Date</span>
-                          {sortBy === 'recent' ? <ArrowDown className="w-4 h-4 ml-1" /> : <ArrowUp className="w-4 h-4 ml-1" />}
-                        </div>
-                      </th>
+                      className="px-8 text-center text-xs font-medium text-[#4F4F4F] cursor-pointer"
+                      onClick={handleDateSortToggle}
+                    >
+                      <div className="flex justify-center items-center whitespace-nowrap">
+                        <span>Upload Date</span>
+                        {sortBy === 'recent' ? <ArrowDown className="w-4 h-4 ml-1" /> : <ArrowUp className="w-4 h-4 ml-1" />}
+                      </div>
+                    </th>
+                    {/* Removed onClick from Issue Date to avoid conflicting sort controls */}
+                    <th className="px-8 text-center text-xs font-medium text-[#4F4F4F]">
+                      <div className="flex justify-center items-center whitespace-nowrap">
+                        <span>Issue Date</span>
+                      </div>
+                    </th>
                       <th className="px-8 text-center text-xs font-medium text-[#4F4F4F]">Status</th>
                       <th className="px-8 text-center text-xs font-medium text-[#4F4F4F]">Publisher</th>
                       <th className="px-8 text-center text-xs font-medium text-[#4F4F4F]">Actions</th>
@@ -293,9 +369,9 @@ export default function AllDocuments() {
                       <td className="px-8 py-4 text-center">{document.publisher}</td>
                       <td className="px-8 py-4">
                         <div className="flex items-center justify-center space-x-3 text-[#1F4A75]">
-                          <button onClick={() => setViewingDocument(document)} className="transition-colors"><Eye className="w-4 h-4" /></button>
-                          <button onClick={() => handleDelete(document)} className="transition-colors"><Trash2 className="w-4 h-4" /></button>
-                          <button onClick={() => handleDownload(document)} className="transition-colors" disabled={downloading === document.id}>
+                          <button onClick={() => setViewingDocument(document)} className="transition-colors hover:text-blue-700" title="View document"><Eye className="w-4 h-4" /></button>
+                          <button onClick={() => handleDelete(document)} className="transition-colors hover:text-red-600" title="Delete document"><Trash2 className="w-4 h-4" /></button>
+                          <button onClick={() => handleDownload(document)} className="transition-colors hover:text-blue-700" disabled={downloading === document.id} title="Download document">
                             {downloading === document.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} 
                           </button>
                         </div>

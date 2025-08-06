@@ -51,20 +51,18 @@ export default function DocumentDetail() {
             </span>
           </div>
 
-          {/* Document Header */}
-          <div className="mb-6">
-            <DocumentHeader 
-              fileName={document.file_name}
-              issueDate={document.issue_date}
-              publisher={document.publisher}
-              documentId={id || "15"}
-              onPreviewClick={handlePreviewClick}
-            />
-          </div>
+          
 
           <div className="flex gap-6">
             {/* Left Column - Main Content */}
             <div className="w-[731px] space-y-6">
+              <DocumentHeader
+                fileName={document.file_name}
+                issueDate={document.issue_date}
+                publisher={document.publisher}
+                documentId={id || "15"}
+                onPreviewClick={handlePreviewClick}
+              />
               <CircularOverview />
               <AIGeneratedSummary />
               <KeyObligationsAndActionPoints />
