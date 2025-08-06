@@ -1,10 +1,52 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Edit } from "lucide-react";
 
 export default function KeyObligationsAndActionPoints() {
+  const obligations = [
+    {
+      title: "Ensure FPI investments stay within prescribed limits - 6% for G-Secs, 2% for SDGs, and 15% for corporate bonds",
+      overview: "Implement new absolute limit amounts as specified in Table I for different half-year periods",
+      reference: "Immediate implementation required | High Priority",
+      responsible: "AD Category-I banks must inform constituents and customers about the circular contents",
+      deadline: "Within 15 days of issue | Medium Priority"
+    },
+    {
+      title: "Overview/Description:",
+      overview: "Implement new absolute limit amounts as specified in Table I for different half-year periods",
+      reference: "Immediate implementation required | High Priority",
+      responsible: "AD Category-I banks must inform constituents and customers about the circular contents",
+      deadline: "Within 15 days of issue | Medium Priority"
+    },
+    {
+      title: "Reference Page Number and Section:",
+      overview: "Monitor and maintain CDS sales limit at 5% of outstanding corporate bonds (₹2,93,612 crore approx.)",
+      reference: "Ongoing compliance | Medium Priority",
+      responsible: "AD Category-I banks must inform constituents and customers about the circular contents",
+      deadline: "Within 15 days of issue | Medium Priority"
+    },
+    {
+      title: "Responsible Party:",
+      overview: "AD Category-I banks must inform constituents and customers about the circular contents",
+      reference: "Within 15 days of issue | Medium Priority",
+      responsible: "AD Category-I banks must inform constituents and customers about the circular contents",
+      deadline: "Within 15 days of issue | Medium Priority"
+    },
+    {
+      title: "Deadline:",
+      overview: "AD Category-I banks must inform constituents and customers about the circular contents",
+      reference: "Within 15 days of issue | Medium Priority",
+      responsible: "AD Category-I banks must inform constituents and customers about the circular contents",
+      deadline: "Within 15 days of issue | Medium Priority"
+    }
+  ];
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Key Obligations & Action Points</CardTitle>
+    <Card className="border-0 shadow-sm">
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg font-medium">Obligations</CardTitle>
+          <Edit className="w-4 h-4 text-gray-400" />
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
