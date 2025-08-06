@@ -73,8 +73,7 @@ export default function ChatPopup({ isOpen, onClose, documentId, documentName }:
           session_id: currentSessionId,
           message: messageToSend,
           mode: "single",
-          document_id: parseInt(documentId, 10) 
-
+          doc_id: parseInt(documentId, 10) 
         }),
       });
 
