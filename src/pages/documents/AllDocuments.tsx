@@ -160,31 +160,30 @@ export default function AllDocuments() {
         throw new Error('Failed to fetch documents');
       }
       const data = await response.json();
-      return data.map((doc: any) => {
-        const uploadedDate = new Date(doc.publication_date);
-        const uploadedAtDate = doc.uploaded_at ? new Date(doc.uploaded_at) : null;
-        return{
-        id: doc.id.toString(),
-        name: doc.title || 'No Title',
-        publicationDate: uploadedDate.toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-        }),
-        uploadedAtDate: uploadedDate,
-        uploaded_at: uploadedAtDate ? uploadedAtDate.toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-        }) : 'N/A',
-        status: doc.status,
-        publisher: doc.issuing_authority || 'N/A',
-        url: doc.blob_url,
-        file_name: doc.file_name,
-        };
-      });
-    },
-  });
+      // The corrected version
+return data.map((doc: any) => {
+  // Check if the date fields from the API are valid before creating Date objects.
+  const publicationDateObj = doc.publication_date ? new Date(doc.publication_date) : null;
+  const uploadedAtDateObj = doc.uploaded_at ? new Date(doc.uploaded_at) : null;
+
+  return {
+    id: doc.id.toString(),
+    name: doc.title || 'No Title',
+    publicationDate: publicationDateObj 
+      ? publicationDateObj.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) 
+      : 'N/A',
+    uploaded_at: uploadedAtDateObj 
+      ? uploadedAtDateObj.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) 
+      : 'N/A',
+    uploadedAtDate: uploadedAtDateObj, 
+    status: doc.status,
+    publisher: doc.issuing_authority || 'N/A',
+    url: doc.blob_url,
+    file_name: doc.file_name,
+  };
+});
+  }
+});
 
   const deleteMutation = useMutation({
     mutationFn: async (fileName: string) => {

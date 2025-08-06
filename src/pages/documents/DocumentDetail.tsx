@@ -9,12 +9,30 @@ import HumanValidationRequired from "./components/document-detail/HumanValidatio
 import ComparativeInsights from "./components/document-detail/ComparativeInsights";
 import DocumentTimeline from "./components/document-detail/DocumentTimeline";
 import ReportsAndExports from "./components/document-detail/ReportsAndExports";
-import { useState } from "react";
+import { useState, createContext, useContext } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useParams, useLocation } from "react-router-dom";
+import ChatSidebar from "@/components/ChatSidebar";
+
+// Create context for chat sidebar state
+const ChatSidebarContext = createContext<{
+  isChatOpen: boolean;
+  setIsChatOpen: (open: boolean) => void;
+  documentId: string;
+  documentName: string;
+} | null>(null);
+
+export const useChatSidebar = () => {
+  const context = useContext(ChatSidebarContext);
+  if (!context) {
+    throw new Error('useChatSidebar must be used within ChatSidebarProvider');
+  }
+  return context;
+};
 
 export default function DocumentDetail() {
   const [showPdfViewer, setShowPdfViewer] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const { id } = useParams();
   const location = useLocation();
   
@@ -35,58 +53,75 @@ export default function DocumentDetail() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50">
-      <Sidebar />
-      
-      <div className="flex-1 p-6 overflow-y-auto">
-        <div className="max-w-7xl">
-          {/* Breadcrumb */}
-          <div className="flex items-center space-x-2 text-sm text-gray-600 mb-6">
-            <Link to="/documents" className="hover:text-gray-900 transition-colors">
-              All Documents
-            </Link>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-[#1F4A75] font-semibold" style={{ fontFamily: 'Poppins', fontWeight: 500, fontSize: '16px', lineHeight: '100%', letterSpacing: '0%' }}>
-              {document.file_name}
-            </span>
-          </div>
-
-          
-
-          <div className="flex gap-6">
-            {/* Left Column - Main Content */}
-            <div className="w-[731px] space-y-6">
-              <DocumentHeader
-                fileName={document.file_name}
-                issueDate={document.issue_date}
-                publisher={document.publisher}
-                documentId={id || "15"}
-                onPreviewClick={handlePreviewClick}
-              />
-              <CircularOverview />
-              <AIGeneratedSummary />
-              <KeyObligationsAndActionPoints />
+    <ChatSidebarContext.Provider value={{
+      isChatOpen,
+      setIsChatOpen,
+      documentId: id || "15",
+      documentName: document.file_name
+    }}>
+      <div className="flex h-screen bg-slate-50">
+        <Sidebar />
+        
+        <div className={`flex-1 p-6 overflow-y-auto transition-all duration-300 ${isChatOpen ? 'mr-80' : ''}`}>          
+          <div className="max-w-7xl">
+            {/* Breadcrumb */}
+            <div className="flex items-center space-x-2 text-sm text-gray-600 mb-6">
+              <Link to="/documents" className="hover:text-gray-900 transition-colors"  style={{ font: 'poppins', fontWeight: 400, fontSize: '16px', lineHeight: '100%', letterSpacing: '0%' }}>
+                All Documents
+              </Link>
+              <ChevronRight className="w-4 h-4" />
+              <span className="text-[#1F4A75] font-semibold" style={{ font: 'poppins', fontWeight: 400, fontSize: '16px', lineHeight: '100%', letterSpacing: '0%' }}>
+                {document.file_name}
+              </span>
             </div>
 
-            {/* Right Column - Validation & Assessment */}
-            <div className="w-[361px] space-y-6">
-              <DocumentTimeline />
-              <HumanValidationRequired />
-              <ComparativeInsights />
-              <ReportsAndExports />
+            <div className="flex gap-5">
+              {/* Left Column - Main Content */}
+              <div className={`space-y-6 transition-all duration-300 ${isChatOpen ? 'w-full max-w-[500px]' : 'w-[731px]'}`}>
+                <DocumentHeader
+                  fileName={document.file_name}
+                  issueDate={document.issue_date}
+                  publisher={document.publisher}
+                  documentId={id || "15"}
+                  onPreviewClick={handlePreviewClick}
+                />
+                <CircularOverview />
+                <AIGeneratedSummary />
+                <KeyObligationsAndActionPoints />
+              </div>
+
+              {/* Right Column - Validation & Assessment */}
+              <div className={`space-y-6 transition-all duration-300 ${isChatOpen ? 'w-full max-w-[300px]' : 'w-[361px]'}`}>
+                <DocumentTimeline />
+                <HumanValidationRequired />
+                <ComparativeInsights />
+                <ReportsAndExports />
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
+        {/* Chat Sidebar */}
+        <div className={`fixed top-0 right-0 h-full transition-transform duration-300 ease-in-out z-30 ${
+          isChatOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}>
+          <ChatSidebar
+            isOpen={isChatOpen}
+            onClose={() => setIsChatOpen(false)}
+            documentId={id}
+            documentName={document.file_name}
+          />
+        </div>
+      </div>
+      
       <Dialog open={showPdfViewer} onOpenChange={setShowPdfViewer}>
-        <DialogContent className="max-w-4xl h-[90vh]">
+        <DialogContent className="max-w-3xl h-[90vh]">
           <DialogHeader>
             <DialogTitle>{document.file_name}</DialogTitle>
           </DialogHeader>
           <iframe src={document.blob_url} width="100%" height="100%" className="border-none"></iframe>
         </DialogContent>
       </Dialog>
-    </div>
+    </ChatSidebarContext.Provider>
   );
 }

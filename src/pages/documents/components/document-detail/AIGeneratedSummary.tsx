@@ -7,7 +7,7 @@ export default function AIGeneratedSummary() {
         <CardTitle className="text-lg">Summary</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="border-l-4 border-blue-500 pl-4 bg-blue-50 p-4 rounded-r-lg">
+        <div className="border-l-4 border-blue-500 pl-4 bg-blue-50 p-2 rounded-r-lg">
           <p className="text-sm text-gray-700 leading-relaxed">
             The balance sheet of a monetary authority is unique in its importance, derived not only as the source of
             monetary creation but also as a description of the relationships with the government on the one hand and

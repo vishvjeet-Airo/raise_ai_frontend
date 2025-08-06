@@ -10,7 +10,7 @@ export default function CircularOverview() {
         <div className="grid grid-cols-3 gap-6">
           <div>
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">ISSUING AUTHORITY</div>
-            <div className="text-sm text-gray-900">All authorised dealer Category-<br />Ad category bank</div>
+            <div className="text-sm text-gray-900">All authorised dealer Category</div>
           </div>
           <div>
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">ISSUING DATE</div>
