@@ -2,7 +2,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 
-export default function ReportsAndExports() {
+interface ReportsAndExportsProps {
+  documentTitle?: string;
+  documentUrl?: string;
+}
+
+export default function ReportsAndExports({ documentTitle, documentUrl }: ReportsAndExportsProps) {
+  const handleDownloadOriginal = () => {
+    if (documentUrl) {
+      const link = document.createElement('a');
+      link.href = documentUrl;
+      link.download = documentTitle || 'document';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -26,11 +42,16 @@ export default function ReportsAndExports() {
                   </div>
                   <div>
                     {/* Decreased font size */}
-                    <p className="text-xs font-medium">Executive Authority</p>
+                    <p className="text-xs font-medium">{documentTitle || "Executive Authority"}</p>
                   </div>
                 </div>
                 {/* Adjusted button height and icon size */}
-                <Button size="sm" className="h-7 bg-blue-600 hover:bg-blue-700">
+                <Button 
+                  size="sm" 
+                  className="h-7 bg-blue-600 hover:bg-blue-700"
+                  onClick={handleDownloadOriginal}
+                  disabled={!documentUrl}
+                >
                   <Download className="w-3 h-3 mr-1" />
                   Download
                 </Button>

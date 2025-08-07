@@ -354,7 +354,11 @@ return data.map((doc: any) => {
                         />
                       </td>
                       <td className="px-8 py-4 max-w-md">
-                        <Link to={`/documents/${document.id}`} className="hover:underline">
+                        <Link 
+                          to={`/documents/${document.id}`} 
+                          state={{ document: document }}
+                          className="hover:underline"
+                        >
                           {document.name}
                         </Link>
                       </td>
