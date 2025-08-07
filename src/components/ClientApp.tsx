@@ -9,6 +9,7 @@ import AllDocuments from "@/pages/documents/AllDocuments";
 import DocumentDetail from "@/pages/documents/DocumentDetail";
 import NotFound from "@/pages/error/NotFound";
 import ChatBot from "@/pages/chatbot";
+import ActionItems from "@/pages/actionitems";
 
 // Custom hook to get the authentication token
 const useAuth = () => {
@@ -68,6 +69,7 @@ function RouterContent() {
         <Route path="/upload" element={<Upload />} />
         <Route path="/documents/:id" element={<DocumentDetail />} />
         <Route path="/chatbot" element={<ChatBot />} />
+        <Route path="/actionitems" element={<ActionItems />} />
       </Route>
 
       {/* Fallback Route */}

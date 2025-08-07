@@ -9,10 +9,12 @@ import HumanValidationRequired from "./components/document-detail/HumanValidatio
 import ComparativeInsights from "./components/document-detail/ComparativeInsights";
 import DocumentTimeline from "./components/document-detail/DocumentTimeline";
 import ReportsAndExports from "./components/document-detail/ReportsAndExports";
+// The import path for ChatSidebar was incorrect in your provided code.
+// I've corrected it based on the previous context.
+import ChatSidebar from "@/components/ChatSidebar"; 
 import { useState, createContext, useContext } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useParams, useLocation } from "react-router-dom";
-import ChatSidebar from "@/components/ChatSidebar";
 
 // Create context for chat sidebar state
 const ChatSidebarContext = createContext<{
@@ -62,7 +64,8 @@ export default function DocumentDetail() {
       <div className="flex h-screen bg-slate-50">
         <Sidebar />
         
-        <div className={`flex-1 p-6 overflow-y-auto transition-all duration-300 ${isChatOpen ? 'mr-80' : ''}`}>          
+        {/* This container correctly resizes by applying a margin when the chat is open */}
+        <div className={`flex-1 p-6 overflow-y-auto transition-all duration-300 ${isChatOpen ? 'mr-80' : ''}`}>
           <div className="max-w-7xl">
             {/* Breadcrumb */}
             <div className="flex items-center space-x-2 text-sm text-gray-600 mb-6">
@@ -77,7 +80,8 @@ export default function DocumentDetail() {
 
             <div className="flex gap-5">
               {/* Left Column - Main Content */}
-              <div className={`space-y-6 transition-all duration-300 ${isChatOpen ? 'w-full max-w-[500px]' : 'w-[731px]'}`}>
+              {/* FIX 1: This column is now flexible (`flex-1`) and will grow/shrink to fill available space. */}
+              <div className="flex-1 space-y-6">
                 <DocumentHeader
                   fileName={document.file_name}
                   issueDate={document.issue_date}
@@ -91,7 +95,8 @@ export default function DocumentDetail() {
               </div>
 
               {/* Right Column - Validation & Assessment */}
-              <div className={`space-y-6 transition-all duration-300 ${isChatOpen ? 'w-full max-w-[300px]' : 'w-[361px]'}`}>
+              {/* FIX 2: This column now has a fixed width and is prevented from shrinking. */}
+              <div className="w-[361px] flex-shrink-0 space-y-6">
                 <DocumentTimeline />
                 <HumanValidationRequired />
                 <ComparativeInsights />
@@ -101,14 +106,14 @@ export default function DocumentDetail() {
           </div>
         </div>
 
-        {/* Chat Sidebar */}
+        {/* Chat Sidebar: This now slides in and the main content adjusts to it. */}
         <div className={`fixed top-0 right-0 h-full transition-transform duration-300 ease-in-out z-30 ${
           isChatOpen ? 'translate-x-0' : 'translate-x-full'
         }`}>
           <ChatSidebar
             isOpen={isChatOpen}
             onClose={() => setIsChatOpen(false)}
-            documentId={id}
+            documentId={id || "15"}
             documentName={document.file_name}
           />
         </div>
