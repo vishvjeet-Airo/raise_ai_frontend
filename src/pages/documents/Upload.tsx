@@ -3,6 +3,7 @@ import { useState, useRef, useCallback } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { toast } from "sonner";
 import { Cloud, X, FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface UploadFile {
   id: string;
@@ -27,6 +28,8 @@ export default function Upload() {
   const [allCompleted, setAllCompleted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Initialize the navigate function
+  const navigate = useNavigate();
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 B';
@@ -172,8 +175,7 @@ export default function Upload() {
 
     if (!hasFilesToSubmit) {
       toast.info('No completed PDF files found for submission.');
-      setAllCompleted(false);
-      setUploadedFiles([]);
+      setIsSubmitting(false); // Reset submitting state
       return;
     }
 
@@ -189,19 +191,30 @@ export default function Upload() {
 
         if (Array.isArray(results)) {
           let allSuccess = true;
+          let anyFileSucceeded = false; // Track if at least one file succeeds
+
           results.forEach((result: any) => {
             if (result.success) {
               toast.success(`File ${result.filename} uploaded successfully!`);
+              anyFileSucceeded = true; // Mark that a success occurred
             } else {
               allSuccess = false;
               toast.error(`Failed to upload ${result.filename}: ${result.detail}`);
             }
           });
+
           if (allSuccess && results.length > 1) {
             toast.success('All selected PDF files submitted successfully!');
-          } else if (results.length === 0) {
-            toast.error('No response from server for submitted files.');
           }
+
+          // If any file was uploaded successfully, redirect after a short delay.
+          if (anyFileSucceeded) {
+            setTimeout(() => {
+              navigate('/documents'); // Navigate to the All Documents page
+            }, 2500); 
+            return;
+          }
+
         } else {
           console.error('Backend response is not an array:', responseData);
           toast.error('Unexpected response from server. Check console for details.');
@@ -215,10 +228,10 @@ export default function Upload() {
       toast.error('Error during API upload. Check console for details.');
     }
     finally {
-      // --- Add this finally block ---
       setIsSubmitting(false);
     }
 
+    // This code will now only run if no files were successfully uploaded
     setAllCompleted(false);
     setUploadedFiles([]);
   };
@@ -369,17 +382,16 @@ export default function Upload() {
                                     : 'opacity-0 pointer-events-none'
                     }`}
                   >
-                   {/* --- Add conditional text/spinner --- */}
                   {isSubmitting ? (
-                      <>
-                          <Cloud className="mr-2 h-4 w-4 animate-pulse" />
-                          Submitting...
-                      </>
-                  ) : (
-                      'Submit'
-                  )}
-              </button>
-          </div>
+                        <>
+                            <Cloud className="mr-2 h-4 w-4 animate-pulse" />
+                            Submitting...
+                        </>
+                    ) : (
+                        'Submit'
+                    )}
+                  </button>
+              </div>
               )}
               
             </div>
