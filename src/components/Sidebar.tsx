@@ -153,8 +153,23 @@ export const Sidebar: React.FC<SidebarProps> = () => {
                   {!isCollapsed && <span>Action Items</span>}
                 </Link>
               </li>
-            </ul>
             
+              {/* Company Profile Section */}
+              <li>
+                <Link
+                  to="/company"
+                  className={twMerge(
+                    "w-full flex items-center gap-3 p-2 rounded-lg text-sm font-medium tracking-tightest",
+                    isActive("/company") ? "bg-[#F0F5FF] text-[#052E65]" : "text-[#718096] hover:bg-gray-100",
+                    isCollapsed && "justify-center"
+                  )}
+                >
+                  {/* Change w-5 h-5 to w-4 h-4 */}
+                  <img src="/companyProfile.png" alt="Company Profile" className="w-[14px] h-[17px]" />
+                  {!isCollapsed && <span>Company Profile</span>}
+                </Link>
+              </li>
+            </ul>
             
             {/* Separator Line */}
             {!isCollapsed && <div className="w-[208px] h-[2px] rounded-full bg-[#F6F6F6] mx-auto my-4" />}

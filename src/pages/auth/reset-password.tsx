@@ -360,7 +360,7 @@ export default function ResetPassword() {
           {/* Frame Image */}
           <div className="mt-9 mb-7 relative flex flex-col items-center justify-center">
             <img 
-              src="/frame.png" 
+              src="/Frame.png" 
               alt="Frame" 
               width="411"
               height="509"
