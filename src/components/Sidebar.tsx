@@ -9,8 +9,11 @@ import {
   LogOut,
   Menu,
   MessageCircle,
+  Settings,
   X,
 } from "lucide-react";
+import { SupportModal } from "./SupportModal";
+import { SettingsModal } from "./SettingsModal";
 
 // It's good practice to define props, even if they are empty for now.
 // This makes the component easier to extend later.
@@ -20,6 +23,8 @@ export const Sidebar: React.FC<SidebarProps> = () => {
   const [documentsExpanded, setDocumentsExpanded] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -182,10 +187,22 @@ export const Sidebar: React.FC<SidebarProps> = () => {
               // Expanded view
               <ul className="space-y-1">
                 <li>
-                  <Link to="/help" className="flex items-center gap-3 p-2 text-sm font-medium leading-5 tracking-tightest text-[#757575] hover:bg-gray-100 rounded-lg">
+                  <button
+                    onClick={() => setShowSupportModal(true)}
+                    className="flex items-center gap-3 p-2 text-sm font-medium leading-5 tracking-tightest text-[#757575] hover:bg-gray-100 rounded-lg w-full"
+                  >
                     <HelpCircle className="w-5 h-5" />
-                    <span>Help</span>
-                  </Link>
+                    <span>Help & Support</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => setShowSettingsModal(true)}
+                    className="flex items-center gap-3 p-2 text-sm font-medium leading-5 tracking-tightest text-[#757575] hover:bg-gray-100 rounded-lg w-full"
+                  >
+                    <Settings className="w-5 h-5" />
+                    <span>Settings</span>
+                  </button>
                 </li>
                 <li>
                   <button onClick={handleLogout} className="flex items-center gap-3 p-2 text-sm font-medium leading-5 tracking-tightest text-[#D55F5A] hover:bg-red-50 rounded-lg w-full">
@@ -198,9 +215,20 @@ export const Sidebar: React.FC<SidebarProps> = () => {
               // Collapsed view
               <ul className="space-y-2">
                 <li>
-                  <Link to="/help" className="flex justify-center p-2 rounded-lg text-[#757575] hover:bg-gray-100">
+                  <button
+                    onClick={() => setShowSupportModal(true)}
+                    className="flex justify-center p-2 rounded-lg text-[#757575] hover:bg-gray-100 w-full"
+                  >
                     <HelpCircle className="w-5 h-5" />
-                  </Link>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => setShowSettingsModal(true)}
+                    className="flex justify-center p-2 rounded-lg text-[#757575] hover:bg-gray-100 w-full"
+                  >
+                    <Settings className="w-5 h-5" />
+                  </button>
                 </li>
                 <li>
                   <button onClick={handleLogout} className="flex justify-center p-2 rounded-lg text-[#D55F5A] hover:bg-red-50 w-full">
@@ -219,6 +247,16 @@ export const Sidebar: React.FC<SidebarProps> = () => {
           <X className="w-5 h-5" />
         </button>
       </div>
+
+      {/* Modals */}
+      <SupportModal
+        isOpen={showSupportModal}
+        onClose={() => setShowSupportModal(false)}
+      />
+      <SettingsModal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+      />
     </>
   );
 };

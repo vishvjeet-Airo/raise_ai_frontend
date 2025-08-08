@@ -2,6 +2,7 @@ import { API_BASE_URL } from "@/lib/config";
 import { useState } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, HelpCircle } from "lucide-react";
+import { SupportModal } from "@/components/SupportModal";
 
 async function loginUser({ username, password }: { username: string; password: string }) {
   const params = new URLSearchParams();
@@ -40,6 +41,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showSupportModal, setShowSupportModal] = useState(false);
   const navigate = useNavigate();
 
   const validateForm = () => {
@@ -349,7 +351,10 @@ export default function Login() {
       
         {/* Mobile Support Button */}
         <div className="lg:hidden fixed top-4 right-4 z-10">
-          <button className="flex items-center space-x-1 text-[10px] text-gray-600 hover:text-gray-900 transition-colors bg-white rounded-full px-2 py-1 shadow-md">
+          <button
+            onClick={() => setShowSupportModal(true)}
+            className="flex items-center space-x-1 text-[10px] text-gray-600 hover:text-gray-900 transition-colors bg-white rounded-full px-2 py-1 shadow-md"
+          >
             <HelpCircle className="w-3 h-3" />
             <span className="text-[8px]">Support</span>
           </button>
@@ -360,8 +365,9 @@ export default function Login() {
       <div className="hidden lg:flex flex-1 relative overflow-hidden" style={{ background: '#052E65' }}>
         {/* Support Button */}
         <div className="absolute top-6 left-12 z-10">
-          <button 
-            className="flex items-center space-x-2 transition-colors"
+          <button
+            onClick={() => setShowSupportModal(true)}
+            className="flex items-center space-x-2 transition-colors hover:opacity-80"
             style={{
               width: '120px',
               height: '30px',
@@ -374,9 +380,9 @@ export default function Login() {
               color: '#F7FAFC'
             }}
           >
-            <img 
-              src="/MdOutlineSupportAgent.png" 
-              alt="Support Agent" 
+            <img
+              src="/MdOutlineSupportAgent.png"
+              alt="Support Agent"
               className="w-4 h-4"
             />
             <span>Support</span>
@@ -472,6 +478,12 @@ export default function Login() {
           </div>
         </div>
       )}
+
+      {/* Support Modal */}
+      <SupportModal
+        isOpen={showSupportModal}
+        onClose={() => setShowSupportModal(false)}
+      />
     </div>
   );
 }
