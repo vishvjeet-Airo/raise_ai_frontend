@@ -9,9 +9,7 @@ import HumanValidationRequired from "./components/document-detail/HumanValidatio
 import ComparativeInsights from "./components/document-detail/ComparativeInsights";
 import DocumentTimeline from "./components/document-detail/DocumentTimeline";
 import ReportsAndExports from "./components/document-detail/ReportsAndExports";
-// The import path for ChatSidebar was incorrect in your provided code.
-// I've corrected it based on the previous context.
-import ChatSidebar from "@/components/ChatSidebar"; 
+import ChatSidebar from "./components/document-detail/ChatSidebar"; 
 import { useState, createContext, useContext } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useParams, useLocation } from "react-router-dom";

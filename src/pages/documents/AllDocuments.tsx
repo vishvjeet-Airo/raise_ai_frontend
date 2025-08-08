@@ -313,14 +313,8 @@ return data.map((doc: any) => {
                     <thead className="bg-[#E5F6F0]">
                     <tr className="h-[43px]">
                       <th className="w-12 px-6">
-                        <input
-                          type="checkbox"
-                          checked={selectedDocuments.length === documents.length && documents.length > 0}
-                          onChange={(e) => handleSelectAll(e.target.checked)}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
                       </th>
-                      <th className="px-8 text-left text-xs font-medium text-[#4F4F4F]">Name</th>
+                      <th className="text-left text-xs font-medium text-[#4F4F4F]">Name</th>
                       
                       <th
                       className="px-8 text-center text-xs font-medium text-[#4F4F4F] cursor-pointer"
@@ -343,44 +337,48 @@ return data.map((doc: any) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                  {sortedDocuments.map((document) => (
-                    <tr key={document.id} className="hover:bg-gray-50 transition-colors text-xs font-medium text-[#767575]">
-                      <td className="px-6 py-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedDocuments.includes(document.id)}
-                          onChange={(e) => handleSelectDocument(document.id, e.target.checked)}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="px-8 py-4 max-w-md">
-                        <Link 
-                          to={`/documents/${document.id}`} 
-                          state={{ document: document }}
-                          className="hover:underline"
-                        >
-                          {document.name}
-                        </Link>
-                      </td>
-                      <td className="px-8 py-4 text-center">{document.uploaded_at}</td>
-                      <td className="px-8 py-4 text-center">{document.publicationDate}</td>
-                      <td className="px-8 py-4 text-center">
-                        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(document.status)}`}>
-                          {document.status === 'COMPLETED' ? 'Processed' : document.status}
-                        </span>
-                      </td>
-                      <td className="px-8 py-4 text-center">{document.publisher}</td>
-                      <td className="px-8 py-4">
-                        <div className="flex items-center justify-center space-x-3 text-[#1F4A75]">
-                          <button onClick={() => setViewingDocument(document)} className="transition-colors hover:text-blue-700" title="View document"><Eye className="w-4 h-4" /></button>
-                          <button onClick={() => handleDelete(document)} className="transition-colors hover:text-red-600" title="Delete document"><Trash2 className="w-4 h-4" /></button>
-                          <button onClick={() => handleDownload(document)} className="transition-colors hover:text-blue-700" disabled={downloading === document.id} title="Download document">
-                            {downloading === document.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} 
-                          </button>
-                        </div>
+                  {/* This logic checks if there are any documents to display */}
+                  {sortedDocuments.length > 0 ? (
+                    sortedDocuments.map((document) => (
+                      <tr key={document.id} className="hover:bg-gray-50 transition-colors text-xs font-medium text-[#767575]">
+                        <td className="px-6 py-4"></td>
+                        <td className="py-4 max-w-md">
+                          <Link 
+                            to={`/documents/${document.id}`} 
+                            state={{ document: document }}
+                            className="hover:underline"
+                          >
+                            {document.name}
+                          </Link>
+                        </td>
+                        <td className="px-8 py-4 text-center">{document.uploaded_at}</td>
+                        <td className="px-8 py-4 text-center">{document.publicationDate}</td>
+                        <td className="px-8 py-4 text-center">
+                          <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(document.status)}`}>
+                            {document.status === 'COMPLETED' ? 'Processed' : document.status}
+                          </span>
+                        </td>
+                        <td className="px-8 py-4 text-center">{document.publisher}</td>
+                        <td className="px-8 py-4">
+                          <div className="flex items-center justify-center space-x-3 text-[#1F4A75]">
+                            <button onClick={() => setViewingDocument(document)} className="transition-colors hover:text-blue-700" title="View document"><Eye className="w-4 h-4" /></button>
+                            <button onClick={() => handleDelete(document)} className="transition-colors hover:text-red-600" title="Delete document"><Trash2 className="w-4 h-4" /></button>
+                            <button onClick={() => handleDownload(document)} className="transition-colors hover:text-blue-700" disabled={downloading === document.id} title="Download document">
+                              {downloading === document.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} 
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    // If NO documents, it shows this "Not Found" message
+                    <tr>
+                      <td colSpan={7} className="text-center py-10">
+                        <img src="/Not Found.png" alt="No documents found" className="mx-auto h-40" />
+                        <p className="mt-4 text-gray-500 font-semibold">No Documents Found</p>
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
 
                   </table>
