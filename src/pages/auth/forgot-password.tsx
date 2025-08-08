@@ -2,6 +2,7 @@ import { API_BASE_URL } from "@/lib/config";
 import { useState } from "react";
 import { Link } from 'react-router-dom';
 import { HelpCircle, CheckCircle2 } from "lucide-react";
+import { SupportModal } from "@/components/SupportModal";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -10,6 +11,7 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showSupportModal, setShowSupportModal] = useState(false);
 
   const validateEmail = (email: string) => {
     if (email.trim() && !/\S+@\S+\.\S+/.test(email)) {
@@ -231,7 +233,8 @@ export default function ForgotPassword() {
         {/* Support Button */}
         <div className="absolute top-6 left-12 z-10">
           <button
-            className="flex items-center space-x-2 transition-colors"
+            onClick={() => setShowSupportModal(true)}
+            className="flex items-center space-x-2 transition-colors hover:opacity-80"
             style={{
               width: "120px",
               height: "30px",
@@ -354,6 +357,12 @@ export default function ForgotPassword() {
           </div>
         </div>
       )}
+
+      {/* Support Modal */}
+      <SupportModal
+        isOpen={showSupportModal}
+        onClose={() => setShowSupportModal(false)}
+      />
     </div>
   );
 }
