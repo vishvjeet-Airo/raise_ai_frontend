@@ -4,6 +4,15 @@ import { Send, Plus, Search, Trash2 } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
+import { API_BASE_URL } from "@/lib/config";
+
+
+interface Reference {
+  document_id: string;
+  file_name: string;
+  title: string;
+  blob_url?: string;
+}
 
 interface Reference {
   document_id: string;
@@ -18,6 +27,7 @@ interface Message {
   content: string;
   timestamp: Date;
   references?: Reference[];
+<<<<<<< HEAD
 }
 
 interface ChatSession {
@@ -25,6 +35,16 @@ interface ChatSession {
   document_id?: string;
   chat_history: any[]; 
 }
+=======
+}
+
+interface ChatSession {
+  session_id: string;
+  document_id?: string;
+  chat_history: any[]; 
+}
+
+>>>>>>> 13441cf6e3a1f2d92d82b87aa993bd8eb11c1cc3
 
 export default function ChatBot() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -55,6 +75,7 @@ export default function ChatBot() {
       setChatSessions([]);
       return [];
     }
+<<<<<<< HEAD
   };
 
   const handleNewChat = async (docId?: string) => {
@@ -172,7 +193,128 @@ export default function ChatBot() {
       } finally {
           setIsLoading(false);
       }
+=======
+>>>>>>> 13441cf6e3a1f2d92d82b87aa993bd8eb11c1cc3
   };
+
+  const handleNewChat = async (docId?: string) => {
+    setIsLoading(true);
+    setMessages([]);
+    setInputMessage("");
+    setSessionId("");
+    setDocumentId(null);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/chat/new`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: docId ? JSON.stringify({ document_id: docId }) : undefined,
+      });
+
+      if (!response.ok) throw new Error('Failed to create new chat session');
+
+      const data = await response.json();
+      setSessionId(data.session_id);
+      setDocumentId(data.document_id || null);
+      await fetchChatSessions(); 
+    } catch (error) {
+      console.error('Error creating new chat:', error);
+      const errorMessage: Message = {
+        id: 'error-new-chat',
+        type: 'bot',
+        content: 'Sorry, I was unable to start a new chat. Please try again.',
+        timestamp: new Date(),
+      };
+      setMessages([errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteChat = async (sessionIdToDelete: string) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/chat/${sessionIdToDelete}`, {
+            method: 'DELETE',
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to delete chat session');
+        }
+
+        const remainingSessions = await fetchChatSessions();
+
+        if (sessionId === sessionIdToDelete) {
+            if (remainingSessions.length > 0) {
+                loadChatHistory(remainingSessions[0].session_id);
+            } else {
+                handleNewChat();
+            }
+        }
+    } catch (error) {
+        console.error("Error deleting chat:", error);
+        // Optionally, show an error message to the user
+    }
+  };
+
+  const loadChatHistory = (sessionIdToLoad: string) => {
+    const session = chatSessions.find(s => s.session_id === sessionIdToLoad);
+    if (!session) {
+        fetchHistoryForSession(sessionIdToLoad);
+        return;
+    }
+
+    if (Array.isArray(session.chat_history)) {
+        const formattedMessages: Message[] = session.chat_history.map((item: any, index: number) => ({
+            id: `hist-${index}-${Date.now()}`,
+            type: item.role === 'user' ? 'user' : 'bot',
+            content: item.content,
+            timestamp: new Date(item.timestamp || Date.now()),
+            references: item.references || []
+        }));
+        setMessages(formattedMessages);
+    } else {
+        setMessages([]);
+    }
+
+    setSessionId(session.session_id);
+    setDocumentId(session.document_id || null);
+  };
+
+  const fetchHistoryForSession = async (sessionIdToLoad: string) => {
+      setIsLoading(true);
+      try {
+          const response = await fetch(`${API_BASE_URL}/api/chat/${sessionIdToLoad}/history`);
+          if (!response.ok) {
+              throw new Error(`Failed to fetch chat history for session ${sessionIdToLoad}`);
+          }
+          const history = await response.json();
+          
+          if (Array.isArray(history)) {
+              const formattedMessages: Message[] = history.map((item: any, index: number) => ({
+                  id: `hist-${index}-${Date.now()}`,
+                  type: item.role === 'user' ? 'user' : 'bot',
+                  content: item.content,
+                  timestamp: new Date(item.timestamp || Date.now()),
+                  references: item.references || []
+              }));
+              setMessages(formattedMessages);
+          } else {
+              setMessages([]);
+          }
+          setSessionId(sessionIdToLoad);
+          const sessionDetails = chatSessions.find(s => s.session_id === sessionIdToLoad);
+          if (sessionDetails) {
+              setDocumentId(sessionDetails.document_id || null);
+          }
+
+      } catch (error) {
+          console.error('Error loading chat history:', error);
+          await handleNewChat();
+      } finally {
+          setIsLoading(false);
+      }
+  };
+
 
   const handleSendMessage = async (message?: string) => {
     const messageToSend = message || inputMessage;
@@ -242,6 +384,10 @@ export default function ChatBot() {
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
         
+<<<<<<< HEAD
+=======
+        // Split chunk by newlines to handle multiple JSON objects in one chunk
+>>>>>>> 13441cf6e3a1f2d92d82b87aa993bd8eb11c1cc3
         const jsonStrings = chunk.split(/\r?\n/).filter(s => s.trim() !== '');
 
         for (const jsonString of jsonStrings) {
@@ -318,6 +464,7 @@ export default function ChatBot() {
       <div className="flex-1 flex">
         <div className="flex-1 flex flex-col bg-[#FBFBFB]">
           <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+<<<<<<< HEAD
             {messages.length === 0 && !isLoading ? (
               <div className="flex items-center justify-center h-full text-gray-500 text-center font-poppins italic font-normal">
                 <div>
@@ -327,6 +474,9 @@ export default function ChatBot() {
               </div>
             ) : (
               messages.map((msg) => (
+=======
+            {messages.map((msg) => (
+>>>>>>> 13441cf6e3a1f2d92d82b87aa993bd8eb11c1cc3
                 <div
                   key={msg.id}
                   className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}
@@ -334,7 +484,7 @@ export default function ChatBot() {
                   {msg.type === "bot" ? (
                     <div className="flex items-start space-x-3">
                       <div className="w-8 h-8 rounded-full bg-[#EEEEEE] flex items-center justify-center text-xs font-semibold text-[#767575]">
-                        AI
+                        {isLoading && messages[messages.length - 1].id === msg.id ? <div className="loader"></div> : "AI"}
                       </div>
                       {/* Change made here: Removed `prose prose-sm` classes */}
                       <div className="max-w-xl p-4 bg-white rounded-lg shadow text-sm text-[#333333] whitespace-pre-wrap">
@@ -373,22 +523,16 @@ export default function ChatBot() {
                   )}
                 </div>
               ))
-            )}
+            }
             
-            {/* Loading indicator */}
-            {isLoading && (
+            {isLoading && messages.length > 0 && messages[messages.length -1].type === 'user' && (
               <div className="flex justify-start">
                 <div className="flex items-start space-x-3">
                   <div className="w-8 h-8 rounded-full bg-[#EEEEEE] flex items-center justify-center text-xs font-semibold text-[#767575]">
                     AI
                   </div>
                   <div className="max-w-xl p-4 bg-white rounded-lg shadow text-sm text-[#333333]">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                      <span className="text-gray-500 text-xs">AI is thinking...</span>
-                    </div>
+                    <div className="loader"></div>
                   </div>
                 </div>
               </div>
@@ -486,3 +630,4 @@ export default function ChatBot() {
     </div>
   );
 }
+
