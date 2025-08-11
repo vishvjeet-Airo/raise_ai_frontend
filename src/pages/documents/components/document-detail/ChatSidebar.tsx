@@ -136,20 +136,20 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
         const { done, value } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
-        
+
         const jsonStrings = chunk.split(/\r?\n/).filter(s => s.trim() !== '');
 
         for (const jsonString of jsonStrings) {
-            try {
-                const parsed = JSON.parse(jsonString);
-                if (parsed.type === "chunk") {
-                    botMessageContent += parsed.content;
-                } else if (parsed.type === "references") {
-                    botMessageReferences = parsed.data;
-                }
-            } catch (parseError) {
-                console.warn("Failed to parse JSON chunk:", jsonString, parseError);
+          try {
+            const parsed = JSON.parse(jsonString);
+            if (parsed.type === "chunk") {
+              botMessageContent += parsed.content;
+            } else if (parsed.type === "references") {
+              botMessageReferences = parsed.data;
             }
+          } catch (parseError) {
+            console.warn("Failed to parse JSON chunk:", jsonString, parseError);
+          }
         }
 
         setMessages((prev) =>
@@ -161,7 +161,7 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
 
     } catch (error) {
       console.error('Error calling chat API:', error);
-      
+
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: "bot",
@@ -216,7 +216,7 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
           <span className="text-xs text-gray-500">{documentId ? `Document ID: ${documentId}` : "No Document Selected"}</span>
         </div>
         <div className="flex items-center space-x-2">
-          <button 
+          <button
             onClick={() => handleNewChat()}
             className="p-1 hover:bg-gray-100 rounded transition-colors"
             title="New chat"
@@ -251,26 +251,25 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
             <div key={msg.id} className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}>
               {msg.type === "bot" ? (
                 <div className="flex items-start space-x-2">
-                  <div className="w-6 h-6 rounded-full bg-[#EEEEEE] flex items-center justify-center text-xs font-semibold text-[#767575] flex-shrink-0">AI</div>
                   <div className="max-w-full p-3 bg-white rounded-lg shadow text-sm text-[#333333] prose prose-sm whitespace-pre-wrap">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                     {msg.references && msg.references.length > 0 && (
-                        <div className="mt-2 text-xs text-gray-500">
-                            <strong>References:</strong>
-                            <ul className="list-disc list-inside">
-                                {msg.references.map((ref, refIndex) => (
-                                    <li key={refIndex}>
-                                        {ref.blob_url ? (
-                                            <a href={ref.blob_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                                {ref.title}
-                                            </a>
-                                        ) : (
-                                            ref.title
-                                        )}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
+                      <div className="mt-2 text-xs text-gray-500">
+                        <strong>References:</strong>
+                        <ul className="list-disc list-inside">
+                          {msg.references.map((ref, refIndex) => (
+                            <li key={refIndex}>
+                              {ref.blob_url ? (
+                                <a href={ref.blob_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                  {ref.title}
+                                </a>
+                              ) : (
+                                ref.title
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -279,22 +278,20 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
                   <div className="max-w-full p-3 bg-[#1F4A75] text-white font-poppins rounded-lg shadow text-sm whitespace-pre-line">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                   </div>
-                  <img src="/analyst.png" alt="user" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
                 </div>
               )}
             </div>
           ))
         )}
-        
+
         {isLoading && (
           <div className="flex justify-start">
             <div className="flex items-start space-x-2">
-              <div className="w-6 h-6 rounded-full bg-[#EEEEEE] flex items-center justify-center text-xs font-semibold text-[#767575] flex-shrink-0">AI</div>
               <div className="p-3 bg-white rounded-lg shadow text-sm text-[#333333]">
                 <div className="flex items-center space-x-1.5">
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   <span className="text-gray-500 text-xs ml-2">AI is thinking...</span>
                 </div>
               </div>
@@ -309,10 +306,10 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
         {messages.length === 0 && !isLoading && (
           <div className="grid grid-cols-1 gap-2 w-full mb-3">
             {quickQuestions.map((question, index) => (
-              <button 
-                key={index} 
-                onClick={() => handleQuickQuestionClick(question)} 
-                className="px-3 py-2 bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg text-xs font-poppins text-gray-700 hover:text-blue-700 transition-all duration-200 text-left" 
+              <button
+                key={index}
+                onClick={() => handleQuickQuestionClick(question)}
+                className="px-3 py-2 bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg text-xs font-poppins text-gray-700 hover:text-blue-700 transition-all duration-200 text-left"
                 disabled={isLoading}
               >
                 {question}
@@ -328,17 +325,17 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
             rows={1}
             className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976D2] focus:border-transparent resize-none text-sm"
             style={{ minHeight: "40px" }}
-            onKeyPress={(e) => { 
-              if (e.key === "Enter" && !e.shiftKey) { 
-                e.preventDefault(); 
-                handleSendMessage(); 
-              } 
+            onKeyPress={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+              }
             }}
             disabled={isLoading}
           />
-          <button 
-            onClick={() => handleSendMessage()} 
-            className="absolute right-2 bottom-2 text-[#1976D2] hover:text-[#1565C0] disabled:opacity-50 disabled:cursor-not-allowed p-1" 
+          <button
+            onClick={() => handleSendMessage()}
+            className="absolute right-2 bottom-2 text-[#1976D2] hover:text-[#1565C0] disabled:opacity-50 disabled:cursor-not-allowed p-1"
             disabled={isLoading || inputMessage.trim() === ""}
           >
             <Send className="w-4 h-4" />
