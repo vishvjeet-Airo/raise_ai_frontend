@@ -358,7 +358,7 @@ export default function AllDocuments() {
                   <button
                     onClick={handleDeleteAll}
                     disabled={documents.length === 0 || deleteAllMutation.isPending}
-                    className="h-8 px-3 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+                    className="h-8 px-3 bg-blue-600 text-white text-sm rounded-lg hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
                     title="Delete all documents"
                   >
                     {deleteAllMutation.isPending ? (
