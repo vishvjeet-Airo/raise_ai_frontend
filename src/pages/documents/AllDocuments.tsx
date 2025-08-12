@@ -12,7 +12,7 @@ interface Document {
   publicationDate: string; // "DD/MM/YYYY"
   uploadedAtDate: Date;
   uploaded_at: string;
-  status: 'Processed' | 'COMPLETED' | 'PENDING' | 'FAILED';
+  status: 'PROCESSED' | 'COMPLETED' | 'PENDING' | 'FAILED' | 'QUEUED' | 'ANALYZED' | 'ANALYZING' | 'IN REVIEW' | 'ESCALATED' | 'VERIFIED' | 'FAILED' | 'ARCHIVED';
   publisher: string;
   url: string; // URL for the document to be viewed
   file_name: string;
@@ -305,8 +305,8 @@ export default function AllDocuments() {
   };
 
   const getStatusStyle = (status: string) => {
-    if (status === 'Processed' || status === 'COMPLETED') return 'bg-[#2DA1DB] text-white';
-    if (status === 'Processing' || status === 'PENDING') return 'bg-yellow-500 text-white';
+    if (status === 'PROCESSED' || status === 'COMPLETED') return 'bg-[#2DA1DB] text-white';
+    if (status === 'PROCESSING' || status === 'PENDING') return 'bg-yellow-500 text-white';
     return 'bg-red-500 text-white';
   };
 
