@@ -7,6 +7,7 @@ import ResetPassword from "@/pages/auth/reset-password";
 import Upload from "@/pages/documents/Upload";
 import AllDocuments from "@/pages/documents/AllDocuments";
 import DocumentDetail from "@/pages/documents/DocumentDetail";
+import AuditTrail from "@/pages/documents/AuditTrail";
 import NotFound from "@/pages/error/NotFound";
 import ChatBot from "@/pages/chatbot";
 import ActionItems from "@/pages/actionitems";
@@ -69,6 +70,7 @@ function RouterContent() {
         <Route path="/documents" element={<AllDocuments />} />
         <Route path="/upload" element={<Upload />} />
         <Route path="/documents/:id" element={<DocumentDetail />} />
+        <Route path="/documents/:id/audit-trail" element={<AuditTrail />} />
         <Route path="/chatbot" element={<ChatBot />} />
         <Route path="/actionitems" element={<ActionItems />} />
         <Route path="/company" element={<CompanyProfilePage />} />

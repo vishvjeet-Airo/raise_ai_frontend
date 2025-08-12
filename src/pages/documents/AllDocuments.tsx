@@ -16,6 +16,8 @@ interface Document {
   publisher: string;
   url: string; // URL for the document to be viewed
   file_name: string;
+  circularType?: string;
+  referenceNumber?: string;
 }
 
 /**
@@ -62,7 +64,7 @@ const DocumentViewerModal = ({ document, onClose }: { document: Document; onClos
         console.error("Error fetching PDF for viewing:", e);
         setError("Could not load the document for preview.");
       } finally {
-        // We set loading to false here in the success case, 
+        // We set loading to false here in the success case,
         // but the iframe's onLoad will handle the final visual switch.
       }
     };
@@ -197,6 +199,8 @@ export default function AllDocuments() {
           publisher: doc.issuing_authority || 'N/A',
           url: doc.blob_url,
           file_name: doc.file_name,
+          circularType: doc.circular_type,
+          referenceNumber: doc.reference_number,
         };
       });
     }
@@ -395,6 +399,7 @@ export default function AllDocuments() {
                           <span>Issue Date</span>
                         </div>
                       </th>
+                      
                       <th className="px-8 text-center text-xs font-medium text-[#4F4F4F]">Status</th>
                       <th className="px-8 text-center text-xs font-medium text-[#4F4F4F]">Publisher</th>
                       <th className="px-8 text-center text-xs font-medium text-[#4F4F4F]">Actions</th>
@@ -417,6 +422,7 @@ export default function AllDocuments() {
                           </td>
                           <td className="px-8 py-4 text-center">{document.uploaded_at}</td>
                           <td className="px-8 py-4 text-center">{document.publicationDate}</td>
+                          
                           <td className="px-8 py-4 text-center">
                             <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(document.status)}`}>
                               {document.status === 'COMPLETED' ? 'Processed' : document.status}
@@ -437,14 +443,13 @@ export default function AllDocuments() {
                     ) : (
                       // If NO documents, it shows this "Not Found" message
                       <tr>
-                        <td colSpan={7} className="text-center py-10">
+                        <td colSpan={9} className="text-center py-10">
                           <img src="/Not Found.png" alt="No documents found" className="mx-auto h-40" />
                           <p className="mt-4 text-gray-500 font-semibold">No Documents Found</p>
                         </td>
                       </tr>
                     )}
                   </tbody>
-
                 </table>
               </div>
             </div>

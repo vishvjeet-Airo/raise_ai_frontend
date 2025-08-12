@@ -1,8 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 
 export default function DocumentTimeline() {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const location = useLocation();
+
+  const handleViewFullHistory = () => {
+    // Pass the document data to the audit trail page
+    navigate(`/documents/${id}/audit-trail`, {
+      state: { document: location.state?.document }
+    });
+  };
+
   const timelineItems = [
     {
       title: "Document Uploaded",
@@ -65,8 +77,9 @@ export default function DocumentTimeline() {
         </div>
         
         <div className="flex justify-center mt-3">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
+            onClick={handleViewFullHistory}
             className="font-medium text-xs leading-none tracking-normal text-[#1691CF] h-auto p-1"
           >
             View full History & Audit Trail →
