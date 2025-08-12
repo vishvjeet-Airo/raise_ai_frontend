@@ -192,29 +192,29 @@ export default function AuditTrail() {
         <div className="max-w-7xl">
           {/* Breadcrumb */}
           <div className="flex items-center space-x-2 text-sm text-gray-600 mb-6">
-            <Link to="/documents" className="hover:text-gray-900 transition-colors font-poppins">
+            <Link to="/documents" className="hover:text-gray-900 transition-colors">
               All Documents
             </Link>
             <ChevronRight className="w-4 h-4" />
-            <Link 
-              to={`/documents/${id}`} 
+            <Link
+              to={`/documents/${id}`}
               state={{ document: documentFromState }}
-              className="hover:text-gray-900 transition-colors font-poppins"
+              className="hover:text-gray-900 transition-colors"
             >
               {documentFromState?.name || 'Document Detail'}
             </Link>
             <ChevronRight className="w-4 h-4" />
-            <span className="text-[#1F4A75] font-semibold font-poppins">
+            <span className="text-[#1F4A75] font-semibold">
               Audit Trail & Full History
             </span>
           </div>
 
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-2xl font-semibold text-gray-900 mb-2 font-poppins">
+            <h1 className="text-2xl font-semibold text-[#1F4A75] mb-2">
               Document Audit Trail & Full History
             </h1>
-            <p className="text-gray-600 font-poppins">
+            <p className="text-gray-600">
               Complete chronological record of all activities and changes for "{documentFromState?.name || 'Document'}"
             </p>
           </div>
@@ -223,40 +223,40 @@ export default function AuditTrail() {
           <div className="grid grid-cols-4 gap-4 mb-8">
             <Card>
               <CardContent className="p-4">
-                <div className="text-2xl font-bold text-gray-900 font-poppins">
+                <div className="text-2xl font-semibold text-gray-900">
                   {auditEvents.length}
                 </div>
-                <div className="text-sm text-gray-500 font-poppins">
+                <div className="text-sm text-gray-500 font-medium">
                   Total Events
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <div className="text-2xl font-bold text-green-600 font-poppins">
+                <div className="text-2xl font-semibold text-green-600">
                   {auditEvents.filter(e => e.status === 'success').length}
                 </div>
-                <div className="text-sm text-gray-500 font-poppins">
+                <div className="text-sm text-gray-500 font-medium">
                   Successful Actions
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <div className="text-2xl font-bold text-yellow-600 font-poppins">
+                <div className="text-2xl font-semibold text-yellow-600">
                   {auditEvents.filter(e => e.status === 'warning').length}
                 </div>
-                <div className="text-sm text-gray-500 font-poppins">
+                <div className="text-sm text-gray-500 font-medium">
                   Warnings
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <div className="text-2xl font-bold text-blue-600 font-poppins">
+                <div className="text-2xl font-semibold text-blue-600">
                   {new Set(auditEvents.map(e => e.user)).size}
                 </div>
-                <div className="text-sm text-gray-500 font-poppins">
+                <div className="text-sm text-gray-500 font-medium">
                   Unique Users
                 </div>
               </CardContent>
@@ -266,7 +266,7 @@ export default function AuditTrail() {
           {/* Timeline */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-gray-900 font-poppins">
+              <CardTitle className="text-lg font-medium text-gray-900">
                 Complete Audit Trail
               </CardTitle>
             </CardHeader>
@@ -289,10 +289,10 @@ export default function AuditTrail() {
                         <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex-1">
-                              <h3 className="text-lg font-medium text-gray-900 font-poppins">
+                              <h3 className="text-lg font-medium text-gray-900">
                                 {event.action}
                               </h3>
-                              <p className="text-sm text-gray-600 mt-1 font-poppins">
+                              <p className="text-sm text-gray-600 mt-1">
                                 {event.details}
                               </p>
                             </div>
@@ -305,12 +305,12 @@ export default function AuditTrail() {
                             <div className="flex items-center space-x-4">
                               <div className="flex items-center space-x-1">
                                 <User className="w-4 h-4" />
-                                <span className="font-poppins">{event.user}</span>
+                                <span className="font-medium">{event.user}</span>
                                 <span className="text-gray-400">({event.userRole})</span>
                               </div>
                               <div className="flex items-center space-x-1">
                                 <Clock className="w-4 h-4" />
-                                <span className="font-poppins">{date} at {time}</span>
+                                <span className="font-medium">{date} at {time}</span>
                               </div>
                             </div>
                           </div>
@@ -358,14 +358,14 @@ export default function AuditTrail() {
 
           {/* Action Buttons */}
           <div className="flex justify-end space-x-3 mt-8">
-            <Button variant="outline" className="font-poppins">
+            <Button variant="outline" className="text-sm font-medium">
               <Download className="w-4 h-4 mr-2" />
               Export Audit Log
             </Button>
-            <Button 
+            <Button
               variant="outline"
               onClick={() => window.print()}
-              className="font-poppins"
+              className="text-sm font-medium"
             >
               <Eye className="w-4 h-4 mr-2" />
               Print Report
