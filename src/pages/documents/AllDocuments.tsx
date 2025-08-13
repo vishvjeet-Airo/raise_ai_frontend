@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
-// Added AlertTriangle for error states
 import { Search, ArrowDown, ArrowUp, Eye, Download, X, Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { API_BASE_URL } from "@/lib/config";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
@@ -132,13 +131,25 @@ const DocumentViewerModal = ({ document, onClose }: { document: Document; onClos
 };
 
 const DeleteConfirmationDialog = ({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void; }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white p-6 rounded-lg shadow-lg">
-      <h2 className="text-lg font-bold mb-4">Are you sure?</h2>
-      <p className="mb-4">This action cannot be undone.</p>
-      <div className="flex justify-end space-x-4">
-        <button onClick={onCancel} className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300">Cancel</button>
-        <button onClick={onConfirm} className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600">Delete</button>
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 font-['Poppins']">
+    <div className="bg-white rounded-[10px] shadow-lg w-[394px] h-[190px] flex flex-col items-center justify-center p-8">
+      <p className="text-[16px] font-poppins text-[#767575] mb-10 text-center">
+        Are you sure you want to delete?
+      </p>
+      <div className="flex justify-end space-x-6">
+        <button 
+          onClick={onCancel} 
+          className="w-auto px-6 h-[40px] rounded-[8px] border border-[#1F4A75] text-[#1F4A75] bg-white font-normal flex items-center justify-center transition-colors hover:bg-gray-100"
+        >
+          No
+        </button>
+        
+        <button 
+          onClick={onConfirm} 
+          className="w-auto px-6 h-[40px] rounded-[8px] bg-[#1F4A75] text-white font-normal flex items-center justify-center transition-colors hover:bg-[#1a3c63]"
+        >
+          Yes
+        </button>
       </div>
     </div>
   </div>
@@ -150,7 +161,7 @@ const DeleteAllConfirmationDialog = ({ documentCount, onConfirm, onCancel }: { d
       <h2 className="text-lg font-bold mb-4">Delete All Documents</h2>
       <p className="mb-4">
         Are you sure you want to delete all <span className="font-semibold">{documentCount}</span> documents?
-        This action cannot be undone.
+        <br />This action cannot be undone.
       </p>
       <div className="flex justify-end space-x-4">
         <button onClick={onCancel} className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300">Cancel</button>
