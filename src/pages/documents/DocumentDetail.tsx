@@ -124,7 +124,9 @@ export default function DocumentDetail() {
               <div className="w-[361px] flex-shrink-0 space-y-6">
                 <DocumentTimeline />
                 <HumanValidationRequired />
-                <ComparativeInsights />
+                <ComparativeInsights 
+                  documentId={document.id}
+                />
                 <ReportsAndExports
                   documentTitle={document.name}
                   documentUrl={document.url}
