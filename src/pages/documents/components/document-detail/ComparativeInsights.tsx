@@ -1,35 +1,50 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import ReactMarkdown from 'react-markdown';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { API_BASE_URL } from "@/lib/config";
 
-interface AmendmentAnalysis {
-  focus: string;
-  impact: string;
-  summary: string;
-  key_changes: string[];
-  comparison_note: string;
-}
-
-interface Version {
+// Reusing the same interfaces from your previous code
+interface DocumentInfo {
   id: number;
+  title: string;
   version: number;
-  file_name: string;
-  uploaded_at: string;
-  publication_date: string;
   is_amendment: boolean;
-  amendment_analysis: AmendmentAnalysis | null;
+  previous_version_id: number | null;
+  uploaded_at: string;
+  status: string;
+  publication_date: string;
+  issuing_authority: string;
+  circular_type: string;
+  reference_number: string;
+  file_name: string;
 }
 
-interface VersioningData {
-  title: string;
+interface VersionHistory {
   total_versions: number;
-  versions: Version[];
+  versions: DocumentInfo[];
+  current_version_number: number;
+  is_latest_version: boolean;
+  has_previous_version: boolean;
+}
+
+interface AmendmentAnalysis {
+  has_analysis: boolean;
+  analysis_data: {
+    is_amendment: boolean;
+    version: number;
+    total_versions: number;
+    summary: string;
+    key_changes: string[];
+    impact: string;
+    comparison_note: string;
+    focus: string;
+  } | null;
+}
+
+interface VersioningInfoResponse {
+  document_info: DocumentInfo;
+  version_history: VersionHistory;
+  amendment_analysis: AmendmentAnalysis;
   auto_fix_info: {
     was_applied: boolean;
     success: boolean;
@@ -39,51 +54,55 @@ interface VersioningData {
   };
 }
 
-// The component now accepts a 'documentId' prop
 export default function ComparativeInsights({ documentId }: { documentId: number }) {
-  const [comparativeData, setComparativeData] = useState<Version[]>([]);
+  const [documentInfo, setDocumentInfo] = useState<DocumentInfo | null>(null);
+  const [versionHistory, setVersionHistory] = useState<DocumentInfo[]>([]);
+  const [keyChanges, setKeyChanges] = useState<string[] | null>(null);
+  const [comparisonNote, setComparisonNote] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [showKeyChangesModal, setShowKeyChangesModal] = useState<boolean>(false);
 
   useEffect(() => {
-    // This function fetches the data from your API
-    const fetchComparativeData = async () => {
+    const fetchVersioningInfo = async () => {
       try {
-        setLoading(true); // Start loading
-        setError(null); // Clear any previous errors
+        setLoading(true);
+        setError(null);
 
-        // Fetch data from the API using the documentId prop
-const response = await fetch(
-          `${API_BASE_URL}/api/documents/${documentId}/version-history`
+        const response = await fetch(
+          `${API_BASE_URL}/api/documents/${documentId}/versioning-info`
         );
         if (!response.ok) {
-          // If the response is not successful, throw an error
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
-        const data: VersioningData = await response.json();
+        const data: VersioningInfoResponse = await response.json();
 
-        // Filter the versions to only show amendments with analysis
-        const amendments = data.versions.filter(
-          (version) => version.is_amendment && version.amendment_analysis
-        );
-        
-        // Update the state with the filtered data
-        setComparativeData(amendments);
+        // Sort the versions in descending order (newest first)
+        const sortedVersions = data.version_history.versions.sort((a, b) => b.version - a.version);
+
+        setDocumentInfo(data.document_info);
+        setVersionHistory(sortedVersions);
+
+        if (data.amendment_analysis.analysis_data) {
+          setKeyChanges(data.amendment_analysis.analysis_data.key_changes);
+          setComparisonNote(data.amendment_analysis.analysis_data.comparison_note);
+        } else {
+          setKeyChanges(null);
+          setComparisonNote(null);
+        }
       } catch (e: any) {
-        setError(e.message); // Set the error message if something goes wrong
+        setError(e.message);
       } finally {
-        setLoading(false); // End loading regardless of success or failure
+        setLoading(false);
       }
     };
 
-    // Only run the fetch function if a documentId is provided
     if (documentId) {
-      fetchComparativeData();
+      fetchVersioningInfo();
     }
-  }, [documentId]); // Re-run the effect if documentId changes
+  }, [documentId]);
 
-  // Conditional rendering for different states
   if (loading) {
     return (
       <Card className="bg-white">
@@ -114,24 +133,6 @@ const response = await fetch(
     );
   }
 
-  if (comparativeData.length === 0) {
-    return (
-      <Card className="bg-white">
-        <CardHeader className="pb-4">
-          <CardTitle className="font-poppins font-medium text-[16px] leading-[100%] tracking-[0] text-[#3F3F3F]">
-            Comparative Insights
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center p-8 text-gray-500">
-            No amendment insights available for this document.
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Main component render with fetched data
   return (
     <Card className="bg-white">
       <CardHeader className="pb-4">
@@ -140,52 +141,128 @@ const response = await fetch(
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <TooltipProvider delayDuration={300}>
+        {documentInfo && (
+          <h3 className="font-poppins font-semibold text-[14px] leading-[24px] tracking-[0] text-[#3F3F3F] mb-4">
+            Document Version: {documentInfo.version}
+          </h3>
+        )}
+
+        {/* If only one version, show just one point */}
+        {versionHistory.length === 1 && documentInfo && (
           <div className="space-y-4">
-            {comparativeData.map((item) => (
-              <Tooltip key={item.id} delayDuration={300}>
-                <TooltipTrigger asChild>
-                  <div className="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500 hover:bg-gray-100 transition-colors duration-200 cursor-pointer">
-                    <h4 className="font-poppins font-semibold text-[12px] leading-[20px] tracking-[0] text-[#5B5A5A]">
-                      {/* Display publication date and version from API data */}
-                      Version {item.version} - {item.publication_date}
-                    </h4>
-                    <p className="font-poppins font-normal text-[11px] leading-[20px] tracking-[0] text-[#5B5A5A]">
-                      {/* Display the comparison note from API data */}
-                      {item.amendment_analysis?.comparison_note}
-                    </p>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="right"
-                  className="max-w-xs bg-white border border-gray-200 shadow-lg"
-                  sideOffset={8}
+            <h4 className="font-poppins font-semibold text-[12px] text-[#3F3F3F]">
+              Version History
+            </h4>
+            <div className="space-y-4">
+              <div
+                className="border-l-4 pl-4 py-2 bg-yellow-100 border-yellow-500 transition-colors duration-200"
+              >
+                <div
+                  className="font-poppins font-medium text-[14px] flex items-center bg-yellow-200 rounded px-1 py-0.5"
+                  style={{ color: '#B7791F', display: 'inline-block' }}
                 >
-                  <div className="space-y-2 p-2">
-                    <h4 className="font-poppins font-semibold text-[12px] text-[#3F3F3F]">
-                      Key Changes:
-                    </h4>
-                    <ul className="space-y-1">
-                      {/* Map through the key changes from API data */}
-                      {item.amendment_analysis?.key_changes.map(
-                        (change, changeIndex) => (
-                          <li
-                            key={changeIndex}
-                            className="font-poppins font-normal text-[11px] text-[#5B5A5A] flex items-start"
-                          >
-                            <span className="text-blue-500 mr-1">•</span>
-                            {/* Use dangerouslySetInnerHTML to render the formatted text */}
-                            <div dangerouslySetInnerHTML={{ __html: change }} />
-                          </li>
-                        )
-                      )}
-                    </ul>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            ))}
+                  Version {documentInfo.version} - {documentInfo.publication_date}
+                  <span className="ml-2 bg-yellow-400 text-yellow-900 text-[10px] px-2 py-1 rounded-full font-semibold">
+                    Current
+                  </span>
+                </div>
+                <div
+                  className="font-poppins text-[12px] text-[#5B5A5A] mt-1 bg-yellow-100 rounded px-1 py-0.5"
+                  style={{ display: 'inline-block' }}
+                >
+                  Reference Number: {documentInfo.reference_number || "N/A"}
+                </div>
+              </div>
+            </div>
           </div>
-        </TooltipProvider>
+        )}
+
+        {/* If more than one version, show all points */}
+        {versionHistory.length > 1 && documentInfo && (
+          <div className="space-y-4">
+            <h4 className="font-poppins font-semibold text-[12px] text-[#3F3F3F]">
+              Version History
+            </h4>
+            <div className="space-y-4">
+              {versionHistory.map((item) => {
+                const isCurrent = item.id === documentId || item.version === documentInfo.version;
+                return (
+                  <div
+                    key={item.id}
+                    className={`border-l-4 pl-4 py-2 transition-colors duration-200 ${isCurrent ? 'bg-yellow-100 border-yellow-500' : 'bg-gray-50 border-[#1F4A75] hover:bg-gray-100'}`}
+                  >
+                    <div
+                      className={`font-poppins font-medium text-[14px] flex items-center ${isCurrent ? 'bg-yellow-200 rounded px-1 py-0.5' : ''}`}
+                      style={{ color: isCurrent ? '#B7791F' : '#3F3F3F', display: 'inline-block' }}
+                    >
+                      Version {item.version} - {item.publication_date}
+                      {isCurrent && (
+                        <span className="ml-2 bg-yellow-400 text-yellow-900 text-[10px] px-2 py-1 rounded-full font-semibold">
+                          Current
+                        </span>
+                      )}
+                    </div>
+                    <div
+                      className={`font-poppins text-[12px] text-[#5B5A5A] mt-1 ${isCurrent ? 'bg-yellow-100 rounded px-1 py-0.5' : ''}`}
+                      style={{ display: 'inline-block' }}
+                    >
+                      Reference Number: {item.reference_number || "N/A"}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Show Key Changes button only if more than one version and current version is not 1 */}
+        {keyChanges && keyChanges.length > 0 && versionHistory.length > 1 && documentInfo && documentInfo.version !== 1 && (
+          <div className="mt-6">
+            <button
+              onClick={() => setShowKeyChangesModal(true)}
+              className="bg-[#1F4A75] hover:bg-[#153452] text-white font-poppins text-[12px] font-semibold py-2 px-4 rounded-lg shadow transition-colors duration-200"
+            >
+              <span className="font-montserrat font-medium text-[14px] leading-[100%] tracking-[0] text-[#FFFFFF]">
+                View Key Changes
+              </span>
+            </button>
+          </div>
+        )}
+
+        {/* The Key Changes Modal */}
+        {showKeyChangesModal && keyChanges && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full relative">
+              <button
+                onClick={() => setShowKeyChangesModal(false)}
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <h4 className="font-poppins font-semibold text-[14px] text-[#3F3F3F] mb-4">
+                Key Changes
+              </h4>
+              {comparisonNote && (
+                <p className="font-poppins text-[12px] text-[#5B5A5A] mb-4">
+                  {comparisonNote}
+                </p>
+              )}
+              <div className="font-poppins text-[12px] text-[#3F3F3F]">
+                <ReactMarkdown
+                  components={{
+                    ul: ({ node, ...props }) => <ul {...props} className="list-disc list-inside space-y-1" />,
+                    li: ({ node, ...props }) => <li {...props} className="font-poppins font-normal text-[12px] text-[#3F3F3F] mb-1" />,
+                    p: ({ node, ...props }) => <p {...props} className="p-0 m-0" />,
+                  }}
+                >
+                  {keyChanges.map(change => `* ${change}`).join('\n')}
+                </ReactMarkdown>
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
