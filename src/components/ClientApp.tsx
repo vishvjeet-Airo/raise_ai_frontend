@@ -12,6 +12,8 @@ import NotFound from "@/pages/error/NotFound";
 import ChatBot from "@/pages/chatbot";
 import ActionItems from "@/pages/actionitems";
 import CompanyProfilePage from "@/pages/company";
+import CreateUploader from "@/pages/auth/CreateUploader";
+
 
 // Custom hook to get the authentication token
 const useAuth = () => {
@@ -74,6 +76,7 @@ function RouterContent() {
         <Route path="/chatbot" element={<ChatBot />} />
         <Route path="/actionitems" element={<ActionItems />} />
         <Route path="/company" element={<CompanyProfilePage />} />
+        <Route path="/auth/create-uploader" element={<CreateUploader />} />
       </Route>
 
       {/* Fallback Route */}

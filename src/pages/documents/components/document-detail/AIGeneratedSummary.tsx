@@ -22,6 +22,7 @@ export default function AIGeneratedSummary({ documentId }: { documentId: number 
   const [summary, setSummary] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [showSecond, setShowSecond] = useState(false);
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -47,6 +48,9 @@ export default function AIGeneratedSummary({ documentId }: { documentId: number 
     }
   }, [documentId]);
 
+  // Split summary into paragraphs
+  const paragraphs = summary.split(/\n{2,}/).filter(Boolean);
+
   return (
     <Card>
       <CardHeader>
@@ -61,9 +65,26 @@ export default function AIGeneratedSummary({ documentId }: { documentId: number 
             <p className="text-sm text-red-500">Error: {error}</p>
           )}
           {!loading && !error && (
-            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-              {summary}
-            </p>
+            <>
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                {paragraphs[0]}
+              </p>
+              {paragraphs.length > 1 && (
+                <>
+                  {showSecond && (
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line mt-2">
+                      {paragraphs[1]}
+                    </p>
+                  )}
+                  <button
+                    className="mt-2 text-blue-600 hover:underline text-xs font-semibold"
+                    onClick={() => setShowSecond((v) => !v)}
+                  >
+                    {showSecond ? "- Show Less" : "+ Show More"}
+                  </button>
+                </>
+              )}
+            </>
           )}
         </div>
       </CardContent>
