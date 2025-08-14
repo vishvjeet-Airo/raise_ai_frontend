@@ -11,9 +11,6 @@ import { Sidebar } from "@/components/Sidebar";
 const ORGANISATION_API_ENDPOINT = `${API_BASE_URL}/api/organisation`;
 
 const api = {
-    createOrganization: (orgData: CreateOrganizationData) => 
-        axios.post<{ id: number }>(`${ORGANISATION_API_ENDPOINT}/organization/create`, orgData),
-
     getOrganizationFull: (orgId: number) => 
         axios.get<OrganizationData>(`${ORGANISATION_API_ENDPOINT}/organization/${orgId}/full`),
 
@@ -30,15 +27,6 @@ const api = {
 // --- TYPE DEFINITIONS (Matching Backend Schemas) ---
 
 type ModelType = 'organization' | 'jurisdiction' | 'license' | 'regulator' | 'business_unit' | 'standard' | 'critical_process' | 'third_party' | 'compliance_record';
-
-// Organization creation data structure
-interface CreateOrganizationData {
-    name: string;
-    legal_entity_type: string;
-    industry_classification?: string;
-    employee_count?: number;
-    annual_turnover?: number;
-}
 
 interface Jurisdiction { id: number; country: string; state?: string; city?: string; }
 interface License { id: number; license_name: string; license_number?: string; issuing_authority?: string; expiry_date?: string; }
@@ -88,112 +76,6 @@ interface EditModalProps {
 interface ListItemProps { modelType: ModelType; item: { id: number }; children: React.ReactNode; }
 interface CardHeaderProps { title: string; icon: React.ReactElement; onAdd: () => void; }
 
-// --- ORGANIZATION CREATION FORM COMPONENT ---
-const CreateOrganizationForm = ({ onSubmit, loading }: { onSubmit: (data: CreateOrganizationData) => void; loading: boolean }) => {
-    const [formData, setFormData] = useState<CreateOrganizationData>({
-        name: '',
-        legal_entity_type: '',
-        industry_classification: '',
-        employee_count: 0,
-        annual_turnover: 0
-    });
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value, type } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'number' ? (value === '' ? 0 : Number(value)) : value
-        }));
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        onSubmit(formData);
-    };
-
-    return (
-        <div className="flex bg-slate-50">
-            <Sidebar />
-            <div className="flex-1 p-8 h-screen overflow-y-auto">
-                <div className="max-w-2xl mx-auto">
-                    <div className="bg-white p-8 rounded-lg shadow-md">
-                        <div className="flex items-center gap-3 mb-6">
-                            <Building2 className="w-8 h-8 text-[#1F4A75]" />
-                            <h1 className="text-xl font-bold text-[#1F4A75]">Create Organization</h1>
-                        </div>
-                        <p className="text-gray-600 mb-6">
-                            Please create your organization profile to get started.
-                        </p>
-                        
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <FormInput 
-                                label="Organization Name" 
-                                name="name" 
-                                value={formData.name} 
-                                onChange={handleChange} 
-                                placeholder="Enter organization name"
-                                required={true}
-                            />
-                            
-                            <FormInput 
-                                label="Legal Entity Type" 
-                                name="legal_entity_type" 
-                                value={formData.legal_entity_type} 
-                                onChange={handleChange} 
-                                placeholder="e.g., Corporation, LLC, Partnership"
-                                required={true}
-                            />
-                            
-                            <FormInput 
-                                label="Industry Classification" 
-                                name="industry_classification" 
-                                value={formData.industry_classification || ''} 
-                                onChange={handleChange} 
-                                placeholder="e.g., Technology, Healthcare, Finance"
-                            />
-                            
-                            <FormInput 
-                                label="Employee Count" 
-                                name="employee_count" 
-                                value={formData.employee_count || 0} 
-                                onChange={handleChange} 
-                                type="number"
-                                placeholder="0"
-                            />
-                            
-                            <FormInput 
-                                label="Annual Turnover (USD)" 
-                                name="annual_turnover" 
-                                value={formData.annual_turnover || 0} 
-                                onChange={handleChange} 
-                                type="number"
-                                placeholder="0"
-                            />
-                            
-                            <div className="flex justify-end pt-4">
-                                <button 
-                                    type="submit" 
-                                    disabled={loading || !formData.name || !formData.legal_entity_type}
-                                    className="px-6 py-3 bg-[#1F4A75] text-white rounded-lg hover:bg-blue-900 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
-                                >
-                                    {loading ? (
-                                        <>
-                                            <LoaderCircle className="animate-spin" size={16} />
-                                            Creating...
-                                        </>
-                                    ) : (
-                                        'Create Organization'
-                                    )}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
 // --- REUSABLE COMPONENTS with PROPS TYPED ---
 
 const InfoItem = ({ label, value }: InfoItemProps) => (
@@ -229,7 +111,6 @@ const CardHeader = ({ title, icon, onAdd }: CardHeaderProps) => (
         <button onClick={onAdd} className="flex items-center gap-2 text-sm text-[#1F4A75] font-semibold p-2 rounded-lg hover:bg-gray-100"><Plus size={16} />Add</button>
     </div>
 );
-
 
 // --- MODAL & FORMS (Fully Typed) ---
 const EditModal = ({ modalConfig, onClose, onSave, orgId }: EditModalProps) => {
@@ -330,39 +211,20 @@ const EditModal = ({ modalConfig, onClose, onSave, orgId }: EditModalProps) => {
     );
 };
 
-
 // --- MAIN PAGE COMPONENT ---
 export default function CompanyProfilePage() {
     const router = useRouter();
+    const { organisationId } = router.query;
+    
     const [profile, setProfile] = useState<OrganizationData | null>(null);
-    const [loading, setLoading] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [modalConfig, setModalConfig] = useState<ModalConfig | null>(null);
-    const [creatingOrg, setCreatingOrg] = useState<boolean>(false);
-    const [showCreateForm, setShowCreateForm] = useState<boolean>(true);
-    const [organizationId, setOrganizationId] = useState<number | null>(() => {
-        // Try to get organization ID from localStorage on component mount
-        const savedId = localStorage.getItem('organizationId');
-        return savedId ? parseInt(savedId, 10) : null;
-    });
 
-    // If an organization ID exists locally, redirect to the dynamic route so the URL carries the ID
-    useEffect(() => { 
-        if (organizationId) {
-            router.replace(`/company/${organizationId}`);
-        }
-    }, [organizationId]);
-
-    const fetchData = async (orgId?: number) => {
-        const idToUse = orgId || organizationId;
-        if (!idToUse) {
-            console.error("No organization ID available for fetching data");
-            return;
-        }
-        
+    const fetchData = async (orgId: number) => {
         try {
             setLoading(true);
-            const response = await api.getOrganizationFull(idToUse);
+            const response = await api.getOrganizationFull(orgId);
             setProfile(response.data);
             setError(null);
         } catch (err: unknown) {
@@ -374,7 +236,11 @@ export default function CompanyProfilePage() {
         
                 if (axiosError.response) {
                     // The server responded with an error (e.g., 404, 500)
-                    errorMessage = `Error: Server responded with status ${axiosError.response.status}.`;
+                    if (axiosError.response.status === 404) {
+                        errorMessage = "Organization not found.";
+                    } else {
+                        errorMessage = `Error: Server responded with status ${axiosError.response.status}.`;
+                    }
                     console.error("Server Error:", axiosError.response.data);
                 } else if (axiosError.request) {
                     // The request was made, but no response was received
@@ -397,6 +263,19 @@ export default function CompanyProfilePage() {
         }
     };
 
+    // Fetch data when organisationId is available
+    useEffect(() => {
+        if (organisationId && typeof organisationId === 'string') {
+            const orgId = parseInt(organisationId, 10);
+            if (!isNaN(orgId)) {
+                fetchData(orgId);
+            } else {
+                setError("Invalid organization ID");
+                setLoading(false);
+            }
+        }
+    }, [organisationId]);
+
     const handleOpenModal = (mode: 'create' | 'edit', modelType: ModelType, data: any = {}) => setModalConfig({ mode, modelType, data });
     const handleCloseModal = () => setModalConfig(null);
 
@@ -413,7 +292,7 @@ export default function CompanyProfilePage() {
                 await api.updateItem(modelType, dataToSend.id, dataToSend);
             }
             handleCloseModal();
-            fetchData();
+            fetchData(orgId);
         } catch (err: any) {
             const errorMsg = err.response?.data?.detail || `Error saving ${modelType.replace(/_/g, ' ')}.`;
             alert(errorMsg);
@@ -425,33 +304,13 @@ export default function CompanyProfilePage() {
         if (window.confirm(`Are you sure you want to delete this ${modelType.replace(/_/g, ' ')}?`)) {
             try {
                 await api.deleteItem(modelType, itemId);
-                fetchData();
+                if (organisationId && typeof organisationId === 'string') {
+                    fetchData(parseInt(organisationId, 10));
+                }
             } catch (err) {
                 alert(`Error deleting ${modelType.replace(/_/g, ' ')}. Check console for details.`);
                 console.error(err);
             }
-        }
-    };
-
-    const handleCreateOrganization = async (orgData: CreateOrganizationData) => {
-        try {
-            setCreatingOrg(true);
-            const response = await api.createOrganization(orgData);
-            const newOrgId = response.data.id;
-            
-            // Store the organization ID in state and localStorage
-            setOrganizationId(newOrgId);
-            localStorage.setItem('organizationId', newOrgId.toString());
-            
-            // Navigate to dynamic route which will load the org via URL
-            router.push(`/company/${newOrgId}`);
-            return;
-        } catch (err: any) {
-            const errorMsg = err.response?.data?.detail || "Error creating organization.";
-            alert(errorMsg);
-            console.error(err);
-        } finally {
-            setCreatingOrg(false);
         }
     };
 
@@ -465,11 +324,6 @@ export default function CompanyProfilePage() {
         </div>
     );
     
-    // Always show creation form first, unless profile exists and form is hidden
-    if (showCreateForm) {
-        return <CreateOrganizationForm onSubmit={handleCreateOrganization} loading={creatingOrg} />;
-    }
-    
     // Show loading if fetching data
     if (loading) {
         return <div className="flex items-center justify-center h-screen bg-slate-50"><LoaderCircle className="animate-spin text-[#1F4A75]" size={48} /><span className="ml-4 text-lg text-gray-600">Loading Profile...</span></div>;
@@ -480,7 +334,7 @@ export default function CompanyProfilePage() {
         return <div className="flex flex-col items-center justify-center h-screen bg-slate-50 text-red-600"><div className="flex items-center"><X size={48} /><span className="ml-4 text-lg font-semibold">An Error Occurred</span></div><p className="mt-2 text-center max-w-md">{error}</p></div>;
     }
     
-    // Show profile if it exists and form is not shown
+    // Show profile if it exists
     if (!profile) {
         return null; // This should never happen due to the checks above, but TypeScript needs it
     }
@@ -502,7 +356,8 @@ export default function CompanyProfilePage() {
                             <h2 className="text-l font-bold text-[#1F4A75] flex items-center gap-3">
                                 {React.cloneElement(<Building2/>, { className: "w-5 h-5" })} General Profile
                             </h2>
-                            </div>
+                            <button onClick={() => handleOpenModal('edit', 'organization', profile)} className="flex items-center gap-2 text-sm text-[#1F4A75] font-semibold p-2 rounded-lg hover:bg-gray-100"><Pencil size={16} />Edit</button>
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-6 pt-4">
                             <InfoItem label="Company Name" value={profile.name} />
                             <InfoItem label="Legal Entity Type" value={profile.legal_entity_type} />
