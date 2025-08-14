@@ -162,10 +162,10 @@ export const Sidebar: React.FC<SidebarProps> = () => {
               {/* Company Profile Section */}
               <li>
                 <Link
-                  to="/company"
+                  to="/company/create"
                   className={twMerge(
                     "w-full flex items-center gap-3 p-2 rounded-lg text-sm font-medium tracking-tightest",
-                    isActive("/company") ? "bg-[#F0F5FF] text-[#052E65]" : "text-[#718096] hover:bg-gray-100",
+                    isActive("/company/create") ? "bg-[#F0F5FF] text-[#052E65]" : "text-[#718096] hover:bg-gray-100",
                     isCollapsed && "justify-center"
                   )}
                 >

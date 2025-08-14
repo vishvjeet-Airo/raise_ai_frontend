@@ -13,6 +13,9 @@ import ChatBot from "@/pages/chatbot";
 import ActionItems from "@/pages/actionitems";
 import CompanyProfilePage from "@/pages/company";
 import CreateUploader from "@/pages/auth/CreateUploader";
+import CompanyProfileByIdPage from "@/pages/company/[id]";
+import CompanyCreatePage from "@/pages/company/create";
+
 
 
 // Custom hook to get the authentication token
@@ -76,6 +79,8 @@ function RouterContent() {
         <Route path="/chatbot" element={<ChatBot />} />
         <Route path="/actionitems" element={<ActionItems />} />
         <Route path="/company" element={<CompanyProfilePage />} />
+        <Route path="/company/create" element={<CompanyCreatePage />} />
+        <Route path="/company/:id" element={<CompanyProfileByIdPage />} />
         <Route path="/auth/create-uploader" element={<CreateUploader />} />
       </Route>
 
