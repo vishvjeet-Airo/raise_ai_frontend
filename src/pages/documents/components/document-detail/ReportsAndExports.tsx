@@ -8,14 +8,40 @@ interface ReportsAndExportsProps {
 }
 
 export default function ReportsAndExports({ documentTitle, documentUrl }: ReportsAndExportsProps) {
-  const handleDownloadOriginal = () => {
+  function withAttachment(sasUrl: string, fileName: string) {
+    try {
+      const url = new URL(sasUrl);
+      const disposition = `attachment; filename="${fileName}"`;
+      url.searchParams.set('response-content-disposition', disposition);
+      return url.toString();
+    } catch {
+      return sasUrl;
+    }
+  }
+
+  async function forceDownloadViaBlob(sasUrl: string, fileName: string = 'document.pdf') {
+    try {
+      const res = await fetch(sasUrl, { mode: 'cors', credentials: 'omit' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      window.location.href = withAttachment(sasUrl, fileName);
+    }
+  }
+
+  const handleDownloadOriginal = async () => {
     if (documentUrl) {
-      const link = document.createElement('a');
-      link.href = documentUrl;
-      link.download = documentTitle || 'document';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const fileName = (documentTitle || 'document') + '.pdf';
+      await forceDownloadViaBlob(documentUrl, fileName);
     }
   };
 
