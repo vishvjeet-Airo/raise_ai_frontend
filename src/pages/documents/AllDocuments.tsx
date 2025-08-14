@@ -5,6 +5,14 @@ import { Search, ArrowDown, ArrowUp, Eye, Download, X, Loader2, Trash2, AlertTri
 import { API_BASE_URL } from "@/lib/config";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 
+interface ActionPoint {
+  id: number;
+  title: string;
+  description: string;
+  source_page: number;
+  deadline: string | null;
+}
+
 interface Document {
   id: string;
   name: string;
@@ -17,6 +25,7 @@ interface Document {
   file_name: string;
   circularType?: string;
   referenceNumber?: string;
+  actionPoints?: ActionPoint[];
 }
 
 /**
@@ -212,6 +221,7 @@ export default function AllDocuments() {
           file_name: doc.file_name,
           circularType: doc.circular_type,
           referenceNumber: doc.reference_number,
+          actionPoints: doc.action_points || [],
         };
       });
     }

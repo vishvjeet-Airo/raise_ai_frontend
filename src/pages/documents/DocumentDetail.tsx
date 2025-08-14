@@ -115,8 +115,12 @@ export default function DocumentDetail() {
                   referenceNumber={document.referenceNumber}
                   impactAreas={document.impactAreas}
                 />
-                <AIGeneratedSummary />
-                <KeyObligationsAndActionPoints />
+                <AIGeneratedSummary 
+                  documentId={document.id}
+                />
+                <KeyObligationsAndActionPoints 
+                actionPoints={document.actionPoints || []}
+                />
               </div>
 
               {/* Right Column - Validation & Assessment */}
