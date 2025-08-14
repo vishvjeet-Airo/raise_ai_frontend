@@ -174,6 +174,21 @@ export const Sidebar: React.FC<SidebarProps> = () => {
                   {!isCollapsed && <span>Company Profile</span>}
                 </Link>
               </li>
+
+              {/* Create Uploader Section */}
+              <li>
+                <Link
+                  to="/auth/create-uploader"
+                  className={twMerge(
+                    "w-full flex items-center gap-3 p-2 rounded-lg text-sm font-medium tracking-tightest",
+                    isActive("/auth/create-uploader") ? "bg-[#F0F5FF] text-[#052E65]" : "text-[#718096] hover:bg-gray-100",
+                    isCollapsed && "justify-center"
+                  )}
+                >
+                  <img src="/uploader.png" alt="Create Uploader" className="w-[14px] h-[17px]" />
+                  {!isCollapsed && <span>Create Uploader</span>}
+                </Link>
+              </li>
             </ul>
             
             {/* Separator Line */}

@@ -154,11 +154,8 @@ export default function DocumentDetail() {
       </div>
 
       <Dialog open={showPdfViewer} onOpenChange={setShowPdfViewer}>
-        <DialogContent className="max-w-3xl h-[90vh]">
-          <DialogHeader>
-            <DialogTitle>{document.name}</DialogTitle>
-          </DialogHeader>
-          <iframe src={document.url} width="100%" height="100%" className="border-none"></iframe>
+        <DialogContent className="max-w-4xl h-[90vh] p-0 overflow-hidden">
+          <iframe src={document.url} width="100%" height="100%" className="border-0 block" />
         </DialogContent>
       </Dialog>
     </ChatSidebarContext.Provider>
