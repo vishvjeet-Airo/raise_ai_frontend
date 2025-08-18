@@ -11,6 +11,7 @@ interface DocumentHeaderProps {
   onPreviewClick?: () => void;
 }
 
+// This component will now work without errors
 export default function DocumentHeader({ fileName, issueDate, publisher, documentId, onPreviewClick }: DocumentHeaderProps) {
   const { isChatOpen, setIsChatOpen, isPreviewOpen } = useChatSidebar();
 

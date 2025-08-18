@@ -12,13 +12,24 @@ import HumanValidationRequired from "./components/document-detail/HumanValidatio
 import KeyObligationsAndActionPoints from "./components/document-detail/KeyObligationsAndActionPoints";
 import ReportsAndExports from "./components/document-detail/ReportsAndExports";
 
-// Create context for chat sidebar state
-const ChatSidebarContext = createContext(null);
+// Defines the shape of the data in the context
+type ChatSidebarContextType = {
+  isChatOpen: boolean;
+  setIsChatOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isPreviewOpen: boolean;
+  setIsPreviewOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  shouldMinimizeSidebar: boolean;
+  documentId: string;
+  documentName: string;
+};
+
+// Creates the context with the correct type
+const ChatSidebarContext = createContext<ChatSidebarContextType | null>(null);
 
 export const useChatSidebar = () => {
   const context = useContext(ChatSidebarContext);
   if (!context) {
-    throw new Error("useChatSidebar must be used within ChatSidebarProvider");
+    throw new Error("useChatSidebar must be used within a ChatSidebarProvider");
   }
   return context;
 };
@@ -41,7 +52,7 @@ export default function DocumentDetail() {
     setIsPreviewOpen(!isPreviewOpen);
   };
 
-  // This single variable now controls both sidebar minimization and content stacking.
+  // If either sidebar is open, minimize the main sidebar and stack the content
   const anySidebarOpen = isPreviewOpen || isChatOpen;
   const shouldMinimizeSidebar = anySidebarOpen;
 
@@ -93,8 +104,6 @@ export default function DocumentDetail() {
                 </span>
               </div>
 
-              {/* --- LOGIC CHANGE IS HERE --- */}
-              {/* The layout now depends on `anySidebarOpen` instead of `bothSidebarsOpen` */}
               <div className={anySidebarOpen ? "" : "flex gap-5"}>
                 {anySidebarOpen ? (
                   // When ANY sidebar is open, stack content vertically
@@ -170,10 +179,9 @@ export default function DocumentDetail() {
             </div>
           </main>
 
-  {/* Preview Sidebar*/}
+          {/* Preview Sidebar (Iframe Only) */}
           {isPreviewOpen && (
             <aside className="w-[45%] max-w-2xl border-l border-gray-200 bg-white flex flex-col transition-all duration-300">
-              {/* The div containing the title and close button has been removed */}
               <div className="flex-1 min-h-0">
                 <iframe
                   src={document.url}
