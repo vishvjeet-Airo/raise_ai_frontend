@@ -47,13 +47,6 @@ export default function ChatBot() {
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  const quickQuestions = [
-    "What are the latest guidelines on KYC?",
-    "What are the current interest rate policies or repo rate?",
-    "What are the rules for foreign exchange transactions?",
-    "Are there any recent updates related to UPI?",
-  ];
-
   const fetchChatSessions = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/chat/no-document`);
@@ -298,9 +291,6 @@ export default function ChatBot() {
     }
   };
 
-  const handleQuickQuestionClick = (question: string) => {
-    handleSendMessage(question);
-  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -413,16 +403,6 @@ export default function ChatBot() {
           {messages.length === 0 && !isLoading && (
             <div className="px-6 pb-3">
               <div className="grid grid-cols-2 gap-2 w-full">
-                {quickQuestions.map((question, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleQuickQuestionClick(question)}
-                    className="px-3 py-2 bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg text-xs font-poppins text-gray-700 hover:text-blue-700 transition-all duration-200 text-left"
-                    disabled={isLoading}
-                  >
-                    {question}
-                  </button>
-                ))}
               </div>
             </div>
           )}

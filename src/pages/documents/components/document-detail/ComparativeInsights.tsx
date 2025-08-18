@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import ReactMarkdown from 'react-markdown';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { API_BASE_URL } from "@/lib/config";
+import { Loader2 } from "lucide-react";
+import FadedTextLoader from "./FadedTextLoader";
 
 // Reusing the same interfaces from your previous code
 interface DocumentInfo {
@@ -112,7 +114,7 @@ export default function ComparativeInsights({ documentId }: { documentId: number
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center p-8 text-gray-500">Loading insights...</div>
+          <FadedTextLoader/>
         </CardContent>
       </Card>
     );

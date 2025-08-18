@@ -12,7 +12,7 @@ interface DocumentHeaderProps {
 }
 
 export default function DocumentHeader({ fileName, issueDate, publisher, documentId, onPreviewClick }: DocumentHeaderProps) {
-  const { isChatOpen, setIsChatOpen } = useChatSidebar();
+  const { isChatOpen, setIsChatOpen, isPreviewOpen } = useChatSidebar();
 
   const toggleChat = () => {
     setIsChatOpen(!isChatOpen);
@@ -32,12 +32,16 @@ export default function DocumentHeader({ fileName, issueDate, publisher, documen
 
           <div className="flex gap-3 pt-2">
             <Button
-              className="text-white px-4 py-2 text-sm font-medium"
-              style={{ backgroundColor: "#1F4A75" }}
+              variant={isPreviewOpen ? "default" : "default"}
+              className={isPreviewOpen
+                ? "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-medium"
+                : "text-white px-4 py-2 text-sm font-medium"
+              }
+              style={!isPreviewOpen ? { backgroundColor: "#1F4A75" } : {}}
               onClick={onPreviewClick}
             >
               <FileText className="w-4 h-4 mr-2" />
-              Preview Document
+              {isPreviewOpen ? "Close Preview" : "Preview Document"}
             </Button>
 
             <Button

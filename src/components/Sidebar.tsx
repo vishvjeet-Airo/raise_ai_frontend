@@ -17,12 +17,15 @@ import { SettingsModal } from "./SettingsModal";
 
 // It's good practice to define props, even if they are empty for now.
 // This makes the component easier to extend later.
-interface SidebarProps {}
+interface SidebarProps {
+  forceCollapsed?: boolean;
+}
 
-export const Sidebar: React.FC<SidebarProps> = () => {
+export const Sidebar: React.FC<SidebarProps> = ({ forceCollapsed = false }) => {
   const [documentsExpanded, setDocumentsExpanded] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const actuallyCollapsed = forceCollapsed || isCollapsed;
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const location = useLocation();
@@ -61,17 +64,16 @@ export const Sidebar: React.FC<SidebarProps> = () => {
           `bg-white border-r border-gray-200 flex flex-col h-screen
            fixed lg:relative left-0 top-0 z-50 transform transition-all duration-300 ease-in-out`,
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
-          isCollapsed ? "w-[88px]" : "w-64", // Corrected width
-          "lg:translate-x-0"
+          actuallyCollapsed ? "w-[70px]" : "w-64", "lg:translate-x-0"
         )}
       >
-        <div className={twMerge("flex flex-col h-full", isCollapsed ? "items-center" : "")}>
+        <div className={twMerge("flex flex-col h-full", actuallyCollapsed ? "items-center" : "")}>
 
           {/* User Profile Section */}
-          <div className={twMerge("p-4 border-b border-gray-200 w-full", isCollapsed ? "px-4" : "px-6")}>
+          <div className={twMerge("p-4 border-b border-gray-200 w-full", actuallyCollapsed ? "px-4" : "px-6")}>
             <div className="flex items-center space-x-3">
               <img src="/analyst.png" alt="Andrew Smith" className="w-10 h-10 rounded-full" />
-              {!isCollapsed && (
+              {!actuallyCollapsed && (
                 <div>
                   <div className="font-medium text-[10px] leading-[12px] tracking-[0.4px] uppercase text-[#757575]">Finance Analyst</div>
                   <div className="font-medium text-sm leading-5 tracking-normal text-black">Andrew Smith</div>
@@ -82,40 +84,41 @@ export const Sidebar: React.FC<SidebarProps> = () => {
           </div>
 
           {/* Desktop Collapse Button */}
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="hidden lg:flex absolute -right-3 top-8 z-10 w-6 h-6 bg-white border-2 border-gray-200 rounded-full items-center justify-center text-gray-500 hover:bg-gray-100"
-          >
-            <ChevronLeft className={`w-4 h-4 transition-transform ${isCollapsed ? 'rotate-180' : ''}`} />
-          </button>
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="hidden lg:flex absolute -right-3 top-8 z-10 w-6 h-6 bg-white border-2 border-gray-200 rounded-full items-center justify-center text-gray-500 hover:bg-gray-100"
+            >
+              <ChevronLeft className={`w-4 h-4 transition-transform ${actuallyCollapsed ? 'rotate-180' : ''}`} />
+            </button>
+          
 
           {/* Navigation Menu */}
-          <div className={twMerge("flex-1 py-6 w-full", isCollapsed ? "px-4" : "px-6")}>
-            {!isCollapsed && <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4">MAIN</div>}
+          <div className={twMerge("flex-1 py-6 w-full", actuallyCollapsed ? "px-4" : "px-6")}>
+            {!actuallyCollapsed && <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4">MAIN</div>}
             
             <ul className="space-y-2">
               {/* Documents Section */}
               <li>
                 <button
-                  onClick={() => !isCollapsed && setDocumentsExpanded(!documentsExpanded)}
+                  onClick={() => !actuallyCollapsed && setDocumentsExpanded(!documentsExpanded)}
                   className={twMerge(
                     "w-full flex items-center justify-between p-2 rounded-lg transition-colors text-sm font-medium tracking-tightest",
                     isDocumentsSectionActive ? "bg-[#F0F5FF] text-[#052E65]" : "text-[#718096] hover:bg-gray-100",
-                    isCollapsed && "justify-center"
+                    actuallyCollapsed && "justify-center"
                   )}
                 >
                   <div className="flex items-center gap-3">
                     <img src="/document.png" alt="Documents" className="w-[14px] h-[18px]" />
-                    {!isCollapsed && <span>Documents</span>}
+                    {!actuallyCollapsed && <span>Documents</span>}
                   </div>
-                  {!isCollapsed && (
+                  {!actuallyCollapsed && (
                     <ChevronDown
                       className={`w-4 h-4 transition-transform ${documentsExpanded ? "rotate-180" : ""}`}
                     />
                   )}
                 </button>
 
-                {documentsExpanded && !isCollapsed && (
+                {documentsExpanded && !actuallyCollapsed && (
                   <div className="mt-2 pl-4 ml-[10px] border-l-2 border-gray-200 space-y-1">
                     <Link to="/documents" className={twMerge("block p-2 rounded-lg w-full text-xs font-medium tracking-tightest text-[#718096] hover:bg-gray-100", isActive("/documents") && "bg-[#F6F6F6]")}>
                       All Documents
@@ -134,12 +137,12 @@ export const Sidebar: React.FC<SidebarProps> = () => {
                   className={twMerge(
                     "w-full flex items-center gap-3 p-2 rounded-lg text-sm font-medium tracking-tightest",
                     isActive("/chatbot") ? "bg-[#F0F5FF] text-[#052E65]" : "text-[#718096] hover:bg-gray-100",
-                    isCollapsed && "justify-center"
+                    actuallyCollapsed && "justify-center"
                   )}
                 >
                   {/* Change w-5 h-5 to w-4 h-4 */}
                   <img src="/chatbot.png" alt="Chat Bot" className="w-[16px] h-[15px]" />
-                  {!isCollapsed && <span>Chat Bot</span>}
+                  {!actuallyCollapsed && <span>Chat Bot</span>}
                 </Link>
               </li>
 
@@ -150,12 +153,12 @@ export const Sidebar: React.FC<SidebarProps> = () => {
                   className={twMerge(
                     "w-full flex items-center gap-3 p-2 rounded-lg text-sm font-medium tracking-tightest",
                     isActive("/actionitems") ? "bg-[#F0F5FF] text-[#052E65]" : "text-[#718096] hover:bg-gray-100",
-                    isCollapsed && "justify-center"
+                    actuallyCollapsed && "justify-center"
                   )}
                 >
                   {/* Change w-5 h-5 to w-4 h-4 */}
                   <img src="/ActionItem.png" alt="Action Items" className="w-[14px] h-[17px]" />
-                  {!isCollapsed && <span>Action Items</span>}
+                  {!actuallyCollapsed && <span>Action Items</span>}
                 </Link>
               </li>
             
@@ -166,12 +169,12 @@ export const Sidebar: React.FC<SidebarProps> = () => {
                   className={twMerge(
                     "w-full flex items-center gap-3 p-2 rounded-lg text-sm font-medium tracking-tightest",
                     isActive("/company/create") ? "bg-[#F0F5FF] text-[#052E65]" : "text-[#718096] hover:bg-gray-100",
-                    isCollapsed && "justify-center"
+                    actuallyCollapsed && "justify-center"
                   )}
                 >
                   {/* Change w-5 h-5 to w-4 h-4 */}
                   <img src="/companyProfile.png" alt="Company Profile" className="w-[14px] h-[17px]" />
-                  {!isCollapsed && <span>Company Profile</span>}
+                  {!actuallyCollapsed && <span>Company Profile</span>}
                 </Link>
               </li>
 
@@ -182,23 +185,23 @@ export const Sidebar: React.FC<SidebarProps> = () => {
                   className={twMerge(
                     "w-full flex items-center gap-3 p-2 rounded-lg text-sm font-medium tracking-tightest",
                     isActive("/auth/create-uploader") ? "bg-[#F0F5FF] text-[#052E65]" : "text-[#718096] hover:bg-gray-100",
-                    isCollapsed && "justify-center"
+                    actuallyCollapsed && "justify-center"
                   )}
                 >
                   <img src="/uploader.png" alt="Create Uploader" className="w-[14px] h-[17px]" />
-                  {!isCollapsed && <span>Create Uploader</span>}
+                  {!actuallyCollapsed && <span>Create Uploader</span>}
                 </Link>
               </li>
             </ul>
             
             {/* Separator Line */}
-            {!isCollapsed && <div className="w-[208px] h-[2px] rounded-full bg-[#F6F6F6] mx-auto my-4" />}
+            {!actuallyCollapsed && <div className="w-[208px] h-[2px] rounded-full bg-[#F6F6F6] mx-auto my-4" />}
 
           </div>
 
           {/* Bottom Section */}
-          <div className={twMerge("p-4 w-full", isCollapsed ? "px-2" : "px-6")}>
-            {!isCollapsed ? (
+          <div className={twMerge("p-4 w-full", actuallyCollapsed ? "px-2" : "px-6")}>
+            {!actuallyCollapsed ? (
               // Expanded view
               <ul className="space-y-1">
                 <li>

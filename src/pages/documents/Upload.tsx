@@ -5,6 +5,11 @@ import { toast } from "sonner";
 import { Cloud, X, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+const getAuthHeaders = (): HeadersInit | undefined => {
+  const token = localStorage.getItem('access_token');
+  return token ? { Authorization: `Bearer ${token}` } : undefined;
+};
+
 interface UploadFile {
   id: string;
   file: File;
@@ -183,6 +188,7 @@ export default function Upload() {
       const response = await fetch(`${API_BASE_URL}/api/documents/upload`, {
         method: 'POST',
         body: formData,
+        headers: getAuthHeaders(),
       });
 
       if (response.ok) {
@@ -240,8 +246,8 @@ export default function Upload() {
     <div className="flex h-screen bg-white">
       <Sidebar />
   
-      <div className="flex-1 p-6 overflow-y-auto">
-        <div className="bg-[#FBFBFB] rounded-xl p-8 min-h-full">
+      <div className="flex-1 p-6 overflow-y-auto mt-0">
+        <div className="bg-[#FBFBFB] p-8 min-h-full">
             <div className="max-w-4xl">
               {/* Header */}
               <div className="mb-8">
