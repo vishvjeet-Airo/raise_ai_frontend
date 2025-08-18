@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { Sidebar } from "@/components/Sidebar";
 
-const ORGANISATION_API_ENDPOINT = `${API_BASE_URL}/api/organisation`;
+const ORGANISATION_API_ENDPOINT = `${API_BASE_URL}/api/organisations`;
 
 // --- API Abstraction ---
 const api = {

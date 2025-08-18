@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Edit } from "lucide-react";
+import { Edit, Loader2 } from "lucide-react";
+import FadedTextLoader from "./FadedTextLoader";
 
 interface ActionPoint {
   id: number;
@@ -9,7 +10,17 @@ interface ActionPoint {
   deadline: string | null;
 }
 
-export default function KeyObligationsAndActionPoints({ actionPoints = [] }: { actionPoints: ActionPoint[] }) {
+interface KeyObligationsAndActionPointsProps {
+  actionPoints?: ActionPoint[];
+  loading?: boolean;
+  error?: string | null;
+}
+
+export default function KeyObligationsAndActionPoints({ 
+  actionPoints = [], 
+  loading = false, 
+  error = null 
+}: KeyObligationsAndActionPointsProps) {
   return (
     <Card className="border-0 shadow-sm">
       <CardHeader className="pb-4">
@@ -20,10 +31,18 @@ export default function KeyObligationsAndActionPoints({ actionPoints = [] }: { a
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {actionPoints.length === 0 && (
+          {loading && (
+            <FadedTextLoader />
+          )}
+          {error && (
+            <div className="flex items-center py-4">
+              <p className="text-sm text-red-600">Error: {error}</p>
+            </div>
+          )}
+          {!loading && !error && actionPoints.length === 0 && (
             <div className="text-gray-500 text-sm">No obligations or action points found for this document.</div>
           )}
-          {actionPoints.map((point, idx) => (
+          {!loading && !error && actionPoints.map((point, idx) => (
             <div key={point.id}>
               <div className="flex items-start space-x-3">
                 <div className="w-3 h-3 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>

@@ -32,16 +32,9 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
   const [inputMessage, setInputMessage] = useState("");
   const [sessionId, setSessionId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
 
-  const quickQuestions = [
-    "Summarize this document",
-    "What are the key points?",
-    "What are the compliance requirements?",
-    "When does this take effect?",
-  ];
 
   const handleNewChat = async (docId?: string) => {
     setIsLoading(true);
@@ -55,9 +48,7 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ document_id: documentId }),
       });
-
       if (!response.ok) throw new Error('Failed to create new chat session');
-
       const data = await response.json();
       setSessionId(data.session_id);
     } catch (error) {
@@ -80,10 +71,11 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
 
     let currentSessionId = sessionId;
 
-    // If no session exists, create one first
     if (!currentSessionId) {
+      // If no session exists, we should ideally wait for it to be created.
+      // A robust way is to use the state callback from handleNewChat.
+      // For now, this logic might need adjustment if handleNewChat takes time.
       await handleNewChat();
-      // After creating new session, we need to wait for it to complete
       return;
     }
 
@@ -101,19 +93,12 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
     try {
       const response = await fetch(`${API_BASE_URL}/api/chat/${currentSessionId}/message`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: messageToSend }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to get response from chatbot');
-      }
-
-      if (!response.body) {
-        throw new Error('Response body is null');
-      }
+      if (!response.ok) throw new Error('Failed to get response from chatbot');
+      if (!response.body) throw new Error('Response body is null');
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -136,7 +121,6 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
         const { done, value } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
-
         const jsonStrings = chunk.split(/\r?\n/).filter(s => s.trim() !== '');
 
         for (const jsonString of jsonStrings) {
@@ -158,26 +142,21 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
           )
         );
       }
-
     } catch (error) {
       console.error('Error calling chat API:', error);
-
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: "bot",
         content: "Sorry, I encountered an error while processing your request. Please try again.",
         timestamp: new Date(),
       };
-
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleQuickQuestionClick = (question: string) => {
-    handleSendMessage(question);
-  };
+
 
   const handleNavigateToFullChat = () => {
     if (sessionId) {
@@ -205,10 +184,8 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   return (
-    <div className="w-80 bg-[#FBFBFB] border-l border-gray-200 flex flex-col h-full">
+    <div className="w-full bg-[#FBFBFB] flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white flex-shrink-0">
         <div className="flex flex-col">
@@ -216,25 +193,13 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
           <span className="text-xs text-gray-500">{documentId ? `Document ID: ${documentId}` : "No Document Selected"}</span>
         </div>
         <div className="flex items-center space-x-2">
-          <button
-            onClick={() => handleNewChat()}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
-            title="New chat"
-          >
+          <button onClick={() => handleNewChat()} className="p-1 hover:bg-gray-100 rounded transition-colors" title="New chat">
             <Plus className="w-4 h-4 text-gray-600" />
           </button>
-          <button
-            onClick={handleNavigateToFullChat}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
-            title="Open in full view"
-          >
+          <button onClick={handleNavigateToFullChat} className="p-1 hover:bg-gray-100 rounded transition-colors" title="Open in full view">
             <ExternalLink className="h-4 w-4 text-gray-500" />
           </button>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
-            title="Close"
-          >
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded transition-colors" title="Close">
             <X className="h-4 w-4 text-gray-500" />
           </button>
         </div>
@@ -283,7 +248,6 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
             </div>
           ))
         )}
-
         {isLoading && (
           <div className="flex justify-start">
             <div className="flex items-start space-x-2">
@@ -305,16 +269,6 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
       <div className="border-t bg-[#FBFBFB] px-4 py-3 flex-shrink-0">
         {messages.length === 0 && !isLoading && (
           <div className="grid grid-cols-1 gap-2 w-full mb-3">
-            {quickQuestions.map((question, index) => (
-              <button
-                key={index}
-                onClick={() => handleQuickQuestionClick(question)}
-                className="px-3 py-2 bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg text-xs font-poppins text-gray-700 hover:text-blue-700 transition-all duration-200 text-left"
-                disabled={isLoading}
-              >
-                {question}
-              </button>
-            ))}
           </div>
         )}
         <div className="relative">

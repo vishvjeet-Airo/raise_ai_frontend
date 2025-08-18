@@ -4,6 +4,12 @@ import { Sidebar } from "@/components/Sidebar";
 import { Search, ArrowDown, ArrowUp, Eye, Download, X, Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { API_BASE_URL } from "@/lib/config";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import FadedTextLoader from "./components/document-detail/FadedTextLoader";
+
+const getAuthHeaders = (): HeadersInit | undefined => {
+  const token = localStorage.getItem('access_token');
+  return token ? { Authorization: `Bearer ${token}` } : undefined;
+};
 
 interface ActionPoint {
   id: number;
@@ -66,18 +72,18 @@ const DocumentViewerModal = ({ document, onClose }: { document: Document; onClos
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" aria-modal="true" role="dialog">
       <div className="bg-white rounded-lg shadow-2xl overflow-hidden w-full max-w-4xl h-[90vh] relative">
-        <button
-          onClick={onClose}
+          <button
+            onClick={onClose}
           className="absolute top-2 right-2 z-10 text-white bg-black/40 hover:bg-black/60 rounded-full p-1"
-          aria-label="Close document viewer"
-        >
-          <X className="w-6 h-6" />
-        </button>
-        <iframe
+            aria-label="Close document viewer"
+          >
+            <X className="w-6 h-6" />
+          </button>
+            <iframe
           src={document.url}
-          title={document.name}
+              title={document.name}
           className="w-full h-full border-0 block"
-        />
+            />
       </div>
     </div>
   );
@@ -138,7 +144,9 @@ export default function AllDocuments() {
   const { data: documents = [], isLoading, isError, error } = useQuery<Document[], Error>({
     queryKey: ["documents"],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/documents`);
+      const response = await fetch(`${API_BASE_URL}/api/documents`,{
+        headers: getAuthHeaders(),
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch documents');
       }
@@ -170,6 +178,7 @@ export default function AllDocuments() {
       });
     }
   });
+  
 
   const deleteMutation = useMutation({
     mutationFn: async (fileName: string) => {
@@ -306,8 +315,8 @@ export default function AllDocuments() {
       <div className="flex h-screen bg-white overflow-hidden">
         <Sidebar />
 
-        <div className="flex-1 p-6 overflow-y-auto">
-          <div className="bg-[#FBFBFB] rounded-xl px-6 py-6 my-6 min-h-[calc(100vh-64px)]">
+        <div className="flex-1 p-6 overflow-y-auto mt-0">
+          <div className="bg-[#FBFBFB] px-6 py-6 my-6 min-h-[calc(100vh-64px)]">
             <div className="w-full">
               {/* Header, Search, and Actions */}
               <div className="flex items-center mb-8 w-full px-8">
@@ -346,8 +355,7 @@ export default function AllDocuments() {
                 <table className="w-full">
                   <thead className="bg-[#E5F6F0]">
                     <tr className="h-[43px]">
-                      <th className="w-12 px-6">
-                      </th>
+                      <th className="w-16 px-4 text-center text-xs font-medium text-[#4F4F4F]">S.No.</th>
                       <th className="text-left text-xs font-medium text-[#4F4F4F]">Name</th>
 
                       <th
@@ -374,10 +382,15 @@ export default function AllDocuments() {
                   <tbody className="divide-y divide-gray-200">
                     {/* This logic checks if there are any documents to display */}
                     {sortedDocuments.length > 0 ? (
-                      sortedDocuments.map((document) => (
+                      sortedDocuments.map((document, index) =>{
+                        const isProcessed = document.status === 'PROCESSED' || document.status === 'COMPLETED';
+                        return (
                         <tr key={document.id} className="hover:bg-gray-50 transition-colors text-xs font-medium text-[#767575]">
-                          <td className="px-6 py-4"></td>
+                          <td className="px-4 py-4 text-center text-gray-600 font-medium">{index + 1}</td>
+                          {/*Name column*/ 
+                          }
                           <td className="py-4 max-w-md">
+                          {isProcessed ? (
                             <Link
                               to={`/documents/${document.id}`}
                               state={{ document: document }}
@@ -385,31 +398,43 @@ export default function AllDocuments() {
                             >
                               {document.name}
                             </Link>
+                            ) : (
+                              <FadedTextLoader lines={1}/>
+                            )}
                           </td>
                           <td className="px-8 py-4 text-center">{document.uploaded_at}</td>
-                          <td className="px-8 py-4 text-center">{document.publicationDate}</td>
-                          
+
+                          {/* Issue date column */}
                           <td className="px-8 py-4 text-center">
-                            <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(document.status)}`}>
-                              {document.status === 'COMPLETED' ? 'Processed' : document.status}
-                            </span>
-                          </td>
-                          <td className="px-8 py-4 text-center">{document.publisher}</td>
-                          <td className="px-8 py-4">
-                            <div className="flex items-center justify-center space-x-3 text-[#1F4A75]">
-                              <button onClick={() => setViewingDocument(document)} className="transition-colors hover:text-blue-700" title="View document"><Eye className="w-4 h-4" /></button>
-                              <button onClick={() => handleDelete(document)} className="transition-colors hover:text-red-600" title="Delete document"><Trash2 className="w-4 h-4" /></button>
-                              <button onClick={() => handleDownload(document)} className="transition-colors hover:text-blue-700" disabled={downloading === document.id} title="Download document">
-                                {downloading === document.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                              </button>
+                          {isProcessed ? document.publicationDate : <FadedTextLoader lines={1} />}
+                            </td>
+           
+                            <td className="px-8 py-4 text-center">
+                              <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(document.status)}`}>
+                                {document.status}
+                              </span>
+                            </td>
+
+                            <td className="px-8 py-4 text-center">
+                              {isProcessed ? document.publisher : <FadedTextLoader lines={1} />}
+                            </td>
+
+                            <td className="px-8 py-4">
+                              <div className="flex items-center justify-center space-x-3 text-[#1F4A75]">
+                                {/* Actions are kept as they are - user might want to delete a pending item */}
+                                <button onClick={() => setViewingDocument(document)} className="transition-colors hover:text-blue-700" title="View document" disabled={!isProcessed}><Eye className="w-4 h-4" /></button>
+                                <button onClick={() => handleDelete(document)} className="transition-colors hover:text-red-600" title="Delete document"><Trash2 className="w-4 h-4" /></button>
+                                <button onClick={() => handleDownload(document)} className="transition-colors hover:text-blue-700" disabled={downloading === document.id || !isProcessed} title="Download document">
+                                  {downloading === document.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                                </button>
                             </div>
                           </td>
                         </tr>
-                      ))
+                      )})
                     ) : (
                       // If NO documents, it shows this "Not Found" message
                       <tr>
-                        <td colSpan={9} className="text-center py-10">
+                        <td colSpan={8} className="text-center py-10">
                           <img src="/Not Found.png" alt="No documents found" className="mx-auto h-40" />
                           <p className="mt-4 text-gray-500 font-semibold">No Documents Found</p>
                         </td>

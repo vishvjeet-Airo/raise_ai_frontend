@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { HelpCircle, CheckCircle2 } from "lucide-react";
 import { SupportModal } from "@/components/SupportModal";
 
+
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState<{ email?: string; general?: string; }>({});

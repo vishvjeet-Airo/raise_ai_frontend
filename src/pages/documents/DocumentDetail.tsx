@@ -1,163 +1,202 @@
-import { Link } from "react-router-dom";
+import { createContext, useContext, useState } from "react";
+import { Link, useLocation, useParams } from "react-router-dom";
+import { ChevronRight, X } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
-import { ChevronRight } from "lucide-react";
-import DocumentHeader from "./components/document-detail/DocumentHeader";
-import CircularOverview from "./components/document-detail/CircularOverview";
 import AIGeneratedSummary from "./components/document-detail/AIGeneratedSummary";
-import KeyObligationsAndActionPoints from "./components/document-detail/KeyObligationsAndActionPoints";
-import HumanValidationRequired from "./components/document-detail/HumanValidationRequired";
+import ChatSidebar from "./components/document-detail/ChatSidebar";
+import CircularOverview from "./components/document-detail/CircularOverview";
 import ComparativeInsights from "./components/document-detail/ComparativeInsights";
+import DocumentHeader from "./components/document-detail/DocumentHeader";
 import DocumentTimeline from "./components/document-detail/DocumentTimeline";
+import HumanValidationRequired from "./components/document-detail/HumanValidationRequired";
+import KeyObligationsAndActionPoints from "./components/document-detail/KeyObligationsAndActionPoints";
 import ReportsAndExports from "./components/document-detail/ReportsAndExports";
-import ChatSidebar from "./components/document-detail/ChatSidebar"; 
-import { useState, createContext, useContext } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useParams, useLocation } from "react-router-dom";
 
 // Create context for chat sidebar state
-const ChatSidebarContext = createContext<{
-  isChatOpen: boolean;
-  setIsChatOpen: (open: boolean) => void;
-  documentId: string;
-  documentName: string;
-} | null>(null);
+const ChatSidebarContext = createContext(null);
 
 export const useChatSidebar = () => {
   const context = useContext(ChatSidebarContext);
   if (!context) {
-    throw new Error('useChatSidebar must be used within ChatSidebarProvider');
+    throw new Error("useChatSidebar must be used within ChatSidebarProvider");
   }
   return context;
 };
 
 export default function DocumentDetail() {
-  const [showPdfViewer, setShowPdfViewer] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const { id } = useParams();
   const location = useLocation();
 
-  // Get document data from location state
   const documentFromState = location.state?.document;
 
-  // If no document data is passed, show an error or redirect
   if (!documentFromState) {
-    return (
-      <div className="flex h-screen bg-slate-50">
-        <Sidebar />
-        <div className="flex-1 p-6 overflow-y-auto">
-          <div className="max-w-7xl">
-            <div className="flex items-center space-x-2 text-sm text-gray-600 mb-6">
-              <Link to="/documents" className="hover:text-gray-900 transition-colors">
-                All Documents
-              </Link>
-              <ChevronRight className="w-4 h-4" />
-              <span className="text-red-600">Document not found</span>
-            </div>
-            <div className="text-center py-12">
-              <p className="text-gray-600 mb-4">Document data not available. Please return to the documents list.</p>
-              <Link
-                to="/documents"
-                className="inline-flex items-center px-4 py-2 bg-[#1F4A75] text-white rounded-lg hover:bg-[#1F4A75]/90 transition-colors"
-              >
-                Back to Documents
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <div>Document not found. Please go back to the list.</div>;
   }
 
   const document = documentFromState;
 
   const handlePreviewClick = () => {
-    setShowPdfViewer(true);
+    setIsPreviewOpen(!isPreviewOpen);
   };
 
+  // This single variable now controls both sidebar minimization and content stacking.
+  const anySidebarOpen = isPreviewOpen || isChatOpen;
+  const shouldMinimizeSidebar = anySidebarOpen;
+
   return (
-    <ChatSidebarContext.Provider value={{
-      isChatOpen,
-      setIsChatOpen,
-      documentId: document.id,
-      documentName: document.name
-    }}>
-      <div className="flex h-screen bg-slate-50">
-        <Sidebar />
+    <ChatSidebarContext.Provider
+      value={{
+        isChatOpen,
+        setIsChatOpen,
+        isPreviewOpen,
+        setIsPreviewOpen,
+        shouldMinimizeSidebar,
+        documentId: document.id,
+        documentName: document.name,
+      }}
+    >
+      <div className="flex h-screen bg-slate-50 overflow-hidden">
+        <Sidebar forceCollapsed={shouldMinimizeSidebar} />
 
-        <div className={`flex-1 p-6 overflow-y-auto transition-all duration-300 ${isChatOpen ? 'mr-80' : ''}`}>
-          <div className="max-w-7xl">
-            {/* Breadcrumb */}
-            <div className="flex items-center space-x-2 text-sm text-gray-600 mb-6">
-              <Link to="/documents" className="hover:text-gray-900 transition-colors" style={{ font: 'poppins', fontWeight: 400, fontSize: '16px', lineHeight: '100%', letterSpacing: '0%' }}>
-                All Documents
-              </Link>
-              <ChevronRight className="w-4 h-4" />
-              <span className="text-[#1F4A75] font-semibold" style={{ font: 'poppins', fontWeight: 400, fontSize: '16px', lineHeight: '100%', letterSpacing: '0%' }}>
-                {document.name}
-              </span>
-            </div>
-
-            <div className="flex gap-5">
-              {/* Left Column - Main Content */}
-              {/* FIX 1: This column is now flexible (`flex-1`) and will grow/shrink to fill available space. */}
-              <div className="flex-1 space-y-6">
-                <DocumentHeader
-                  fileName={document.name}
-                  issueDate={document.publicationDate}
-                  publisher={document.publisher}
-                  documentId={document.id}
-                  onPreviewClick={handlePreviewClick}
-                />
-                <CircularOverview
-                  issuingAuthority={document.publisher}
-                  issuingDate={document.publicationDate}
-                  circularType={document.circularType}
-                  referenceNumber={document.referenceNumber}
-                  impactAreas={document.impactAreas}
-                />
-                <AIGeneratedSummary 
-                  documentId={document.id}
-                />
-                <KeyObligationsAndActionPoints 
-                actionPoints={document.actionPoints || []}
-                />
+        <div className="flex flex-1 min-w-0">
+          {/* Main Content Area */}
+          <main className="flex-1 p-6 overflow-y-auto">
+            <div className="max-w-7xl">
+              <div className="flex items-center space-x-2 text-sm text-gray-600 mb-6">
+                <Link
+                  to="/documents"
+                  className="hover:text-gray-900 transition-colors"
+                  style={{
+                    font: "poppins",
+                    fontWeight: 400,
+                    fontSize: "16px",
+                    lineHeight: "100%",
+                    letterSpacing: "0%",
+                  }}
+                >
+                  All Documents
+                </Link>
+                <ChevronRight className="w-4 h-4" />
+                <span
+                  className="text-[#1F4A75] font-semibold"
+                  style={{
+                    font: "poppins",
+                    fontWeight: 400,
+                    fontSize: "16px",
+                    lineHeight: "100%",
+                    letterSpacing: "0%",
+                  }}
+                >
+                  {document.name}
+                </span>
               </div>
 
-              {/* Right Column - Validation & Assessment */}
-              {/* FIX 2: This column now has a fixed width and is prevented from shrinking. */}
-              <div className="w-[361px] flex-shrink-0 space-y-6">
-                <DocumentTimeline />
-                <HumanValidationRequired />
-                <ComparativeInsights 
-                  documentId={document.id}
-                />
-                <ReportsAndExports
-                  documentTitle={document.name}
-                  documentUrl={document.url}
-                />
+              {/* --- LOGIC CHANGE IS HERE --- */}
+              {/* The layout now depends on `anySidebarOpen` instead of `bothSidebarsOpen` */}
+              <div className={anySidebarOpen ? "" : "flex gap-5"}>
+                {anySidebarOpen ? (
+                  // When ANY sidebar is open, stack content vertically
+                  <div className="w-full space-y-6">
+                    <DocumentHeader
+                      fileName={document.name}
+                      issueDate={document.publicationDate}
+                      publisher={document.publisher}
+                      documentId={document.id}
+                      onPreviewClick={handlePreviewClick}
+                    />
+                    <CircularOverview
+                      issuingAuthority={document.publisher}
+                      issuingDate={document.publicationDate}
+                      circularType={document.circularType}
+                      referenceNumber={document.referenceNumber}
+                      impactAreas={document.impactAreas}
+                    />
+                    <AIGeneratedSummary documentId={document.id} />
+                    <KeyObligationsAndActionPoints
+                      actionPoints={document.actionPoints || []}
+                      loading={false}
+                      error={null}
+                    />
+                    <DocumentTimeline />
+                    <HumanValidationRequired />
+                    <ComparativeInsights documentId={document.id} />
+                    <ReportsAndExports
+                      documentTitle={document.name}
+                      documentUrl={document.url}
+                    />
+                  </div>
+                ) : (
+                  // When NO sidebar is open, use two columns
+                  <>
+                    {/* Left Column of Content */}
+                    <div className="flex-1 space-y-6">
+                      <DocumentHeader
+                        fileName={document.name}
+                        issueDate={document.publicationDate}
+                        publisher={document.publisher}
+                        documentId={document.id}
+                        onPreviewClick={handlePreviewClick}
+                      />
+                      <CircularOverview
+                        issuingAuthority={document.publisher}
+                        issuingDate={document.publicationDate}
+                        circularType={document.circularType}
+                        referenceNumber={document.referenceNumber}
+                        impactAreas={document.impactAreas}
+                      />
+                      <AIGeneratedSummary documentId={document.id} />
+                      <KeyObligationsAndActionPoints
+                        actionPoints={document.actionPoints || []}
+                        loading={false}
+                        error={null}
+                      />
+                    </div>
+
+                    {/* Right Column of Content */}
+                    <div className="w-[361px] flex-shrink-0 space-y-6">
+                      <DocumentTimeline />
+                      <HumanValidationRequired />
+                      <ComparativeInsights documentId={document.id} />
+                      <ReportsAndExports
+                        documentTitle={document.name}
+                        documentUrl={document.url}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
-          </div>
-        </div>
+          </main>
 
-        {/* Chat Sidebar: This now slides in and the main content adjusts to it. */}
-        <div className={`fixed top-0 right-0 h-full transition-transform duration-300 ease-in-out z-30 ${
-          isChatOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}>
-          <ChatSidebar
-            isOpen={isChatOpen}
-            onClose={() => setIsChatOpen(false)}
-            documentId={id || "15"}
-            documentName={document.name}
-          />
+  {/* Preview Sidebar*/}
+          {isPreviewOpen && (
+            <aside className="w-[45%] max-w-2xl border-l border-gray-200 bg-white flex flex-col transition-all duration-300">
+              {/* The div containing the title and close button has been removed */}
+              <div className="flex-1 min-h-0">
+                <iframe
+                  src={document.url}
+                  title={document.name}
+                  className="w-full h-full border-0 block"
+                />
+              </div>
+            </aside>
+          )}
+
+          {/* Chat Sidebar */}
+          {isChatOpen && (
+            <aside className="transition-all duration-300 border-l-2 border-gray-300">
+              <ChatSidebar
+                isOpen={isChatOpen}
+                onClose={() => setIsChatOpen(false)}
+                documentId={id || "15"}
+                documentName={document.name}
+              />
+            </aside>
+          )}
         </div>
       </div>
-
-      <Dialog open={showPdfViewer} onOpenChange={setShowPdfViewer}>
-        <DialogContent className="max-w-4xl h-[90vh] p-0 overflow-hidden">
-          <iframe src={document.url} width="100%" height="100%" className="border-0 block" />
-        </DialogContent>
-      </Dialog>
     </ChatSidebarContext.Provider>
   );
 }
