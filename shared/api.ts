@@ -13,7 +13,7 @@ export interface DemoResponse {
   message: string;
 }
 
-export const uploadDocument = async (file: File, name: string) => {
+"""export const uploadDocument = async (file: File, name: string) => {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("name", name);
@@ -23,9 +23,15 @@ export const uploadDocument = async (file: File, name: string) => {
     body: formData,
   });
 
+  if (response.status === 401) {
+    localStorage.removeItem('access_token');
+    window.location.href = '/auth/Login';
+    throw new Error('Unauthorized');
+  }
+
   if (!response.ok) {
     throw new Error("Failed to upload document");
   }
 
   return response.json();
-};
+};""

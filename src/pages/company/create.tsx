@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { Sidebar } from "@/components/Sidebar";
 
-const ORGANISATION_API_ENDPOINT = `${API_BASE_URL}/api/organisation`;
+const ORGANISATION_API_ENDPOINT = `${API_BASE_URL}/api/organisations`;
 
 // --- API Abstraction ---
 const api = {
@@ -197,7 +197,7 @@ export default function CompanyProfilePage() {
     };
 
     // --- RENDER LOGIC ---
-    if (loading) {
+    if (loading && !profile) { 
         return <div className="flex items-center justify-center h-screen bg-slate-50"><LoaderCircle className="animate-spin text-[#1F4A75]" size={48} /><span className="ml-4 text-lg text-gray-600">Loading...</span></div>;
     }
 
@@ -237,6 +237,7 @@ export default function CompanyProfilePage() {
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* SectionCard components remain unchanged */}
                         <SectionCard title="Jurisdictions" modelType="jurisdiction" icon={<Globe />} items={profile.jurisdictions} onOpenModal={setModalConfig} onDelete={handleDelete}>
                             {(j: Jurisdiction) => <span>{j.city}, {j.state}, {j.country}</span>}
                         </SectionCard>
@@ -272,13 +273,31 @@ export default function CompanyProfilePage() {
 // --- SUB-COMPONENTS ---
 
 const CreateOrganizationPage = ({ onSubmit, loading }: { onSubmit: (data: CreateOrganizationData) => void; loading: boolean }) => {
-    const [formData, setFormData] = React.useState<CreateOrganizationData>({
-        name: '', legal_entity_type: '', industry_classification: '', employee_count: 0, annual_turnover: 0
+    const [formData, setFormData] = React.useState({
+        name: '', legal_entity_type: '', industry_classification: '', 
+        // --- CHANGE: Use strings for form state to allow empty inputs ---
+        employee_count: '0', 
+        annual_turnover: '0'
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value, type } = e.target;
-        setFormData(prev => ({ ...prev, [name]: type === 'number' ? (value === '' ? 0 : Number(value)) : value }));
+        const { name, value } = e.target;
+        // --- CHANGE: Directly set the string value from the input ---
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleFormSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (window.confirm("Are you sure? These details cannot be changed later.")) {
+            // --- CHANGE: Convert string fields back to numbers before submission ---
+            // Note: Number('') correctly evaluates to 0
+            const submissionData = {
+                ...formData,
+                employee_count: Number(formData.employee_count),
+                annual_turnover: Number(formData.annual_turnover),
+            };
+            onSubmit(submissionData);
+        }
     };
 
     return (
@@ -289,15 +308,16 @@ const CreateOrganizationPage = ({ onSubmit, loading }: { onSubmit: (data: Create
                     <div className="bg-white p-8 rounded-lg shadow-md">
                         <div className="flex items-center gap-3 mb-6"><Building2 className="w-8 h-8 text-[#1F4A75]" /><h1 className="text-xl font-bold text-[#1F4A75]">Create Organization</h1></div>
                         <p className="text-gray-600 mb-6">Please create your organization profile to get started.</p>
-                        <form onSubmit={(e) => { e.preventDefault(); onSubmit(formData); }} className="space-y-6">
+                        <form onSubmit={handleFormSubmit} className="space-y-6">
                             <FormInput label="Organization Name" name="name" value={formData.name} onChange={handleChange} required={true} />
                             <FormInput label="Legal Entity Type" name="legal_entity_type" value={formData.legal_entity_type} onChange={handleChange} required={true} />
-                            <FormInput label="Industry Classification" name="industry_classification" value={formData.industry_classification || ''} onChange={handleChange} />
-                            <FormInput label="Employee Count" name="employee_count" value={formData.employee_count || 0} onChange={handleChange} type="number" />
-                            <FormInput label="Annual Turnover (USD)" name="annual_turnover" value={formData.annual_turnover || 0} onChange={handleChange} type="number" />
+                            <FormInput label="Industry Classification" name="industry_classification" value={formData.industry_classification} onChange={handleChange} />
+                            {/* --- CHANGE: Removed the `|| 0` fallback from value --- */}
+                            <FormInput label="Employee Count" name="employee_count" value={formData.employee_count} onChange={handleChange} type="number" />
+                            <FormInput label="Annual Turnover (USD)" name="annual_turnover" value={formData.annual_turnover} onChange={handleChange} type="number" />
                             <div className="flex justify-end pt-4">
                                 <button type="submit" disabled={loading || !formData.name || !formData.legal_entity_type} className="px-6 py-3 bg-[#1F4A75] text-white rounded-lg hover:bg-blue-900 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2">
-                                    {loading ? (<><LoaderCircle className="animate-spin" size={16} />Creating...</>) : 'Create Organization'}
+                                    {loading ? (<><LoaderCircle className="animate-spin" size={16} />Creating Organization...</>) : 'Create Organization'}
                                 </button>
                             </div>
                         </form>
@@ -333,12 +353,22 @@ const EditModal = ({ modalConfig, onClose, onSave, orgId }: { modalConfig: any, 
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
+        // --- CHANGE: This already correctly stores the string value ---
         setFormData((prev: any) => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(modelType, formData);
+        // --- CHANGE: Convert number fields back to numbers on submit ---
+        let submissionData = { ...formData };
+        if (modelType === 'organization') {
+            submissionData = {
+                ...submissionData,
+                employee_count: Number(submissionData.employee_count),
+                annual_turnover: Number(submissionData.annual_turnover),
+            };
+        }
+        onSave(modelType, submissionData);
     };
 
     const renderFormFields = () => {
@@ -348,8 +378,9 @@ const EditModal = ({ modalConfig, onClose, onSave, orgId }: { modalConfig: any, 
                     <FormInput label="Company Name" name="name" value={formData.name || ''} onChange={handleChange} />
                     <FormInput label="Legal Entity Type" name="legal_entity_type" value={formData.legal_entity_type || ''} onChange={handleChange} />
                     <FormInput label="Industry" name="industry_classification" value={formData.industry_classification || ''} onChange={handleChange} />
-                    <FormInput label="Employee Count" name="employee_count" value={formData.employee_count || 0} onChange={handleChange} type="number"/>
-                    <FormInput label="Annual Turnover" name="annual_turnover" value={formData.annual_turnover || 0} onChange={handleChange} type="number"/>
+                    {/* --- CHANGE: Use nullish coalescing `?? ''` to handle null/undefined without affecting 0 --- */}
+                    <FormInput label="Employee Count" name="employee_count" value={formData.employee_count ?? ''} onChange={handleChange} type="number"/>
+                    <FormInput label="Annual Turnover" name="annual_turnover" value={formData.annual_turnover ?? ''} onChange={handleChange} type="number"/>
                 </>;
             case 'jurisdiction':
                 return <>
@@ -357,6 +388,7 @@ const EditModal = ({ modalConfig, onClose, onSave, orgId }: { modalConfig: any, 
                     <FormInput label="State" name="state" value={formData.state || ''} onChange={handleChange} />
                     <FormInput label="City" name="city" value={formData.city || ''} onChange={handleChange} />
                 </>;
+            // Other cases remain unchanged
             case 'license':
                 return <>
                     <FormInput label="License Name" name="license_name" value={formData.license_name || ''} onChange={handleChange} />

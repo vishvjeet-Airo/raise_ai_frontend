@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ReactMarkdown from 'react-markdown';
+import { Link } from "react-router-dom"; // 👈 1. Import Link for navigation
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { API_BASE_URL } from "@/lib/config";
 import { Loader2 } from "lucide-react";
@@ -188,30 +189,55 @@ export default function ComparativeInsights({ documentId }: { documentId: number
             <div className="space-y-4">
               {versionHistory.map((item) => {
                 const isCurrent = item.id === documentId || item.version === documentInfo.version;
-                return (
-                  <div
-                    key={item.id}
-                    className={`border-l-4 pl-4 py-2 transition-colors duration-200 ${isCurrent ? 'bg-yellow-100 border-yellow-500' : 'bg-gray-50 border-[#1F4A75] hover:bg-gray-100'}`}
-                  >
+                
+                // 2. Conditionally render a Link or a div
+                if (isCurrent) {
+                  // Render the non-clickable div for the current version
+                  return (
                     <div
-                      className={`font-poppins font-medium text-[14px] flex items-center ${isCurrent ? 'bg-yellow-200 rounded px-1 py-0.5' : ''}`}
-                      style={{ color: isCurrent ? '#B7791F' : '#3F3F3F', display: 'inline-block' }}
+                      key={item.id}
+                      className="border-l-4 pl-4 py-2 bg-yellow-100 border-yellow-500 transition-colors duration-200"
                     >
-                      Version {item.version} - {item.publication_date}
-                      {isCurrent && (
+                      <div
+                        className="font-poppins font-medium text-[14px] flex items-center bg-yellow-200 rounded px-1 py-0.5"
+                        style={{ color: '#B7791F', display: 'inline-block' }}
+                      >
+                        Version {item.version} - {item.publication_date}
                         <span className="ml-2 bg-yellow-400 text-yellow-900 text-[10px] px-2 py-1 rounded-full font-semibold">
                           Current
                         </span>
-                      )}
+                      </div>
+                      <div
+                        className="font-poppins text-[12px] text-[#5B5A5A] mt-1 bg-yellow-100 rounded px-1 py-0.5"
+                        style={{ display: 'inline-block' }}
+                      >
+                        Reference Number: {item.reference_number || "N/A"}
+                      </div>
                     </div>
-                    <div
-                      className={`font-poppins text-[12px] text-[#5B5A5A] mt-1 ${isCurrent ? 'bg-yellow-100 rounded px-1 py-0.5' : ''}`}
-                      style={{ display: 'inline-block' }}
+                  );
+                } else {
+                  // Render a clickable Link for all other versions
+                  return (
+                    <Link
+                      key={item.id}
+                      to={`/documents/${item.id}`} // 3. Set the navigation path
+                      className="block border-l-4 pl-4 py-2 bg-gray-50 border-[#1F4A75] hover:bg-gray-100 transition-colors duration-200"
                     >
-                      Reference Number: {item.reference_number || "N/A"}
-                    </div>
-                  </div>
-                );
+                      <div
+                        className="font-poppins font-medium text-[14px] flex items-center"
+                        style={{ color: '#3F3F3F', display: 'inline-block' }}
+                      >
+                        Version {item.version} - {item.publication_date}
+                      </div>
+                      <div
+                        className="font-poppins text-[12px] text-[#5B5A5A] mt-1"
+                        style={{ display: 'inline-block' }}
+                      >
+                        Reference Number: {item.reference_number || "N/A"}
+                      </div>
+                    </Link>
+                  );
+                }
               })}
             </div>
           </div>

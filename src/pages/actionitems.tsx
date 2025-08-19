@@ -1,132 +1,202 @@
-import React, { useState } from 'react';
-import { Sidebar } from "@/components/Sidebar"; // Assuming you have a Sidebar component
-import { Search, Filter, ChevronDown, Calendar, Flag, User, CheckCircle2, Circle, Clock } from 'lucide-react';
+"use client"; // This is a client component because it uses hooks like useState
 
-// --- MOCK DATA ---
-// Afterwards, this data would come from your API
+import { useState, useMemo } from 'react';
+import Link from 'next/link';
+import { Sidebar } from "@/components/Sidebar"; // Assuming sidebar path
+import { Search, ArrowUp, ArrowDown } from 'lucide-react';
 
-const actionItemsData = [
+// 1. --- DEFINE TYPES ---
+type ActionItem = {
+  id: string;
+  action: string;
+  person: string;
+  department: 'IT' | 'Compliance' | 'Treasury' | 'Training';
+  deadline: Date;
+  circularId: string;
+  circularName: string;
+};
+
+// 2. --- HARDCODED MOCK DATA ---
+const mockActionItems: ActionItem[] = [
   {
+    id: 'act-001',
+    action: 'Update internal software for new export declaration forms (EDF).',
+    person: 'Alice Johnson',
+    department: 'IT',
+    deadline: new Date('2025-09-15'),
     circularId: 'doc-001',
-    circularName: 'Foreign Exchange Management (Export of Goods & Services) Regulations, 2025',
-    publisher: 'Reserve Bank of India',
-    actions: [
-      {
-        id: 'act-001-a',
-        description: 'Update internal software to handle new export declaration forms (EDF).',
-        assignedTo: 'IT Department',
-        dueDate: '2025-09-15',
-      },
-      {
-        id: 'act-001-b',
-        description: 'Train all branch managers on the amended regulations for export services.',
-        assignedTo: 'Training & Development',
-        dueDate: '2025-10-01',
-      },
-      {
-        id: 'act-001-c',
-        description: 'Draft and circulate the updated internal compliance checklist.',
-        assignedTo: 'Compliance Team',
-        dueDate: '2025-09-20',
-      },
-    ],
+    circularName: 'Foreign Exchange Management Regulations, 2025',
   },
   {
+    id: 'act-002',
+    action: 'Train branch managers on amended export regulations.',
+    person: 'Bob Williams',
+    department: 'Training',
+    deadline: new Date('2025-10-01'),
+    circularId: 'doc-001',
+    circularName: 'Foreign Exchange Management Regulations, 2025',
+  },
+  {
+    id: 'act-003',
+    action: 'Adjust monitoring thresholds for FPI investments.',
+    person: 'Charlie Brown',
+    department: 'Treasury',
+    deadline: new Date('2025-08-30'),
     circularId: 'doc-002',
-    circularName: 'Limits for investment in debt and sale of Credit Default Swaps by Foreign Portfolio Investors (FPIs)',
-    publisher: 'Reserve Bank of India',
-    actions: [
-      {
-        id: 'act-002-a',
-        description: 'Adjust the monitoring thresholds for FPI investments in the treasury system.',
-        assignedTo: 'Treasury Department',
-        dueDate: '2025-08-30',
-      },
-      {
-        id: 'act-002-b',
-        description: 'Inform all relationship managers handling FPI accounts of the new CDS limits.',
-        assignedTo: 'Wealth Management',
-        dueDate: '2025-09-05',
-      },
-    ],
+    circularName: 'Limits for investment in debt by FPIs',
+  },
+  {
+    id: 'act-004',
+    action: 'Draft and circulate the updated internal compliance checklist.',
+    person: 'Diana Prince',
+    department: 'Compliance',
+    deadline: new Date('2025-09-20'),
+    circularId: 'doc-001',
+    circularName: 'Foreign Exchange Management Regulations, 2025',
+  },
+  {
+    id: 'act-005',
+    action: 'Inform relationship managers of new CDS limits for FPIs.',
+    person: 'Edward Smith',
+    department: 'Treasury',
+    deadline: new Date('2025-09-05'),
+    circularId: 'doc-002',
+    circularName: 'Limits for investment in debt by FPIs',
   },
 ];
 
+const departments = ['IT', 'Compliance', 'Treasury', 'Training'];
 
-// --- MAIN COMPONENT ---
-
-export default function ActionItems() {
+// 3. --- MAIN PAGE COMPONENT ---
+export default function ActionItemsPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('All');
+  const [sortConfig, setSortConfig] = useState<{ key: keyof ActionItem; direction: 'asc' | 'desc' } | null>({ key: 'deadline', direction: 'asc' });
 
-  // Filtering logic would be added here in a real app
-  const filteredData = actionItemsData.filter(item => 
-    item.circularName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.actions.some(action => action.description.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  // --- FILTERING AND SORTING LOGIC ---
+  const sortedAndFilteredItems = useMemo(() => {
+    let items = [...mockActionItems];
+
+    // Filter by department
+    if (departmentFilter !== 'All') {
+      items = items.filter(item => item.department === departmentFilter);
+    }
+
+    // Filter by search term
+    if (searchTerm) {
+      const lowercasedTerm = searchTerm.toLowerCase();
+      items = items.filter(item =>
+        item.action.toLowerCase().includes(lowercasedTerm) ||
+        item.person.toLowerCase().includes(lowercasedTerm) ||
+        item.circularName.toLowerCase().includes(lowercasedTerm)
+      );
+    }
+    
+    // Sort items
+    if (sortConfig !== null) {
+      items.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return items;
+  }, [searchTerm, departmentFilter, sortConfig]);
+
+  const handleSort = (key: keyof ActionItem) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen bg-gray-50">
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-y-auto">
-        <div className="bg-[#FBFBFB] p-6 min-h-full">
+      <main className="flex-1 p-6 overflow-y-auto">
+        <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-semibold text-[#1F4A75]">Action Items</h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-xl font-semibold text-gray-800">
+              Action Items
+            </h1>
           </div>
 
-          {/* Filters and Search */}
-          <div className="flex items-center space-x-4 mb-6 bg-white p-4 rounded-lg border border-gray-200">
-            <div className="relative flex-1">
+          {/* Controls: Search and Filter */}
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div className="relative w-full max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Search by circular or action item..."
+                placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full h-10 pl-10 pr-4 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-             
+            <select
+              value={departmentFilter}
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+              className="h-10 px-6 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer -ml-9"
+            >
+              <option value="All">All Departments</option>
+              {departments.map(dep => <option key={dep} value={dep}>{dep}</option>)}
+            </select>
           </div>
 
-          {/* Action Items List */}
-          <div className="space-y-5">
-            {filteredData.map((item) => (
-              <div key={item.circularId} className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-gray-200 bg-gray-50">
-                  <h2 className="font-semibold text-gray-800">{item.circularName}</h2>
-                  <p className="text-xs text-gray-500">{item.publisher}</p>
+          {/* Table */}
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+            <table className="w-full text-sm text-left text-gray-600">
+              <thead className="bg-[#E5F6F0] fntext-xs text-gray-700 tracking-wider">
+                <tr>
+                  <th scope="col" className="px-6 py-3 w-2/5">Action Items</th>
+                  <th scope="col" className="px-6 py-3 whitespace-nowrap">Person Assigned</th>
+                  <th scope="col" className="px-6 py-3">Department</th>
+                  <th scope="col" className="px-6 py-3">
+                    <button onClick={() => handleSort('deadline')} className="flex items-center gap-1.5 hover:text-gray-900">
+                      Deadline
+                      {sortConfig?.key === 'deadline' ? (
+                        sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                      ) : (
+                         <ArrowUp className="w-4 h-4 text-gray-400" />
+                      )}
+                    </button>
+                  </th>
+                  <th scope="col" className="px-6 py-3">Circular</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedAndFilteredItems.map((item) => (
+                  <tr key={item.id} className="bg-white border-b last:border-b-0 hover:bg-gray-50">
+                    <td className="px-6 py-4 font-medium text-gray-600">{item.action}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{item.person}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{item.department}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {item.deadline.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </td>
+                    <td className="px-6 py-4">
+                      <Link href={`/documents/${item.circularId}`} className="font-medium text-blue-600 hover:underline">
+                        {item.circularName}
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {sortedAndFilteredItems.length === 0 && (
+                <div className="text-center p-8 text-gray-500">
+                    No action items found.
                 </div>
-                <div className="divide-y divide-gray-100">
-                  {item.actions.map(action => (
-                    <div key={action.id} className="p-4 flex items-start space-x-4 hover:bg-gray-50">
-                      <div className="flex-1">
-                        <p className="text-sm text-gray-800">{action.description}</p>
-                        <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                          <div className="flex items-center space-x-1.5">
-                            <User className="w-3 h-3" />
-                            <span>{action.assignedTo}</span>
-                          </div>
-                          <div className="flex items-center space-x-1.5">
-                            <Calendar className="w-3 h-3" />
-                            <span>Due: {action.dueDate}</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-             {filteredData.length === 0 && (
-              <div className="text-center py-16 bg-white rounded-lg border border-dashed border-gray-300">
-                <p className="text-gray-500">No action items match your search.</p>
-              </div>
             )}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
