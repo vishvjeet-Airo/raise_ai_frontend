@@ -2,21 +2,17 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 import {
-  BarChartHorizontal,
   ChevronDown,
   ChevronLeft,
   HelpCircle,
   LogOut,
   Menu,
-  MessageCircle,
   Settings,
   X,
 } from "lucide-react";
 import { SupportModal } from "./SupportModal";
 import { SettingsModal } from "./SettingsModal";
 
-// It's good practice to define props, even if they are empty for now.
-// This makes the component easier to extend later.
 interface SidebarProps {
   forceCollapsed?: boolean;
 }
@@ -25,19 +21,30 @@ export const Sidebar: React.FC<SidebarProps> = ({ forceCollapsed = false }) => {
   const [documentsExpanded, setDocumentsExpanded] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const actuallyCollapsed = forceCollapsed || isCollapsed;
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
-  // We add the 'string' type to the 'path' argument.
+  const actuallyCollapsed = forceCollapsed || isCollapsed;
   const isActive = (path: string): boolean => location.pathname === path;
   const isDocumentsSectionActive = isActive("/documents") || isActive("/upload");
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     navigate("/login");
+  };
+
+  // --- 1. NEW HANDLER FUNCTION ---
+  // This function checks the sidebar's state and acts accordingly.
+  const handleDocumentsClick = () => {
+    if (actuallyCollapsed) {
+      // If the sidebar is collapsed, navigate directly.
+      navigate("/documents");
+    } else {
+      // If the sidebar is expanded, toggle the dropdown.
+      setDocumentsExpanded(!documentsExpanded);
+    }
   };
 
   return (
@@ -77,20 +84,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ forceCollapsed = false }) => {
                 <div>
                   <div className="font-medium text-[10px] leading-[12px] tracking-[0.4px] uppercase text-[#757575]">Finance Analyst</div>
                   <div className="font-medium text-sm leading-5 tracking-normal text-black">Andrew Smith</div>
-                  
                 </div>
               )}
             </div>
           </div>
 
           {/* Desktop Collapse Button */}
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="hidden lg:flex absolute -right-3 top-8 z-10 w-6 h-6 bg-white border-2 border-gray-200 rounded-full items-center justify-center text-gray-500 hover:bg-gray-100"
-            >
-              <ChevronLeft className={`w-4 h-4 transition-transform ${actuallyCollapsed ? 'rotate-180' : ''}`} />
-            </button>
-          
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="hidden lg:flex absolute -right-3 top-8 z-10 w-6 h-6 bg-white border-2 border-gray-200 rounded-full items-center justify-center text-gray-500 hover:bg-gray-100"
+          >
+            <ChevronLeft className={`w-4 h-4 transition-transform ${actuallyCollapsed ? 'rotate-180' : ''}`} />
+          </button>
 
           {/* Navigation Menu */}
           <div className={twMerge("flex-1 py-6 w-full", actuallyCollapsed ? "px-4" : "px-6")}>
@@ -99,8 +104,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ forceCollapsed = false }) => {
             <ul className="space-y-2">
               {/* Documents Section */}
               <li>
+                {/* --- 2. USE THE NEW HANDLER --- */}
                 <button
-                  onClick={() => !actuallyCollapsed && setDocumentsExpanded(!documentsExpanded)}
+                  onClick={handleDocumentsClick}
                   className={twMerge(
                     "w-full flex items-center justify-between p-2 rounded-lg transition-colors text-sm font-medium tracking-tightest",
                     isDocumentsSectionActive ? "bg-[#F0F5FF] text-[#052E65]" : "text-[#718096] hover:bg-gray-100",
@@ -140,7 +146,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ forceCollapsed = false }) => {
                     actuallyCollapsed && "justify-center"
                   )}
                 >
-                  {/* Change w-5 h-5 to w-4 h-4 */}
                   <img src="/chatbot.png" alt="Chat Bot" className="w-[16px] h-[15px]" />
                   {!actuallyCollapsed && <span>Chat Bot</span>}
                 </Link>
@@ -156,12 +161,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ forceCollapsed = false }) => {
                     actuallyCollapsed && "justify-center"
                   )}
                 >
-                  {/* Change w-5 h-5 to w-4 h-4 */}
                   <img src="/ActionItem.png" alt="Action Items" className="w-[14px] h-[17px]" />
                   {!actuallyCollapsed && <span>Action Items</span>}
                 </Link>
               </li>
-            
+              
               {/* Company Profile Section */}
               <li>
                 <Link
@@ -172,7 +176,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ forceCollapsed = false }) => {
                     actuallyCollapsed && "justify-center"
                   )}
                 >
-                  {/* Change w-5 h-5 to w-4 h-4 */}
                   <img src="/companyProfile.png" alt="Company Profile" className="w-[14px] h-[17px]" />
                   {!actuallyCollapsed && <span>Company Profile</span>}
                 </Link>
@@ -194,7 +197,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ forceCollapsed = false }) => {
               </li>
             </ul>
             
-            {/* Separator Line */}
             {!actuallyCollapsed && <div className="w-[208px] h-[2px] rounded-full bg-[#F6F6F6] mx-auto my-4" />}
 
           </div>

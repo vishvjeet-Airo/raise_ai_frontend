@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
 import { Search, ArrowDown, ArrowUp, Eye, Download, X, Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { API_BASE_URL } from "@/lib/config";
@@ -133,13 +133,13 @@ const DeleteAllConfirmationDialog = ({ documentCount, onConfirm, onCancel }: { d
 export default function AllDocuments() {
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  // 'sortBy' state now toggles between 'recent' and 'oldest'
   const [sortBy, setSortBy] = useState("recent");
   const [viewingDocument, setViewingDocument] = useState<Document | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
   const [deletingDocument, setDeletingDocument] = useState<Document | null>(null);
   const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: documents = [], isLoading, isError, error } = useQuery<Document[], Error>({
     queryKey: ["documents"],
@@ -148,12 +148,16 @@ export default function AllDocuments() {
         headers: getAuthHeaders(),
       });
       if (!response.ok) {
+        if (response.status === 401) {
+          console.error("Unauthorized request. Logging out.");
+          localStorage.removeItem('access_token');
+          navigate("/login");
+          throw new Error('Unauthorized');
+        }
         throw new Error('Failed to fetch documents');
       }
       const data = await response.json();
-      // The corrected version
       return data.map((doc: any) => {
-        // Check if the date fields from the API are valid before creating Date objects.
         const publicationDateObj = doc.publication_date ? new Date(doc.publication_date) : null;
         const uploadedAtDateObj = doc.uploaded_at ? new Date(doc.uploaded_at) : null;
 
@@ -321,7 +325,7 @@ export default function AllDocuments() {
               {/* Header, Search, and Actions */}
               <div className="flex items-center mb-8 w-full px-8">
                 <h1 className="font-poppins text-base font-medium leading-none tracking-normal text-[#4F4F4F]">
-                  All Documents
+                  All Documents {!isLoading && documents.length > 0 && `(${documents.length})`}
                 </h1>
                 <div className="flex items-center gap-3 ml-auto">
                   <div className="relative">
@@ -422,9 +426,9 @@ export default function AllDocuments() {
                             <td className="px-8 py-4">
                               <div className="flex items-center justify-center space-x-3 text-[#1F4A75]">
                                 {/* Actions are kept as they are - user might want to delete a pending item */}
-                                <button onClick={() => setViewingDocument(document)} className="transition-colors hover:text-blue-700" title="View document" disabled={!isProcessed}><Eye className="w-4 h-4" /></button>
+                                <button onClick={() => setViewingDocument(document)} className="transition-colors hover:text-blue-700" title="View document"><Eye className="w-4 h-4" /></button>
                                 <button onClick={() => handleDelete(document)} className="transition-colors hover:text-red-600" title="Delete document"><Trash2 className="w-4 h-4" /></button>
-                                <button onClick={() => handleDownload(document)} className="transition-colors hover:text-blue-700" disabled={downloading === document.id || !isProcessed} title="Download document">
+                                <button onClick={() => handleDownload(document)} className="transition-colors hover:text-blue-700" disabled={downloading === document.id} title="Download document">
                                   {downloading === document.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                                 </button>
                             </div>
@@ -435,8 +439,7 @@ export default function AllDocuments() {
                       // If NO documents, it shows this "Not Found" message
                       <tr>
                         <td colSpan={8} className="text-center py-10">
-                          <img src="/Not Found.png" alt="No documents found" className="mx-auto h-40" />
-                          <p className="mt-4 text-gray-500 font-semibold">No Documents Found</p>
+                          <p className="mt-4 text-gray-500 font-semibold">No Documents Found!</p>
                         </td>
                       </tr>
                     )}

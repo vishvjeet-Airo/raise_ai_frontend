@@ -33,7 +33,6 @@ export default function Upload() {
   const [allCompleted, setAllCompleted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // Initialize the navigate function
   const navigate = useNavigate();
 
   const formatFileSize = (bytes: number) => {
@@ -190,7 +189,12 @@ export default function Upload() {
         body: formData,
         headers: getAuthHeaders(),
       });
-
+      if (response.status === 401) {
+        console.error("Unauthorized request. Logging out.");
+        localStorage.removeItem('access_token');
+        navigate("/login");
+        throw new Error('Unauthorized');
+      }
       if (response.ok) {
         const responseData = await response.json();
         const results = responseData.results;
@@ -205,7 +209,7 @@ export default function Upload() {
               anyFileSucceeded = true; // Mark that a success occurred
             } else {
               allSuccess = false;
-              toast.error(`Failed to upload ${result.filename}: ${result.detail}`);
+              toast.error(`${result.detail} Hence failed to upload ${result.filename}`);
             }
           });
 

@@ -290,7 +290,7 @@ export default function CompanyProfileByIdPage() {
                             {React.cloneElement(<Building2 />, { className: "w-5 h-5" })} General Profile
                         </h2>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-6 pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-5 align-center gap-x-8 gap-y-6 pt-4">
                         <InfoItem label="Company Name" value={profile.name} />
                         <InfoItem label="Legal Entity Type" value={profile.legal_entity_type} />
                         <InfoItem label="Industry" value={profile.industry_classification} />
