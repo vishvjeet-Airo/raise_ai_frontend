@@ -179,7 +179,7 @@ export default function AllDocuments() {
       }
       const data = await response.json();
       return data.map((doc: any) => {
-        doc.publication_date = doc.publication_date ? String(doc.publication_date).trim().toUpperCase() : "";
+        doc.publication_date = doc.publication_date!='' ? String(doc.publication_date).trim().toUpperCase() : "";
         const publicationDateObj = doc.publication_date != "NULL"? new Date(doc.publication_date) : null;
         const uploadedAtDateObj = doc.uploaded_at ? new Date(doc.uploaded_at) : null;
 

@@ -20,7 +20,7 @@ type ApiActionPoint = {
   description?: string | null;
   source_page?: number | null;
   deadline?: string | null;
-  is_relevant?: boolean;
+  is_relevant?: boolean; // used to filter
   assigned_to_name?: string | null;
   assigned_to_department?: string | null;
   detailed_action_points?: ApiDetailedActionPoint[] | null;
@@ -57,7 +57,7 @@ const getAuthHeaders = (): HeadersInit | undefined => {
 };
 
 /* ---- helpers ---- */
-const ns = "not specified";
+const ns = "Not Specified";
 const toTitle = (s: string) => s.slice(0, 1).toUpperCase() + s.slice(1);
 
 function getStatusClasses(status: string) {
@@ -101,32 +101,32 @@ export default function ActionItemsPage() {
         const mapped: DocGroup[] = (data || []).map((doc) => {
           const rows: RowItem[] = [];
 
-          (doc.action_points || []).forEach((ap) => {
-            (ap.detailed_action_points || []).forEach((dap) => {
-              const actionText =
-                (dap.task && dap.task.trim()) ||
-                ns;
+          // Only include action points with is_relevant === true
+          (doc.action_points || [])
+            .filter((ap) => ap.is_relevant === true)
+            .forEach((ap) => {
+              (ap.detailed_action_points || []).forEach((dap) => {
+                const actionText = (dap.task && dap.task.trim()) || ns;
+                const person = (dap.assigned_to_name && dap.assigned_to_name.trim()) || ns;
+                const department = (dap.assigned_to_department && dap.assigned_to_department.trim()) || ns;
 
-              const person = (dap.assigned_to_name && dap.assigned_to_name.trim()) || ns;
-              const department = (dap.assigned_to_department && dap.assigned_to_department.trim()) || ns;
+                // prefer detailed due_date; fall back to action_point deadline
+                const rawDate = dap.due_date || ap.deadline || null;
+                const deadline = rawDate ? new Date(rawDate) : null;
+                const status = (dap.status && dap.status.trim()) || ns;
 
-              // prefer detailed due_date; fall back to action_point deadline
-              const rawDate = dap.due_date || ap.deadline || null;
-              const deadline = rawDate ? new Date(rawDate) : null;
-              const status = (dap.status && dap.status.trim()) || ns;
-
-              rows.push({
-                id: `doc${doc.id}-ap${ap.id}-dap${dap.id}`,
-                action: actionText,
-                person,
-                department,
-                deadline: deadline && !isNaN(deadline.getTime()) ? deadline : null,
-                status,
-                circularId: doc.id,
-                circularName: doc.title || `Document ${doc.id}`,
+                rows.push({
+                  id: `doc${doc.id}-ap${ap.id}-dap${dap.id}`,
+                  action: actionText,
+                  person,
+                  department,
+                  deadline: deadline && !isNaN(deadline.getTime()) ? deadline : null,
+                  status,
+                  circularId: doc.id,
+                  circularName: doc.title || `Document ${doc.id}`,
+                });
               });
             });
-          });
 
           return {
             documentId: doc.id,
