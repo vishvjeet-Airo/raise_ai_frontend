@@ -89,7 +89,7 @@ const DocumentViewerModal = ({ document, onClose }: { document: Document; onClos
   );
 };
 
-const DeleteConfirmationDialog = ({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void; }) => (
+const DeleteConfirmationDialog = ({ onConfirm, onCancel, isDeleting }: { onConfirm: () => void; onCancel: () => void; isDeleting: boolean; }) => (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 font-['Poppins']">
     <div className="bg-white rounded-[10px] shadow-lg w-[394px] h-[190px] flex flex-col items-center justify-center p-8">
       <p className="text-[16px] font-poppins text-[#767575] mb-10 text-center">
@@ -105,16 +105,24 @@ const DeleteConfirmationDialog = ({ onConfirm, onCancel }: { onConfirm: () => vo
         
         <button 
           onClick={onConfirm} 
-          className="w-auto px-6 h-[40px] rounded-[8px] bg-[#1F4A75] text-white font-normal flex items-center justify-center transition-colors hover:bg-[#1a3c63]"
+          disabled={isDeleting} // Disable button while deleting
+          className="w-auto px-6 h-[40px] rounded-[8px] bg-[#1F4A75] text-white font-normal flex items-center justify-center transition-colors hover:bg-[#1a3c63] disabled:bg-gray-400"
         >
-          Yes
+          {isDeleting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              Deleting...
+            </>
+          ) : (
+            'Yes'
+          )}
         </button>
       </div>
     </div>
   </div>
 );
 
-const DeleteAllConfirmationDialog = ({ documentCount, onConfirm, onCancel }: { documentCount: number; onConfirm: () => void; onCancel: () => void; }) => (
+const DeleteAllConfirmationDialog = ({ documentCount, onConfirm, onCancel, isDeletingAll }: { documentCount: number; onConfirm: () => void; onCancel: () => void; isDeletingAll: boolean; }) => (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div className="bg-white p-6 rounded-lg shadow-lg max-w-md">
       <h2 className="text-lg font-bold mb-4">Delete All Documents</h2>
@@ -124,7 +132,20 @@ const DeleteAllConfirmationDialog = ({ documentCount, onConfirm, onCancel }: { d
       </p>
       <div className="flex justify-end space-x-4">
         <button onClick={onCancel} className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300">Cancel</button>
-        <button onClick={onConfirm} className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600">Delete All</button>
+        <button 
+          onClick={onConfirm} 
+          disabled={isDeletingAll} // Disable button while deleting
+          className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 flex items-center disabled:bg-red-400"
+        >
+          {isDeletingAll ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              Deleting...
+            </>
+          ) : (
+            'Delete All'
+          )}
+        </button>
       </div>
     </div>
   </div>
@@ -181,8 +202,7 @@ export default function AllDocuments() {
         };
       });
     }
-  });
-  
+  }); 
 
   const deleteMutation = useMutation({
     mutationFn: async (fileName: string) => {
@@ -452,14 +472,21 @@ export default function AllDocuments() {
       </div>
       {/* Conditionally render the modal */}
       {viewingDocument && <DocumentViewerModal document={viewingDocument} onClose={() => setViewingDocument(null)} />}
-      {deletingDocument && <DeleteConfirmationDialog onConfirm={confirmDelete} onCancel={() => setDeletingDocument(null)} />}
-      {showDeleteAllDialog && (
-        <DeleteAllConfirmationDialog
-          documentCount={documents.length}
-          onConfirm={confirmDeleteAll}
-          onCancel={() => setShowDeleteAllDialog(false)}
-        />
-      )}
-    </>
+      {deletingDocument && (
+    <DeleteConfirmationDialog
+      onConfirm={confirmDelete}
+      onCancel={() => setDeletingDocument(null)}
+      isDeleting={deleteMutation.isPending} 
+    />
+  )}
+  {showDeleteAllDialog && (
+    <DeleteAllConfirmationDialog
+      documentCount={documents.length}
+      onConfirm={confirmDeleteAll}
+      onCancel={() => setShowDeleteAllDialog(false)}
+      isDeletingAll={deleteAllMutation.isPending}
+    />
+  )}
+</>
   );
 }
