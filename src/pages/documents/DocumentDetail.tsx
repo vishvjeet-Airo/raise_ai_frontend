@@ -1,6 +1,6 @@
-import { createContext, useContext, useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
-import { ChevronRight, X } from "lucide-react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { ChevronRight } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
 import AIGeneratedSummary from "./components/document-detail/AIGeneratedSummary";
 import ChatSidebar from "./components/document-detail/ChatSidebar";
@@ -11,6 +11,7 @@ import DocumentTimeline from "./components/document-detail/DocumentTimeline";
 import HumanValidationRequired from "./components/document-detail/HumanValidationRequired";
 import KeyObligationsAndActionPoints from "./components/document-detail/KeyObligationsAndActionPoints";
 import ReportsAndExports from "./components/document-detail/ReportsAndExports";
+import { API_BASE_URL } from "@/lib/config";
 
 // Defines the shape of the data in the context
 type ChatSidebarContextType = {
@@ -34,40 +35,159 @@ export const useChatSidebar = () => {
   return context;
 };
 
+// API response types (subset)
+type ApiActionPoint = {
+  id: number;
+  title: string;
+  description?: string;
+  source_page?: number;
+  deadline?: string | null;
+  is_relevant?: boolean;
+  assigned_to_name?: string | null;
+  assigned_to_department?: string | null;
+};
+
+type ApiDocument = {
+  id: number;
+  title?: string | null;
+  file_name?: string | null;
+  blob_url?: string | null;
+  issuing_authority?: string | null;
+  publication_date?: string | null;
+  circular_type?: string | null;
+  reference_number?: string | null;
+  action_points?: ApiActionPoint[] | null;
+};
+
+// Normalized shape used by the UI
+type NormalizedDocument = {
+  id: string;
+  name: string;
+  publisher: string;
+  publicationDate: string;
+  circularType: string;
+  referenceNumber: string;
+  url: string;
+  impactAreas: string[];
+  actionPoints: ApiActionPoint[];
+};
+
 export default function DocumentDetail() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const { id } = useParams();
-  const location = useLocation();
+  const { id } = useParams<{ id: string }>();
 
-  const documentFromState = location.state?.document;
+  const [document, setDocument] = useState<NormalizedDocument | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!documentFromState) {
-    return <div>Document not found. Please go back to the list.</div>;
-  }
+  const handlePreviewClick = () => setIsPreviewOpen((v) => !v);
 
-  const document = documentFromState;
+  useEffect(() => {
+    let ignore = false;
 
-  const handlePreviewClick = () => {
-    setIsPreviewOpen(!isPreviewOpen);
-  };
+    async function load() {
+      if (!id) {
+        setError("Missing document id in URL.");
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Token source — adjust to your app’s storage/keys if different
+        const token =
+          localStorage.getItem("access_token") ||
+          sessionStorage.getItem("access_token");
+
+        const res = await fetch(`${API_BASE_URL}/api/documents/${id}`, {
+          headers: {
+            accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch document (${res.status})`);
+        }
+
+        const data: ApiDocument[] | ApiDocument = await res.json();
+        const raw: ApiDocument | undefined = Array.isArray(data) ? data[0] : data;
+
+        if (!raw) {
+          throw new Error("Document not found.");
+        }
+
+        const normalized: NormalizedDocument = {
+          id: String(raw.id),
+          name: raw.title || raw.file_name || `Document ${raw.id}`,
+          publisher: raw.issuing_authority || "Unknown",
+          publicationDate: raw.publication_date || "",
+          circularType: raw.circular_type || "",
+          referenceNumber: raw.reference_number || "",
+          url: raw.blob_url || "",
+          impactAreas: [], // not provided by API
+          actionPoints: raw.action_points ?? [],
+        };
+
+        if (!ignore) setDocument(normalized);
+      } catch (e: any) {
+        if (!ignore) setError(e?.message || "Something went wrong.");
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      ignore = true;
+    };
+  }, [id]);
 
   // If either sidebar is open, minimize the main sidebar and stack the content
   const anySidebarOpen = isPreviewOpen || isChatOpen;
   const shouldMinimizeSidebar = anySidebarOpen;
 
+  const contextValue = useMemo<ChatSidebarContextType | null>(() => {
+    if (!document) return null;
+    return {
+      isChatOpen,
+      setIsChatOpen,
+      isPreviewOpen,
+      setIsPreviewOpen,
+      shouldMinimizeSidebar,
+      documentId: document.id,
+      documentName: document.name,
+    };
+  }, [document, isChatOpen, isPreviewOpen, shouldMinimizeSidebar]);
+
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-slate-50 overflow-hidden">
+        <Sidebar forceCollapsed={false} />
+        <main className="flex-1 p-6 overflow-y-auto">
+          <div className="text-gray-600">Loading document...</div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error || !document) {
+    return (
+      <div className="flex h-screen bg-slate-50 overflow-hidden">
+        <Sidebar forceCollapsed={false} />
+        <main className="flex-1 p-6 overflow-y-auto">
+          <div className="text-red-600">
+            {error || "Document not found. Please go back to the list."}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
-    <ChatSidebarContext.Provider
-      value={{
-        isChatOpen,
-        setIsChatOpen,
-        isPreviewOpen,
-        setIsPreviewOpen,
-        shouldMinimizeSidebar,
-        documentId: document.id,
-        documentName: document.name,
-      }}
-    >
+    <ChatSidebarContext.Provider value={contextValue!}>
       <div className="flex h-screen bg-slate-50 overflow-hidden">
         <Sidebar forceCollapsed={shouldMinimizeSidebar} />
 
@@ -122,7 +242,7 @@ export default function DocumentDetail() {
                       referenceNumber={document.referenceNumber}
                       impactAreas={document.impactAreas}
                     />
-                    <AIGeneratedSummary documentId={document.id} />
+                    <AIGeneratedSummary documentId={Number(document.id)} />
                     <KeyObligationsAndActionPoints
                       actionPoints={document.actionPoints || []}
                       loading={false}
@@ -130,7 +250,7 @@ export default function DocumentDetail() {
                     />
                     <DocumentTimeline />
                     <HumanValidationRequired />
-                    <ComparativeInsights documentId={document.id} />
+                    <ComparativeInsights documentId={Number(document.id)} />
                     <ReportsAndExports
                       documentTitle={document.name}
                       documentUrl={document.url}
@@ -155,7 +275,7 @@ export default function DocumentDetail() {
                         referenceNumber={document.referenceNumber}
                         impactAreas={document.impactAreas}
                       />
-                      <AIGeneratedSummary documentId={document.id} />
+                      <AIGeneratedSummary documentId={Number(document.id)} />
                       <KeyObligationsAndActionPoints
                         actionPoints={document.actionPoints || []}
                         loading={false}
@@ -167,7 +287,7 @@ export default function DocumentDetail() {
                     <div className="w-[361px] flex-shrink-0 space-y-6">
                       <DocumentTimeline />
                       <HumanValidationRequired />
-                      <ComparativeInsights documentId={document.id} />
+                      <ComparativeInsights documentId={Number(document.id)} />
                       <ReportsAndExports
                         documentTitle={document.name}
                         documentUrl={document.url}
@@ -198,7 +318,7 @@ export default function DocumentDetail() {
               <ChatSidebar
                 isOpen={isChatOpen}
                 onClose={() => setIsChatOpen(false)}
-                documentId={id || "15"}
+                documentId={document.id}
                 documentName={document.name}
               />
             </aside>

@@ -359,7 +359,7 @@ export default function AllDocuments() {
                 <table className="w-full">
                   <thead className="bg-[#E5F6F0]">
                     <tr className="h-[43px]">
-                      <th className="w-16 px-4 text-center text-xs font-medium text-[#4F4F4F]">S.No.</th>
+                      <th className="w-16 px-4 text-center text-xs font-medium text-[#4F4F4F]">ID</th>
                       <th className="text-left text-xs font-medium text-[#4F4F4F]">Name</th>
 
                       <th
@@ -390,14 +390,13 @@ export default function AllDocuments() {
                         const isProcessed = document.status === 'PROCESSED' || document.status === 'COMPLETED';
                         return (
                         <tr key={document.id} className="hover:bg-gray-50 transition-colors text-xs font-medium text-[#767575]">
-                          <td className="px-4 py-4 text-center text-gray-600 font-medium">{index + 1}</td>
+                          <td className="px-4 py-4 text-center text-gray-600 font-medium">{document.id}</td>
                           {/*Name column*/ 
                           }
                           <td className="py-4 max-w-md">
                           {isProcessed ? (
                             <Link
                               to={`/documents/${document.id}`}
-                              state={{ document: document }}
                               className="hover:underline"
                             >
                               {document.name}

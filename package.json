@@ -12,8 +12,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.3.0",
     "axios": "^1.11.0",
+    "html2canvas": "^1.4.1",
+    "html2pdf.js": "^0.10.3",
     "js-cookie": "^3.0.5",
+    "jspdf": "^3.0.1",
     "next": "^14.0.4",
     "pdfjs-dist": "^5.4.54",
     "react": "^18.3.1",

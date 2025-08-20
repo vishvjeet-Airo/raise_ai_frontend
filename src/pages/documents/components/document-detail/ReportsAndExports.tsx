@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import { useState } from "react";
 
 interface ReportsAndExportsProps {
   documentTitle?: string;
@@ -8,25 +9,27 @@ interface ReportsAndExportsProps {
 }
 
 export default function ReportsAndExports({ documentTitle, documentUrl }: ReportsAndExportsProps) {
+  const [summaryDownloading, setSummaryDownloading] = useState(false);
+
   function withAttachment(sasUrl: string, fileName: string) {
     try {
       const url = new URL(sasUrl);
       const disposition = `attachment; filename="${fileName}"`;
-      url.searchParams.set('response-content-disposition', disposition);
+      url.searchParams.set("response-content-disposition", disposition);
       return url.toString();
     } catch {
       return sasUrl;
     }
   }
 
-  async function forceDownloadViaBlob(sasUrl: string, fileName: string = 'document.pdf') {
+  async function forceDownloadViaBlob(sasUrl: string, fileName: string = "document.pdf") {
     try {
-      const res = await fetch(sasUrl, { mode: 'cors', credentials: 'omit' });
+      const res = await fetch(sasUrl, { mode: "cors", credentials: "omit" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
 
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = fileName;
       document.body.appendChild(a);
@@ -40,40 +43,61 @@ export default function ReportsAndExports({ documentTitle, documentUrl }: Report
 
   const handleDownloadOriginal = async () => {
     if (documentUrl) {
-      const fileName = (documentTitle || 'document') + '.pdf';
+      const fileName = (documentTitle || "document") + ".pdf";
       await forceDownloadViaBlob(documentUrl, fileName);
+    }
+  };
+
+  // 🔹 Full-page PDF with html2pdf.js
+  const handleDownloadSummary = async () => {
+    try {
+      setSummaryDownloading(true);
+
+      const html2pdf = (await import("html2pdf.js")).default;
+
+      const element = document.documentElement; // capture full <html>
+      const fileName = (documentTitle || "full-page-report") + ".pdf";
+
+      const opt = {
+        margin: 0.5,
+        filename: fileName,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+      };
+
+      await html2pdf().set(opt).from(element).save();
+    } catch (e) {
+      console.error("Failed to generate PDF:", e);
+    } finally {
+      setSummaryDownloading(false);
     }
   };
 
   return (
     <Card>
       <CardHeader>
-        {/* Decreased font size from text-lg to text-base */}
         <CardTitle className="text-base">Reports & Exports</CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Reduced vertical spacing */}
         <div className="space-y-3">
-          {/* Summary Reports Section */}
+          {/* Original Document */}
           <div>
-            {/* Decreased heading font size and margin */}
-            <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">ORIGINAL DOCUMENT</h4>
+            <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+              ORIGINAL DOCUMENT
+            </h4>
             <div className="space-y-2">
-              {/* Reduced padding */}
               <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-2">
-                  {/* Made icon container smaller */}
                   <div className="w-7 h-7 bg-red-500 rounded flex items-center justify-center">
                     <span className="text-white text-xs font-bold">PDF</span>
                   </div>
                   <div>
-                    {/* Decreased font size */}
                     <p className="text-xs font-medium">{documentTitle || "Executive Authority"}</p>
                   </div>
                 </div>
-                {/* Adjusted button height and icon size */}
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="h-7 bg-blue-600 hover:bg-blue-700"
                   onClick={handleDownloadOriginal}
                   disabled={!documentUrl}
@@ -85,37 +109,34 @@ export default function ReportsAndExports({ documentTitle, documentUrl }: Report
             </div>
           </div>
 
-          {/* Detail Reports Section */}
+          {/* Summary Report */}
           <div>
-            {/* Decreased heading font size and margin */}
-            <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">SUMMARY REPORT</h4>
+            <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+              SUMMARY REPORT
+            </h4>
             <div className="space-y-2">
-              {/* Reduced padding */}
               <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-2">
-                   {/* Made icon container smaller */}
                   <div className="w-7 h-7 bg-red-500 rounded flex items-center justify-center">
                     <span className="text-white text-xs font-bold">PDF</span>
                   </div>
                   <div>
-                    {/* Decreased font size */}
                     <p className="text-xs font-medium">Compliance Obligation</p>
                   </div>
                 </div>
-                 {/* Adjusted button height and icon size */}
-                <Button size="sm" className="h-7 bg-blue-600 hover:bg-blue-700">
+                <Button
+                  size="sm"
+                  className="h-7 bg-blue-600 hover:bg-blue-700 disabled:opacity-60"
+                  onClick={handleDownloadSummary}
+                  disabled={summaryDownloading}
+                >
                   <Download className="w-3 h-3 mr-1" />
-                  Download
+                  {summaryDownloading ? "Preparing..." : "Download"}
                 </Button>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Reduced top margin */}
-        <Button className="w-full mt-5 bg-blue-800 hover:bg-blue-900">
-          Download All Report ( ZIP )
-        </Button>
       </CardContent>
     </Card>
   );
