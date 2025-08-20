@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Edit, Loader2 } from "lucide-react";
 import FadedTextLoader from "./FadedTextLoader";
@@ -28,20 +28,45 @@ export default function KeyObligationsAndActionPoints({
   loading = false,
   error = null,
 }: KeyObligationsAndActionPointsProps) {
-  // 2. Add state to control visibility
+  // Show more/less
   const [showAll, setShowAll] = useState(false);
 
-  // 3. Determine which obligations to display
-  const displayedPoints = showAll ? actionPoints : actionPoints.slice(0, 3);
+  // Relevance filter: all | relevant | irrelevant (treat null/undefined as irrelevant)
+  const [relFilter, setRelFilter] = useState<"all" | "relevant" | "irrelevant">("all");
+
+  // Apply relevance filter
+  const filteredPoints = useMemo(() => {
+    if (relFilter === "all") return actionPoints;
+    if (relFilter === "relevant") return actionPoints.filter((p) => p.is_relevant === true);
+    return actionPoints.filter((p) => p.is_relevant !== true);
+  }, [actionPoints, relFilter]);
+
+  // Determine which obligations to display after filtering
+  const displayedPoints = showAll ? filteredPoints : filteredPoints.slice(0, 3);
 
   return (
     <Card className="border-0 shadow-sm">
       <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          {/* 4. Update CardTitle to show the total count */}
+        <div className="flex items-center justify-between gap-3">
           <CardTitle className="text-lg font-poppins font-normal">
-            Obligations {!loading && actionPoints.length > 0 && `(${actionPoints.length})`}
+            Obligations {!loading && filteredPoints.length > 0 && `(${filteredPoints.length})`}
           </CardTitle>
+
+          {/* Small relevance dropdown (no label text) */}
+          <div>
+            <select
+              id="rel-filter"
+              value={relFilter}
+              onChange={(e) => setRelFilter(e.target.value as typeof relFilter)}
+              className="h-8 px-2 rounded-md border border-slate-300 text-xs text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+              aria-label="Filter obligations by relevance"
+              disabled={loading}
+            >
+              <option value="all">All</option>
+              <option value="relevant">Relevant</option>
+              <option value="irrelevant">Irrelevant</option>
+            </select>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -60,18 +85,16 @@ export default function KeyObligationsAndActionPoints({
               <p className="text-sm text-red-600">Error: {error}</p>
             </div>
           )}
-          {!loading && !error && actionPoints.length === 0 && (
+          {!loading && !error && filteredPoints.length === 0 && (
             <div className="text-gray-500 text-sm">
-              No obligations or action points found for this document.
+              {relFilter === "all" ? "No obligations found" : "No obligations match this filter."}
             </div>
           )}
           {!loading &&
             !error &&
-            // 5. Map over the 'displayedPoints' array instead of the full 'actionPoints'
             displayedPoints.map((point, idx) => {
               const metaItems: React.ReactNode[] = [];
 
-              // Add page with hover popup if source_page exists
               if (typeof point.source_page === "number") {
                 metaItems.push(
                   <span
@@ -80,38 +103,23 @@ export default function KeyObligationsAndActionPoints({
                     title={point.source_text || "No source text available"}
                   >
                     Page: {point.source_page}
-                    {/* Hover popup for source text */}
-                    {point.source_text && (
-                      <div className="absolute bottom-full ">
-                        <div className="relative">
-                          
-                          {/* Arrow pointing down */}
-                        </div>
-                      </div>
-                    )}
                   </span>
                 );
               }
 
-              // Add deadline if exists
               if (point.deadline) {
                 metaItems.push(
                   <span key="deadline">Deadline: {formatDateShort(point.deadline)}</span>
                 );
               }
 
-              // Add relevant status
               if (typeof point.is_relevant === "boolean") {
                 metaItems.push(
                   <span
                     key="relevant"
-                    className={`text-xs font-medium ${
-                      point.is_relevant
-                        ? 'text-green-600'
-                        : 'text-red-600'
-                    }`}
+                    className={`text-xs font-medium ${point.is_relevant ? "text-green-600" : "text-red-600"}`}
                   >
-                    {point.is_relevant ? 'Relevant' : 'Not Relevant'}
+                    {point.is_relevant ? "Relevant" : "Not Relevant"}
                   </span>
                 );
               }
@@ -141,23 +149,21 @@ export default function KeyObligationsAndActionPoints({
                       )}
                     </div>
                   </div>
-                  {/* Adjust divider logic for the currently displayed items */}
                   {idx !== displayedPoints.length - 1 && (
                     <div className="h-[2px] rounded-full bg-[#F6F6F6] mx-auto my-4" />
                   )}
                 </div>
               );
             })}
-          
-          {/* Show More / Show Less buttons */}
-          {!loading && actionPoints.length > 3 && (
+
+          {!loading && filteredPoints.length > 3 && (
             <div className="pt-2">
               {!showAll ? (
                 <button
                   onClick={() => setShowAll(true)}
                   className="text-blue-600 font-semibold text-sm hover:underline"
                 >
-                  + Show More ({actionPoints.length - 3} more)
+                  + Show More ({filteredPoints.length - 3} more)
                 </button>
               ) : (
                 <button
