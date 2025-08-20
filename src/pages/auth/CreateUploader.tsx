@@ -39,21 +39,40 @@ export default function CreateUploader() {
     setSuccess(false);
 
     try {
+      // --- FIX STARTS HERE ---
+      // 1. Create a payload object with the correct key and data type
+      const payload = {
+        username: formData.username,
+        password: formData.password,
+        organisation_id: parseInt(formData.organisation, 10), // Convert to number and use correct key
+      };
+
+      if (isNaN(payload.organisation_id)) {
+        throw new Error("Organisation ID must be a valid number.");
+      }
+
+
       const response = await fetch(`${API_BASE_URL}/api/users/create-uploader`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
         },
-        body: JSON.stringify(formData),
+        // 3. Send the corrected payload
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create uploader");
+        // Use .text() for more robust error handling in case the error isn't JSON
+        const errorText = await response.text();
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.detail || "Failed to create uploader");
+        } catch {
+          throw new Error(errorText || "Failed to create uploader");
+        }
       }
 
-      const result = await response.json();
       setSuccess(true);
       setFormData({
         username: "",
@@ -92,14 +111,14 @@ export default function CreateUploader() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="username">Username</Label>
+                      <Label htmlFor="username">Username (Email)</Label>
                       <Input
                         id="username"
                         name="username"
-                        type="text"
+                        type="email" // Use type="email" for better validation
                         value={formData.username}
                         onChange={handleInputChange}
-                        placeholder="Enter username"
+                        placeholder="e.g., user@example.com"
                         required
                       />
                     </div>
@@ -116,14 +135,14 @@ export default function CreateUploader() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="organisation">Organisation</Label>
+                      <Label htmlFor="organisation">Organisation ID</Label>
                       <Input
                         id="organisation"
                         name="organisation"
-                        type="text"
+                        type="number" // Use type="number" for better user experience
                         value={formData.organisation}
                         onChange={handleInputChange}
-                        placeholder="Enter organisation"
+                        placeholder="Enter organisation ID"
                         required
                       />
                     </div>
@@ -133,7 +152,7 @@ export default function CreateUploader() {
                     <Alert className="border-green-200 bg-green-50">
                       <CheckCircle className="h-4 w-4 text-green-600" />
                       <AlertDescription className="text-green-800">
-                        Uploader created successfully! The user will receive an email with login instructions.
+                        Uploader created successfully!
                       </AlertDescription>
                     </Alert>
                   )}
