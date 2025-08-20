@@ -87,6 +87,7 @@ export default function Login() {
     localStorage.setItem("role", data.user.role);  
     localStorage.setItem("organisation_id", data.user.organisation_id);
     localStorage.setItem("username", data.user.username);
+    localStorage.setItem("organisation_name",data.organisation.name);
         navigate('/documents');
       } catch (err: any) {
         let finalErrorMessage = 'Login failed. Please check your credentials and try again.';

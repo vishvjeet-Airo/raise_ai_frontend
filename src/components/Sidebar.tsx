@@ -61,30 +61,35 @@ export const Sidebar: React.FC<SidebarProps> = ({ forceCollapsed = false }) => {
     if (!id) return;
 
     const abort = new AbortController();
-    const token = localStorage.getItem("access_token");
+    // const token = localStorage.getItem("access_token");
+    setOrgName(localStorage.getItem("organisation_name")??"Company")
 
-    fetch(`${API_BASE_URL}/api/organisations/organization/${id}/full`, {
-      method: "GET",
-      headers: {
-        accept: "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      signal: abort.signal,
-    })
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`Failed to load org (${r.status})`);
-        const data: OrgFull = await r.json();
-        if (data?.name) setOrgName(data.name);
-      })
-      .catch(() => {
-        // keep default "Company" on failure
-      });
+    // fetch(`${API_BASE_URL}/api/organisations/organization/${id}/full`, {
+    //   method: "GET",
+    //   headers: {
+    //     accept: "application/json",
+    //     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    //   },
+    //   signal: abort.signal,
+    // })
+    //   .then(async (r) => {
+    //     if (!r.ok) throw new Error(`Failed to load org (${r.status})`);
+    //     const data: OrgFull = await r.json();
+    //     if (data?.name) setOrgName(data.name);
+    //   })
+    //   .catch(() => {
+    //     // keep default "Company" on failure
+    //   });
 
     return () => abort.abort();
   }, [orgId]);
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
+    localStorage.removeItem("organisation_name");
+    localStorage.removeItem("username");
+    localStorage.removeItem("organisation_id")
+    localStorage.removeItem("role")
     navigate("/login");
   };
 
