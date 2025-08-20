@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 import {
@@ -12,10 +12,16 @@ import {
 } from "lucide-react";
 import { SupportModal } from "./SupportModal";
 import { SettingsModal } from "./SettingsModal";
+import { API_BASE_URL } from "@/lib/config";
 
 interface SidebarProps {
   forceCollapsed?: boolean;
 }
+
+type OrgFull = {
+  id: number;
+  name: string;
+};
 
 export const Sidebar: React.FC<SidebarProps> = ({ forceCollapsed = false }) => {
   const [documentsExpanded, setDocumentsExpanded] = useState(true);
@@ -23,12 +29,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ forceCollapsed = false }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  const [orgName, setOrgName] = useState<string>("Company");
+
   const location = useLocation();
   const navigate = useNavigate();
 
   const role = (localStorage.getItem("role") || "").toLowerCase();
   const isAdmin = role === "admin";
   const isUploader = role === "uploader";
+
+  // Username from localStorage (fallbacks)
+  const username =
+    localStorage.getItem("username") ||
+    localStorage.getItem("name") ||
+    localStorage.getItem("user_name") ||
+    "User";
 
   // Company path from localStorage for both admin and uploader
   const orgId = localStorage.getItem("organisation_id") || "";
@@ -39,8 +55,41 @@ export const Sidebar: React.FC<SidebarProps> = ({ forceCollapsed = false }) => {
   const isActive = (path: string): boolean => location.pathname === path;
   const isDocumentsSectionActive = isActive("/documents") || isActive("/upload");
 
+  // Fetch organization name to show in the header
+  useEffect(() => {
+    const id = orgId?.trim();
+    if (!id) return;
+
+    const abort = new AbortController();
+    // const token = localStorage.getItem("access_token");
+    setOrgName(localStorage.getItem("organisation_name")??"Company")
+
+    // fetch(`${API_BASE_URL}/api/organisations/organization/${id}/full`, {
+    //   method: "GET",
+    //   headers: {
+    //     accept: "application/json",
+    //     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    //   },
+    //   signal: abort.signal,
+    // })
+    //   .then(async (r) => {
+    //     if (!r.ok) throw new Error(`Failed to load org (${r.status})`);
+    //     const data: OrgFull = await r.json();
+    //     if (data?.name) setOrgName(data.name);
+    //   })
+    //   .catch(() => {
+    //     // keep default "Company" on failure
+    //   });
+
+    return () => abort.abort();
+  }, [orgId]);
+
   const handleLogout = () => {
     localStorage.removeItem("access_token");
+    localStorage.removeItem("organisation_name");
+    localStorage.removeItem("username");
+    localStorage.removeItem("organisation_id")
+    localStorage.removeItem("role")
     navigate("/login");
   };
 
@@ -81,14 +130,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ forceCollapsed = false }) => {
         )}
       >
         <div className={twMerge("flex flex-col h-full", actuallyCollapsed ? "items-center" : "")}>
-          {/* User Profile Section */}
+          {/* User Profile Section (keep logo and styling; show org name + username) */}
           <div className={twMerge("p-4 border-b border-gray-200 w-full", actuallyCollapsed ? "px-4" : "px-6")}>
             <div className="flex items-center space-x-3">
-              <img src="/analyst.png" alt="Andrew Smith" className="w-10 h-10 rounded-full" />
+              <img src="/analyst.png" alt="User" className="w-10 h-10 rounded-full" />
               {!actuallyCollapsed && (
                 <div>
-                  <div className="font-medium text-[10px] leading-[12px] tracking-[0.4px] uppercase text-[#757575]">Finance Analyst</div>
-                  <div className="font-medium text-sm leading-5 tracking-normal text-black">Andrew Smith</div>
+                  <div className="font-medium text-[10px] leading-[12px] tracking-[0.4px] uppercase text-[#757575]">
+                    {username}
+                  </div>
+                  <div className="font-medium text-sm leading-5 tracking-normal text-black">
+                    {orgName}
+                  </div>
                 </div>
               )}
             </div>
@@ -302,6 +355,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ forceCollapsed = false }) => {
         isOpen={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
       />
-    </>
+      </>
   );
 };

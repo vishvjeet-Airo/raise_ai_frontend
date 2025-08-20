@@ -4,16 +4,26 @@ import { Sidebar } from "@/components/Sidebar";
 import { Search, ArrowUp, ArrowDown } from "lucide-react";
 import { API_BASE_URL } from "@/lib/config";
 
-// API types (subset)
+/* ---- API types (reflecting detailed_action_points) ---- */
+type ApiDetailedActionPoint = {
+  id: number;
+  task?: string | null;
+  due_date?: string | null;
+  assigned_to_name?: string | null;
+  assigned_to_department?: string | null;
+  status?: string | null;
+};
+
 type ApiActionPoint = {
   id: number;
-  title: string;
+  title?: string | null;
   description?: string | null;
   source_page?: number | null;
-  deadline?: string | null; // ISO or YYYY-MM-DD or null
+  deadline?: string | null;
   is_relevant?: boolean;
   assigned_to_name?: string | null;
   assigned_to_department?: string | null;
+  detailed_action_points?: ApiDetailedActionPoint[] | null;
 };
 
 type ApiDocument = {
@@ -25,11 +35,12 @@ type ApiDocument = {
 };
 
 type RowItem = {
-  id: number;
-  action: string;
-  person: string;
-  department: string;
-  deadline: Date | null;
+  id: string; // stable string key
+  action: string; // task text
+  person: string; // assigned_to_name
+  department: string; // assigned_to_department
+  deadline: Date | null; // due_date
+  status: string; // status
   circularId: number;
   circularName: string;
 };
@@ -45,6 +56,19 @@ const getAuthHeaders = (): HeadersInit | undefined => {
   return token ? { Authorization: `Bearer ${token}` } : undefined;
 };
 
+/* ---- helpers ---- */
+const ns = "not specified";
+const toTitle = (s: string) => s.slice(0, 1).toUpperCase() + s.slice(1);
+
+function getStatusClasses(status: string) {
+  const v = status.toLowerCase();
+  if (v.includes("complete") || v === "done") return "bg-emerald-100 text-emerald-700";
+  if (v.includes("progress")) return "bg-blue-100 text-blue-700";
+  if (v.includes("overdue") || v.includes("late")) return "bg-rose-100 text-rose-700";
+  if (v.includes("pending")) return "bg-amber-100 text-amber-700";
+  return "bg-slate-100 text-slate-700";
+}
+
 export default function ActionItemsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("All");
@@ -57,7 +81,7 @@ export default function ActionItemsPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch documents + action_points
+  // Fetch documents and flatten detailed_action_points into table rows
   useEffect(() => {
     let ignore = false;
 
@@ -75,15 +99,35 @@ export default function ActionItemsPage() {
         const data: ApiDocument[] = await res.json();
 
         const mapped: DocGroup[] = (data || []).map((doc) => {
-          const rows: RowItem[] = (doc.action_points || []).map((ap) => ({
-            id: ap.id,
-            action: ap.title || ap.description || "Untitled action",
-            person: ap.assigned_to_name || "-",
-            department: ap.assigned_to_department || "-",
-            deadline: ap.deadline ? new Date(ap.deadline) : null,
-            circularId: doc.id,
-            circularName: doc.title || `Document ${doc.id}`,
-          }));
+          const rows: RowItem[] = [];
+
+          (doc.action_points || []).forEach((ap) => {
+            (ap.detailed_action_points || []).forEach((dap) => {
+              const actionText =
+                (dap.task && dap.task.trim()) ||
+                ns;
+
+              const person = (dap.assigned_to_name && dap.assigned_to_name.trim()) || ns;
+              const department = (dap.assigned_to_department && dap.assigned_to_department.trim()) || ns;
+
+              // prefer detailed due_date; fall back to action_point deadline
+              const rawDate = dap.due_date || ap.deadline || null;
+              const deadline = rawDate ? new Date(rawDate) : null;
+              const status = (dap.status && dap.status.trim()) || ns;
+
+              rows.push({
+                id: `doc${doc.id}-ap${ap.id}-dap${dap.id}`,
+                action: actionText,
+                person,
+                department,
+                deadline: deadline && !isNaN(deadline.getTime()) ? deadline : null,
+                status,
+                circularId: doc.id,
+                circularName: doc.title || `Document ${doc.id}`,
+              });
+            });
+          });
+
           return {
             documentId: doc.id,
             documentTitle: doc.title || `Document ${doc.id}`,
@@ -139,7 +183,8 @@ export default function ActionItemsPage() {
               r.action.toLowerCase().includes(term) ||
               r.person.toLowerCase().includes(term) ||
               r.circularName.toLowerCase().includes(term) ||
-              r.department.toLowerCase().includes(term)
+              r.department.toLowerCase().includes(term) ||
+              r.status.toLowerCase().includes(term)
           );
         }
 
@@ -231,13 +276,12 @@ export default function ActionItemsPage() {
                   <div className="bg-white/95 backdrop-blur-sm rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                     <div className="overflow-x-auto overflow-y-hidden rounded-xl">
                       <table className="w-full table-auto text-sm text-left text-slate-700">
-                        {/* Consistent column widths across all tables */}
                         <colgroup>
-                          <col style={{ width: "36%" }} />
-                          <col style={{ width: "24%" }} />
+                          <col style={{ width: "40%" }} />
                           <col style={{ width: "20%" }} />
-                          <col style={{ width: "12%" }} />
-                          <col style={{ width: "8%" }} />
+                          <col style={{ width: "20%" }} />
+                          <col style={{ width: "10%" }} />
+                          <col style={{ width: "10%" }} />
                         </colgroup>
                         <thead className="bg-slate-50 text-xs text-slate-600">
                           <tr className="border-b border-slate-200">
@@ -270,14 +314,14 @@ export default function ActionItemsPage() {
                               key={item.id}
                               className={`border-b border-slate-100 ${idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"} hover:bg-slate-50`}
                             >
-                              <td className="px-6 py-4 align-middle overflow-hidden">
-                                <div className="whitespace-pre-wrap break-words">{item.action}</div>
+                              <td className="px-6 py-4 align-middle">
+                                <div className="whitespace-pre-wrap break-words">{item.action || ns}</div>
                               </td>
-                              <td className="px-6 py-4 align-middle overflow-hidden">
-                                <div className="whitespace-normal break-words">{item.department}</div>
+                              <td className="px-6 py-4 align-middle whitespace-normal break-words">
+                                {item.department || ns}
                               </td>
-                              <td className="px-6 py-4 align-middle overflow-hidden">
-                                <div className="whitespace-normal break-words">{item.person}</div>
+                              <td className="px-6 py-4 align-middle whitespace-normal break-words">
+                                {item.person || ns}
                               </td>
                               <td className="px-6 py-4 align-middle text-center whitespace-nowrap">
                                 {item.deadline
@@ -286,12 +330,12 @@ export default function ActionItemsPage() {
                                       month: "short",
                                       year: "numeric",
                                     })
-                                  : "N/A"}
+                                  : ns}
                               </td>
                               <td className="px-6 py-4 align-middle">
                                 <div className="flex justify-center">
-                                  <span className="inline-flex items-center rounded-full bg-amber-100 text-amber-700 px-2.5 py-0.5 text-xs font-medium">
-                                    Pending
+                                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusClasses(item.status)}`}>
+                                    {item.status === ns ? ns : toTitle(item.status)}
                                   </span>
                                 </div>
                               </td>
@@ -313,7 +357,7 @@ export default function ActionItemsPage() {
             </div>
           )}
         </div>
-      </main>   
-    </div>  
+      </main>
+    </div>
   );
 }

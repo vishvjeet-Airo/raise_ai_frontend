@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '@/lib/config';
@@ -129,6 +130,13 @@ const ListItem = ({
   </div>
 );
 
+/*
+  EditModal focus/typing fixes:
+  - Use uncontrolled inputs (defaultValue) so typing doesn't trigger React state updates on each key.
+  - Only read values on submit via FormData. This avoids any remount/focus issues while typing.
+  - Focus the first field on open.
+  - Render via portal to isolate from parent re-renders.
+*/
 const EditModal = ({
   modalConfig,
   onClose,
@@ -141,44 +149,62 @@ const EditModal = ({
   orgId: number
 }) => {
   const { mode, modelType, data } = modalConfig;
-  const [formData, setFormData] = React.useState<any>(data || {});
 
-  React.useEffect(() => { setFormData(data || {}); }, [data]);
+  // Autofocus first field
+  const firstFieldRef = React.useRef<HTMLInputElement | null>(null);
+  React.useEffect(() => {
+    const id = requestAnimationFrame(() => firstFieldRef.current?.focus());
+    return () => cancelAnimationFrame(id);
+  }, [mode, modelType, data?.id]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev: any) => ({ ...prev, [name]: value }));
-  };
+  const formRef = React.useRef<HTMLFormElement | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const cleanFormData = Object.fromEntries(
-      Object.entries(formData).filter(([_, v]) => v != null && v !== '')
-    );
-    onSave(modelType, cleanFormData, orgId);
+    const fd = new FormData(e.currentTarget);
+    const obj: Record<string, any> = {};
+    fd.forEach((v, k) => {
+      // keep strings; backend can coerce
+      obj[k] = v as string;
+    });
+    // include id for updates
+    if (mode === 'edit' && data?.id != null) obj.id = data.id;
+    onSave(modelType, obj, orgId);
   };
 
+  // Uncontrolled input builder
   const FormInput = ({
     label,
     name,
-    value,
-    onChange,
+    defaultValue,
     placeholder = '',
     type = 'text',
-    required = false
-  }: any) => (
+    required = false,
+    inputRef,
+    autoFocus = false,
+  }: {
+    label: string;
+    name: string;
+    defaultValue?: any;
+    placeholder?: string;
+    type?: React.HTMLInputTypeAttribute;
+    required?: boolean;
+    inputRef?: React.RefObject<HTMLInputElement>;
+    autoFocus?: boolean;
+  }) => (
     <div>
       <label htmlFor={name} className="block text-sm font-medium text-gray-700">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <input
+        ref={inputRef}
         type={type}
         id={name}
         name={name}
-        value={value}
-        onChange={onChange}
+        defaultValue={defaultValue ?? ''}
         placeholder={placeholder}
         required={required}
+        autoFocus={autoFocus}
         className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
       />
     </div>
@@ -188,72 +214,82 @@ const EditModal = ({
     switch (modelType) {
       case 'organization':
         return <>
-          <FormInput label="Company Name" name="name" value={formData.name || ''} onChange={handleChange} />
-          <FormInput label="Legal Entity Type" name="legal_entity_type" value={formData.legal_entity_type || ''} onChange={handleChange} />
-          <FormInput label="Industry" name="industry_classification" value={formData.industry_classification || ''} onChange={handleChange} />
-          <FormInput label="Employee Count" name="employee_count" value={formData.employee_count ?? ''} onChange={handleChange} type="number" />
-          <FormInput label="Annual Turnover" name="annual_turnover" value={formData.annual_turnover ?? ''} onChange={handleChange} type="number" />
+          <FormInput label="Company Name" name="name" defaultValue={data?.name} inputRef={firstFieldRef} autoFocus />
+          <FormInput label="Legal Entity Type" name="legal_entity_type" defaultValue={data?.legal_entity_type} />
+          <FormInput label="Industry" name="industry_classification" defaultValue={data?.industry_classification} />
+          <FormInput label="Employee Count" name="employee_count" defaultValue={data?.employee_count} type="number" />
+          <FormInput label="Annual Turnover" name="annual_turnover" defaultValue={data?.annual_turnover} type="number" />
         </>;
       case 'jurisdiction':
         return <>
-          <FormInput label="Country" name="country" value={formData.country || ''} onChange={handleChange} />
-          <FormInput label="State" name="state" value={formData.state || ''} onChange={handleChange} />
-          <FormInput label="City" name="city" value={formData.city || ''} onChange={handleChange} />
+          <FormInput label="Country" name="country" defaultValue={data?.country} inputRef={firstFieldRef} autoFocus />
+          <FormInput label="State" name="state" defaultValue={data?.state} />
+          <FormInput label="City" name="city" defaultValue={data?.city} />
         </>;
       case 'license':
         return <>
-          <FormInput label="License Name" name="license_name" value={formData.license_name || ''} onChange={handleChange} />
-          <FormInput label="License Number" name="license_number" value={formData.license_number || ''} onChange={handleChange} />
-          <FormInput label="Issuing Authority" name="issuing_authority" value={formData.issuing_authority || ''} onChange={handleChange} />
-          <FormInput label="Expiry Date" name="expiry_date" value={formData.expiry_date || ''} onChange={handleChange} placeholder="YYYY-MM-DD" type="date" />
+          <FormInput label="License Name" name="license_name" defaultValue={data?.license_name} inputRef={firstFieldRef} autoFocus />
+          <FormInput label="License Number" name="license_number" defaultValue={data?.license_number} />
+          <FormInput label="Issuing Authority" name="issuing_authority" defaultValue={data?.issuing_authority} />
+          <FormInput label="Expiry Date" name="expiry_date" defaultValue={data?.expiry_date} placeholder="YYYY-MM-DD" type="date" />
         </>;
       case 'regulator':
         return <>
-          <FormInput label="Regulator Name" name="name" value={formData.name || ''} onChange={handleChange} />
-          <FormInput label="Jurisdiction" name="jurisdiction" value={formData.jurisdiction || ''} onChange={handleChange} />
+          <FormInput label="Regulator Name" name="name" defaultValue={data?.name} inputRef={firstFieldRef} autoFocus />
+          <FormInput label="Jurisdiction" name="jurisdiction" defaultValue={data?.jurisdiction} />
         </>;
       case 'business_unit':
         return <>
-          <FormInput label="Unit Name" name="name" value={formData.name || ''} onChange={handleChange} />
-          <FormInput label="Head Name" name="head_name" value={formData.head_name || ''} onChange={handleChange} />
+          <FormInput label="Unit Name" name="name" defaultValue={data?.name} inputRef={firstFieldRef} autoFocus />
+          <FormInput label="Head Name" name="head_name" defaultValue={data?.head_name} />
         </>;
       case 'standard':
         return <>
-          <FormInput label="Standard Name" name="name" value={formData.name || ''} onChange={handleChange} />
-          <FormInput label="Certification Number" name="certification_number" value={formData.certification_number || ''} onChange={handleChange} />
-          <FormInput label="Valid Until" name="valid_until" value={formData.valid_until || ''} onChange={handleChange} placeholder="YYYY-MM-DD" type="date" />
+          <FormInput label="Standard Name" name="name" defaultValue={data?.name} inputRef={firstFieldRef} autoFocus />
+          <FormInput label="Certification Number" name="certification_number" defaultValue={data?.certification_number} />
+          <FormInput label="Valid Until" name="valid_until" defaultValue={data?.valid_until} placeholder="YYYY-MM-DD" type="date" />
         </>;
       case 'critical_process':
         return <>
-          <FormInput label="Process Name" name="name" value={formData.name || ''} onChange={handleChange} />
-          <FormInput label="Description" name="description" value={formData.description || ''} onChange={handleChange} />
+          <FormInput label="Process Name" name="name" defaultValue={data?.name} inputRef={firstFieldRef} autoFocus />
+          <FormInput label="Description" name="description" defaultValue={data?.description} />
         </>;
       case 'third_party':
         return <>
-          <FormInput label="Vendor/Partner Name" name="name" value={formData.name || ''} onChange={handleChange} />
-          <FormInput label="Service Provided" name="service_provided" value={formData.service_provided || ''} onChange={handleChange} />
-          <FormInput label="Contract Expiry" name="contract_expiry" value={formData.contract_expiry || ''} onChange={handleChange} placeholder="YYYY-MM-DD" type="date" />
+          <FormInput label="Vendor/Partner Name" name="name" defaultValue={data?.name} inputRef={firstFieldRef} autoFocus />
+          <FormInput label="Service Provided" name="service_provided" defaultValue={data?.service_provided} />
+          <FormInput label="Contract Expiry" name="contract_expiry" defaultValue={data?.contract_expiry} placeholder="YYYY-MM-DD" type="date" />
         </>;
       case 'compliance_record':
         return <>
-          <FormInput label="Record Type" name="record_type" value={formData.record_type || ''} onChange={handleChange} placeholder="e.g., Audit, Incident" />
-          <FormInput label="Description" name="description" value={formData.description || ''} onChange={handleChange} />
-          <FormInput label="Date" name="date" value={formData.date || ''} onChange={handleChange} placeholder="YYYY-MM-DD" type="date" />
-          <FormInput label="Outcome" name="outcome" value={formData.outcome || ''} onChange={handleChange} />
+          <FormInput label="Record Type" name="record_type" defaultValue={data?.record_type} inputRef={firstFieldRef} autoFocus placeholder="e.g., Audit, Incident" />
+          <FormInput label="Description" name="description" defaultValue={data?.description} />
+          <FormInput label="Date" name="date" defaultValue={data?.date} placeholder="YYYY-MM-DD" type="date" />
+          <FormInput label="Outcome" name="outcome" defaultValue={data?.outcome} />
         </>;
       default:
         return <p>Invalid form type.</p>;
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg max-h-full overflow-y-auto">
+  const modalUI = (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      <div
+        className="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg max-h-full overflow-y-auto"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-bold text-[#1F4A75] capitalize">{mode} {modelType.replace(/_/g, ' ')}</h3>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800"><X size={24} /></button>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
+          {/* Include hidden id for updates */}
+          {mode === 'edit' && data?.id != null && (
+            <input type="hidden" name="id" defaultValue={String(data.id)} />
+          )}
           {renderFormFields()}
           <div className="flex justify-end gap-4 mt-6">
             <button type="button" onClick={onClose} className="py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
@@ -263,6 +299,9 @@ const EditModal = ({
       </div>
     </div>
   );
+
+  // Render in a portal to isolate from parent re-renders and keep focus stable
+  return createPortal(modalUI, document.body);
 };
 
 export default function CompanyProfileByIdPage() {
@@ -306,7 +345,7 @@ export default function CompanyProfileByIdPage() {
       } else {
         const itemId = dataToSend.id ?? undefined;
         if (!itemId) throw new Error('Missing item ID for update operation.');
-        await api.updateItem(modelType, itemId, dataToSend);
+        await api.updateItem(modelType, Number(itemId), dataToSend);
       }
       setModalConfig(null);
       if (id) {
@@ -613,12 +652,12 @@ export default function CompanyProfileByIdPage() {
                   </ListItem>
                 ))
               ) : (
-                <p className="text-gray-400">No compliance records found.</p>
-              )}
+                <p className="text-gray-400">No compliance records added.</p>
+                )}
             </div>
           </div>
         </div>
-    </div>
+      </div>
     </>
   );
 }
