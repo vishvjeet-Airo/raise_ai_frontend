@@ -82,6 +82,15 @@ export default function Login() {
         if (data.access_token) {
           localStorage.setItem('access_token', data.access_token);
         }
+        if (data?.user) {
+          const { organisation_id, role } = data.user;
+          if (organisation_id !== undefined && organisation_id !== null) {
+            localStorage.setItem('organisation_id', String(organisation_id));
+          }
+          if (role) {
+            localStorage.setItem('role', role);
+          }
+        }
         setApiResponse(JSON.stringify(data, null, 2));
         // Redirect to all documents page
         navigate('/documents');
