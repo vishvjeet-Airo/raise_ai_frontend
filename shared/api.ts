@@ -13,7 +13,7 @@ export interface DemoResponse {
   message: string;
 }
 
-"""export const uploadDocument = async (file: File, name: string) => {
+export const uploadDocument = async (file: File, name: string) => {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("name", name);
@@ -34,4 +34,4 @@ export interface DemoResponse {
   }
 
   return response.json();
-};""
+};
