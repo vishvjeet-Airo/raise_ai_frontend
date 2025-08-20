@@ -52,18 +52,20 @@ type ApiDocument = {
   issuing_authority?: string | null;
   publication_date?: string | null;
   uploaded_at?: string | null; // Keep the original timestamp
+  analysis_completed_at?: string | null; // NEW: completion timestamp from API
   circular_type?: string | null;
   reference_number?: string | null;
   action_points?: ApiActionPoint[] | null;
 };
 
-// MODIFIED: Added uploadedAtTimestamp to the normalized shape
+// MODIFIED: Added uploadedAtTimestamp and completedAtTimestamp to the normalized shape
 type NormalizedDocument = {
   id: string;
   name: string;
   publisher: string;
   publicationDate: string;
   uploadedAtTimestamp?: string; // To store the full ISO string for the timeline
+  completedAtTimestamp?: string; // NEW: analysis completion timestamp
   circularType: string;
   referenceNumber: string;
   url: string;
@@ -117,13 +119,14 @@ export default function DocumentDetail() {
           throw new Error("Document not found.");
         }
 
-        // MODIFIED: Store the original 'uploaded_at' timestamp
+        // MODIFIED: Store the original 'uploaded_at' and 'analysis_completed_at' timestamps
         const normalized: NormalizedDocument = {
           id: String(raw.id),
           name: raw.title || raw.file_name || `Document ${raw.id}`,
           publisher: raw.issuing_authority || "Unknown",
           publicationDate: formatDateShort(raw.publication_date),
           uploadedAtTimestamp: raw.uploaded_at || "", // Keep the full timestamp
+          completedAtTimestamp: raw.analysis_completed_at || "", 
           circularType: raw.circular_type || "",
           referenceNumber: raw.reference_number || "",
           url: raw.blob_url || "",
@@ -249,8 +252,11 @@ export default function DocumentDetail() {
                         error={null}
                       />
                     </div>
-                    {/* MODIFIED: Pass the timestamp prop */}
-                    <DocumentTimeline uploadedTimestamp={document.uploadedAtTimestamp} />
+                    {/* Pass both uploaded and completion timestamps */}
+                    <DocumentTimeline
+                      uploadedTimestamp={document.uploadedAtTimestamp}
+                      completionTimestamp={document.completedAtTimestamp}
+                    />
                     <ComparativeInsights documentId={Number(document.id)} />
                     <ReportsAndExports
                       documentTitle={document.name}
@@ -282,8 +288,11 @@ export default function DocumentDetail() {
 
                       {/* Right Column of Content */}
                       <div className="w-[361px] flex-shrink-0 space-y-6">
-                        {/* MODIFIED: Pass the timestamp prop */}
-                        <DocumentTimeline uploadedTimestamp={document.uploadedAtTimestamp} />
+                        {/* Pass both uploaded and completion timestamps */}
+                        <DocumentTimeline
+                          uploadedTimestamp={document.uploadedAtTimestamp}
+                          completionTimestamp={document.completedAtTimestamp}
+                        />
                         <ComparativeInsights documentId={Number(document.id)} />
                         <ReportsAndExports
                           documentTitle={document.name}
@@ -327,7 +336,7 @@ export default function DocumentDetail() {
             </aside>
           )}
         </div>
-      </div>
-    </ChatSidebarContext.Provider>
+        </div>
+      </ChatSidebarContext.Provider>
   );
 }

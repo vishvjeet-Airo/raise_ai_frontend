@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Edit, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import FadedTextLoader from "./FadedTextLoader";
 import { formatDateShort } from "@/lib/dateUtils";
 
@@ -31,12 +31,11 @@ export default function KeyObligationsAndActionPoints({
   // Show more/less
   const [showAll, setShowAll] = useState(false);
 
-  // Relevance filter: all | relevant | irrelevant (treat null/undefined as irrelevant)
-  const [relFilter, setRelFilter] = useState<"all" | "relevant" | "irrelevant">("all");
+  // Relevance filter: relevant | irrelevant
+  const [relFilter, setRelFilter] = useState<"relevant" | "irrelevant">("relevant");
 
   // Apply relevance filter
   const filteredPoints = useMemo(() => {
-    if (relFilter === "all") return actionPoints;
     if (relFilter === "relevant") return actionPoints.filter((p) => p.is_relevant === true);
     return actionPoints.filter((p) => p.is_relevant !== true);
   }, [actionPoints, relFilter]);
@@ -52,7 +51,7 @@ export default function KeyObligationsAndActionPoints({
             Obligations {!loading && filteredPoints.length > 0 && `(${filteredPoints.length})`}
           </CardTitle>
 
-          {/* Small relevance dropdown (no label text) */}
+          {/* Relevance dropdown (only 2 options) */}
           <div>
             <select
               id="rel-filter"
@@ -62,9 +61,8 @@ export default function KeyObligationsAndActionPoints({
               aria-label="Filter obligations by relevance"
               disabled={loading}
             >
-              <option value="all">All</option>
               <option value="relevant">Relevant</option>
-              <option value="irrelevant">Irrelevant</option>
+              <option value="irrelevant">Not Relevant</option>
             </select>
           </div>
         </div>
@@ -87,7 +85,9 @@ export default function KeyObligationsAndActionPoints({
           )}
           {!loading && !error && filteredPoints.length === 0 && (
             <div className="text-gray-500 text-sm">
-              {relFilter === "all" ? "No obligations found" : "No obligations match this filter."}
+              {relFilter === "relevant"
+                ? "No relevant obligations found."
+                : "No not relevant obligations found."}
             </div>
           )}
           {!loading &&
@@ -113,16 +113,7 @@ export default function KeyObligationsAndActionPoints({
                 );
               }
 
-              if (typeof point.is_relevant === "boolean") {
-                metaItems.push(
-                  <span
-                    key="relevant"
-                    className={`text-xs font-medium ${point.is_relevant ? "text-green-600" : "text-red-600"}`}
-                  >
-                    {point.is_relevant ? "Relevant" : "Not Relevant"}
-                  </span>
-                );
-              }
+              // ⚡ Removed showing "Relevant"/"Not Relevant" text here
 
               return (
                 <div key={point.id}>

@@ -6,7 +6,15 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 // NEW: Helper function to format the date and time
 const formatDateTime = (isoString?: string) => {
   if (!isoString) return "Not available";
-  return new Date(isoString).toLocaleString('en-US', {
+
+  // Parse as UTC
+  const utcDate = new Date(isoString);
+
+  // Convert to IST (UTC + 5:30)
+  const istDate = new Date(utcDate.getTime() + (5 * 60 + 30) * 60 * 1000);
+
+  return istDate.toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',   
     month: 'long',
     day: 'numeric',
     year: 'numeric',
@@ -16,8 +24,14 @@ const formatDateTime = (isoString?: string) => {
   });
 };
 
-// MODIFIED: Component now accepts 'uploadedTimestamp' as a prop
-export default function DocumentTimeline({ uploadedTimestamp }: { uploadedTimestamp?: string }) {
+// MODIFIED: Component now accepts 'uploadedTimestamp' and 'completionTimestamp' as props
+export default function DocumentTimeline({
+  uploadedTimestamp,
+  completionTimestamp,
+}: {
+  uploadedTimestamp?: string;
+  completionTimestamp?: string;
+}) {
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
@@ -28,7 +42,7 @@ export default function DocumentTimeline({ uploadedTimestamp }: { uploadedTimest
     });
   };
 
-  // MODIFIED: timelineItems now uses the dynamic timestamp
+  // MODIFIED: timelineItems now uses the dynamic timestamps
   const timelineItems = [
     {
       title: "Document Uploaded",
@@ -37,8 +51,8 @@ export default function DocumentTimeline({ uploadedTimestamp }: { uploadedTimest
       completed: true
     },
     {
-      title: "AI Analysis Completed", 
-      timestamp: "A few moments later", // This could also be a prop if available
+      title: "AI Analysis Completed",
+      timestamp: formatDateTime(completionTimestamp),
       color: "bg-blue-500",
       completed: true
     }
@@ -79,6 +93,6 @@ export default function DocumentTimeline({ uploadedTimestamp }: { uploadedTimest
           </Button>
         </div>
       </CardContent>
-    </Card>
+      </Card>     
   );
 }
