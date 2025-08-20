@@ -261,6 +261,7 @@ export default function DocumentDetail() {
                     <ReportsAndExports
                       documentTitle={document.name}
                       documentUrl={document.url}
+                      documentId={document.id}
                     />
                   </>
                 ) : (
@@ -297,6 +298,7 @@ export default function DocumentDetail() {
                         <ReportsAndExports
                           documentTitle={document.name}
                           documentUrl={document.url}
+                          documentId={document.id}
                         />
                       </div>
                     </div>
