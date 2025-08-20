@@ -171,15 +171,15 @@ export default function AuditTrail() {
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     return {
-      date: date.toLocaleDateString('en-GB', { 
-        day: '2-digit', 
-        month: 'short', 
-        year: 'numeric' 
+      date: date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
       }),
-      time: date.toLocaleTimeString('en-GB', { 
-        hour: '2-digit', 
+      time: date.toLocaleTimeString('en-GB', {
+        hour: '2-digit',
         minute: '2-digit',
-        hour12: true 
+        hour12: true
       })
     };
   };

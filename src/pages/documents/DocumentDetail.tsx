@@ -8,12 +8,11 @@ import CircularOverview from "./components/document-detail/CircularOverview";
 import ComparativeInsights from "./components/document-detail/ComparativeInsights";
 import DocumentHeader from "./components/document-detail/DocumentHeader";
 import DocumentTimeline from "./components/document-detail/DocumentTimeline";
-import HumanValidationRequired from "./components/document-detail/HumanValidationRequired";
 import KeyObligationsAndActionPoints from "./components/document-detail/KeyObligationsAndActionPoints";
 import ReportsAndExports from "./components/document-detail/ReportsAndExports";
 import { API_BASE_URL } from "@/lib/config";
+import { formatDateShort } from "@/lib/dateUtils";
 
-// Defines the shape of the data in the context
 type ChatSidebarContextType = {
   isChatOpen: boolean;
   setIsChatOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -24,7 +23,6 @@ type ChatSidebarContextType = {
   documentName: string;
 };
 
-// Creates the context with the correct type
 const ChatSidebarContext = createContext<ChatSidebarContextType | null>(null);
 
 export const useChatSidebar = () => {
@@ -35,7 +33,6 @@ export const useChatSidebar = () => {
   return context;
 };
 
-// API response types (subset)
 type ApiActionPoint = {
   id: number;
   title: string;
@@ -54,17 +51,19 @@ type ApiDocument = {
   blob_url?: string | null;
   issuing_authority?: string | null;
   publication_date?: string | null;
+  uploaded_at?: string | null; // Keep the original timestamp
   circular_type?: string | null;
   reference_number?: string | null;
   action_points?: ApiActionPoint[] | null;
 };
 
-// Normalized shape used by the UI
+// MODIFIED: Added uploadedAtTimestamp to the normalized shape
 type NormalizedDocument = {
   id: string;
   name: string;
   publisher: string;
   publicationDate: string;
+  uploadedAtTimestamp?: string; // To store the full ISO string for the timeline
   circularType: string;
   referenceNumber: string;
   url: string;
@@ -96,7 +95,6 @@ export default function DocumentDetail() {
       setError(null);
 
       try {
-        // Token source — adjust to your app’s storage/keys if different
         const token =
           localStorage.getItem("access_token") ||
           sessionStorage.getItem("access_token");
@@ -119,11 +117,13 @@ export default function DocumentDetail() {
           throw new Error("Document not found.");
         }
 
+        // MODIFIED: Store the original 'uploaded_at' timestamp
         const normalized: NormalizedDocument = {
           id: String(raw.id),
           name: raw.title || raw.file_name || `Document ${raw.id}`,
           publisher: raw.issuing_authority || "Unknown",
-          publicationDate: raw.publication_date || "",
+          publicationDate: formatDateShort(raw.publication_date),
+          uploadedAtTimestamp: raw.uploaded_at || "", // Keep the full timestamp
           circularType: raw.circular_type || "",
           referenceNumber: raw.reference_number || "",
           url: raw.blob_url || "",
@@ -145,7 +145,6 @@ export default function DocumentDetail() {
     };
   }, [id]);
 
-  // If either sidebar is open, minimize the main sidebar and stack the content
   const anySidebarOpen = isPreviewOpen || isChatOpen;
   const shouldMinimizeSidebar = anySidebarOpen;
 
@@ -224,10 +223,10 @@ export default function DocumentDetail() {
                 </span>
               </div>
 
-              <div className={anySidebarOpen ? "" : "flex gap-5"}>
+              <div className="space-y-6">
                 {anySidebarOpen ? (
                   // When ANY sidebar is open, stack content vertically
-                  <div className="w-full space-y-6">
+                  <>
                     <DocumentHeader
                       fileName={document.name}
                       issueDate={document.publicationDate}
@@ -243,54 +242,60 @@ export default function DocumentDetail() {
                       impactAreas={document.impactAreas}
                     />
                     <AIGeneratedSummary documentId={Number(document.id)} />
-                    <KeyObligationsAndActionPoints
-                      actionPoints={document.actionPoints || []}
-                      loading={false}
-                      error={null}
-                    />
-                    <DocumentTimeline />
-                    <HumanValidationRequired />
-                    <ComparativeInsights documentId={Number(document.id)} />
-                    <ReportsAndExports
-                      documentTitle={document.name}
-                      documentUrl={document.url}
-                    />
-                  </div>
-                ) : (
-                  // When NO sidebar is open, use two columns
-                  <>
-                    {/* Left Column of Content */}
-                    <div className="flex-1 space-y-6">
-                      <DocumentHeader
-                        fileName={document.name}
-                        issueDate={document.publicationDate}
-                        publisher={document.publisher}
-                        documentId={document.id}
-                        onPreviewClick={handlePreviewClick}
-                      />
-                      <CircularOverview
-                        issuingAuthority={document.publisher}
-                        issuingDate={document.publicationDate}
-                        circularType={document.circularType}
-                        referenceNumber={document.referenceNumber}
-                        impactAreas={document.impactAreas}
-                      />
-                      <AIGeneratedSummary documentId={Number(document.id)} />
+                    <div className="mx-4">
                       <KeyObligationsAndActionPoints
                         actionPoints={document.actionPoints || []}
                         loading={false}
                         error={null}
                       />
                     </div>
+                    {/* MODIFIED: Pass the timestamp prop */}
+                    <DocumentTimeline uploadedTimestamp={document.uploadedAtTimestamp} />
+                    <ComparativeInsights documentId={Number(document.id)} />
+                    <ReportsAndExports
+                      documentTitle={document.name}
+                      documentUrl={document.url}
+                    />
+                  </>
+                ) : (
+                  // When NO sidebar is open, use two columns layout
+                  <>
+                    <div className="flex gap-5">
+                      {/* Left Column of Content */}
+                      <div className="flex-1 space-y-6">
+                        <DocumentHeader
+                          fileName={document.name}
+                          issueDate={document.publicationDate}
+                          publisher={document.publisher}
+                          documentId={document.id}
+                          onPreviewClick={handlePreviewClick}
+                        />
+                        <CircularOverview
+                          issuingAuthority={document.publisher}
+                          issuingDate={document.publicationDate}
+                          circularType={document.circularType}
+                          referenceNumber={document.referenceNumber}
+                          impactAreas={document.impactAreas}
+                        />
+                        <AIGeneratedSummary documentId={Number(document.id)} />
+                      </div>
 
-                    {/* Right Column of Content */}
-                    <div className="w-[361px] flex-shrink-0 space-y-6">
-                      <DocumentTimeline />
-                      <HumanValidationRequired />
-                      <ComparativeInsights documentId={Number(document.id)} />
-                      <ReportsAndExports
-                        documentTitle={document.name}
-                        documentUrl={document.url}
+                      {/* Right Column of Content */}
+                      <div className="w-[361px] flex-shrink-0 space-y-6">
+                        {/* MODIFIED: Pass the timestamp prop */}
+                        <DocumentTimeline uploadedTimestamp={document.uploadedAtTimestamp} />
+                        <ComparativeInsights documentId={Number(document.id)} />
+                        <ReportsAndExports
+                          documentTitle={document.name}
+                          documentUrl={document.url}
+                        />
+                      </div>
+                    </div>
+                    <div className="mx-4">
+                      <KeyObligationsAndActionPoints
+                        actionPoints={document.actionPoints || []}
+                        loading={false}
+                        error={null}
                       />
                     </div>
                   </>
@@ -299,9 +304,8 @@ export default function DocumentDetail() {
             </div>
           </main>
 
-          {/* Preview Sidebar (Iframe Only) */}
           {isPreviewOpen && (
-            <aside className="w-[45%] max-w-2xl border-l border-gray-200 bg-white flex flex-col transition-all duration-300">
+            <aside className="w-1/3 border-l border-gray-200 bg-white flex flex-col transition-all duration-300">
               <div className="flex-1 min-h-0">
                 <iframe
                   src={document.url}
@@ -312,9 +316,8 @@ export default function DocumentDetail() {
             </aside>
           )}
 
-          {/* Chat Sidebar */}
           {isChatOpen && (
-            <aside className="transition-all duration-300 border-l-2 border-gray-300">
+            <aside className="w-1/4 transition-all duration-300 border-l-2 border-gray-300">
               <ChatSidebar
                 isOpen={isChatOpen}
                 onClose={() => setIsChatOpen(false)}

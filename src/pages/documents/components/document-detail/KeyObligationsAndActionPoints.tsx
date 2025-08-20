@@ -1,16 +1,20 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Edit, Loader2 } from "lucide-react"; 
+import { Edit, Loader2 } from "lucide-react";
 import FadedTextLoader from "./FadedTextLoader";
+import { formatDateShort } from "@/lib/dateUtils";
 
 interface ActionPoint {
   id: number;
   title: string;
-  description?: string; 
-  source_page?: number; 
-  deadline?: string | null; 
-  is_relevant?: boolean; 
-  assigned_to_name?: string | null; 
-  assigned_to_department?: string | null; 
+  description?: string;
+  source_page?: number;
+  deadline?: string | null;
+  source_text?: string;
+  is_relevant?: boolean;
+  relevance_justification?: string;
+  assigned_to_name?: string | null;
+  assigned_to_department?: string | null;
 }
 
 interface KeyObligationsAndActionPointsProps {
@@ -24,12 +28,20 @@ export default function KeyObligationsAndActionPoints({
   loading = false,
   error = null,
 }: KeyObligationsAndActionPointsProps) {
+  // 2. Add state to control visibility
+  const [showAll, setShowAll] = useState(false);
+
+  // 3. Determine which obligations to display
+  const displayedPoints = showAll ? actionPoints : actionPoints.slice(0, 3);
+
   return (
     <Card className="border-0 shadow-sm">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-medium">Obligations</CardTitle>
-          <Edit className="w-4 h-4 text-gray-400" />
+          {/* 4. Update CardTitle to show the total count */}
+          <CardTitle className="text-lg font-poppins font-normal">
+            Obligations {!loading && actionPoints.length > 0 && `(${actionPoints.length})`}
+          </CardTitle>
         </div>
       </CardHeader>
       <CardContent>
@@ -55,13 +67,53 @@ export default function KeyObligationsAndActionPoints({
           )}
           {!loading &&
             !error &&
-            actionPoints.map((point, idx) => {
-              const meta: string[] = [];
+            // 5. Map over the 'displayedPoints' array instead of the full 'actionPoints'
+            displayedPoints.map((point, idx) => {
+              const metaItems: React.ReactNode[] = [];
+
+              // Add page with hover popup if source_page exists
               if (typeof point.source_page === "number") {
-                meta.push(`Page: ${point.source_page}`);
+                metaItems.push(
+                  <span
+                    key="page"
+                    className="relative group cursor-help"
+                    title={point.source_text || "No source text available"}
+                  >
+                    Page: {point.source_page}
+                    {/* Hover popup for source text */}
+                    {point.source_text && (
+                      <div className="absolute bottom-full ">
+                        <div className="relative">
+                          
+                          {/* Arrow pointing down */}
+                        </div>
+                      </div>
+                    )}
+                  </span>
+                );
               }
+
+              // Add deadline if exists
               if (point.deadline) {
-                meta.push(`Deadline: ${point.deadline}`);
+                metaItems.push(
+                  <span key="deadline">Deadline: {formatDateShort(point.deadline)}</span>
+                );
+              }
+
+              // Add relevant status
+              if (typeof point.is_relevant === "boolean") {
+                metaItems.push(
+                  <span
+                    key="relevant"
+                    className={`text-xs font-medium ${
+                      point.is_relevant
+                        ? 'text-green-600'
+                        : 'text-red-600'
+                    }`}
+                  >
+                    {point.is_relevant ? 'Relevant' : 'Not Relevant'}
+                  </span>
+                );
               }
 
               return (
@@ -73,23 +125,50 @@ export default function KeyObligationsAndActionPoints({
                         {point.title}
                       </h4>
                       {point.description && (
-                        <p className="text-sm text-gray-700 mb-2">
+                        <p className="text-sm text-gray-700 mb-2 justified">
                           {point.description}
                         </p>
                       )}
-                      {meta.length > 0 && (
-                        <p className="text-xs text-gray-500">
-                          {meta.join(" | ")}
-                        </p>
+                      {metaItems.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                          {metaItems.map((item, itemIdx) => (
+                            <span key={itemIdx}>
+                              {item}
+                              {itemIdx < metaItems.length - 1 && <span className="mx-1">|</span>}
+                            </span>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </div>
-                  {idx !== actionPoints.length - 1 && (
+                  {/* Adjust divider logic for the currently displayed items */}
+                  {idx !== displayedPoints.length - 1 && (
                     <div className="h-[2px] rounded-full bg-[#F6F6F6] mx-auto my-4" />
                   )}
                 </div>
               );
             })}
+          
+          {/* Show More / Show Less buttons */}
+          {!loading && actionPoints.length > 3 && (
+            <div className="pt-2">
+              {!showAll ? (
+                <button
+                  onClick={() => setShowAll(true)}
+                  className="text-blue-600 font-semibold text-sm hover:underline"
+                >
+                  + Show More ({actionPoints.length - 3} more)
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowAll(false)}
+                  className="text-blue-600 font-semibold text-sm hover:underline"
+                >
+                  - Show Less
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -41,12 +41,12 @@ export default function ReportsAndExports({ documentTitle, documentUrl }: Report
     }
   }
 
-  const handleDownloadOriginal = async () => {
+  /*const handleDownloadOriginal = async () => {
     if (documentUrl) {
       const fileName = (documentTitle || "document") + ".pdf";
       await forceDownloadViaBlob(documentUrl, fileName);
     }
-  };
+  };*/
 
   // 🔹 Full-page PDF with html2pdf.js
   const handleDownloadSummary = async () => {
@@ -77,12 +77,13 @@ export default function ReportsAndExports({ documentTitle, documentUrl }: Report
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Reports & Exports</CardTitle>
+        <CardTitle className="text-base font-poppins font-normal">Export Summary Report</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
+        <div className="space-y-2">
+
           {/* Original Document */}
-          <div>
+          {/*<div>
             <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
               ORIGINAL DOCUMENT
             </h4>
@@ -107,13 +108,10 @@ export default function ReportsAndExports({ documentTitle, documentUrl }: Report
                 </Button>
               </div>
             </div>
-          </div>
+          </div>*/}
 
           {/* Summary Report */}
           <div>
-            <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
-              SUMMARY REPORT
-            </h4>
             <div className="space-y-2">
               <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-2">
@@ -121,7 +119,7 @@ export default function ReportsAndExports({ documentTitle, documentUrl }: Report
                     <span className="text-white text-xs font-bold">PDF</span>
                   </div>
                   <div>
-                    <p className="text-xs font-medium">Compliance Obligation</p>
+                    <p className="text-xs font-medium">Summary Report</p>
                   </div>
                 </div>
                 <Button

@@ -178,7 +178,7 @@ export default function ActionItemsPage() {
                     <td className="px-6 py-4 whitespace-nowrap">{item.person}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{item.department}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {item.deadline.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      {item.deadline.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                     </td>
                     <td className="px-6 py-4">
                       <Link href={`/documents/${item.circularId}`} className="font-medium text-blue-600 hover:underline">

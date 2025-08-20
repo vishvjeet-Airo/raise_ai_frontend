@@ -109,7 +109,7 @@ export default function ComparativeInsights({ documentId }: { documentId: number
   if (loading) {
     return (
       <Card className="bg-white">
-        <CardHeader className="pb-4">
+        <CardHeader className="pb-">
           <CardTitle className="font-poppins font-medium text-[16px] leading-[100%] tracking-[0] text-[#3F3F3F]">
             Comparative Insights
           </CardTitle>

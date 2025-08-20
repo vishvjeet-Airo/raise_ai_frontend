@@ -3,59 +3,52 @@ import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 
-export default function DocumentTimeline() {
+// NEW: Helper function to format the date and time
+const formatDateTime = (isoString?: string) => {
+  if (!isoString) return "Not available";
+  return new Date(isoString).toLocaleString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+};
+
+// MODIFIED: Component now accepts 'uploadedTimestamp' as a prop
+export default function DocumentTimeline({ uploadedTimestamp }: { uploadedTimestamp?: string }) {
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
 
   const handleViewFullHistory = () => {
-    // Pass the document data to the audit trail page
     navigate(`/documents/${id}/audit-trail`, {
       state: { document: location.state?.document }
     });
   };
 
+  // MODIFIED: timelineItems now uses the dynamic timestamp
   const timelineItems = [
     {
       title: "Document Uploaded",
-      timestamp: "April 3, 2025 , 2:15 PM",
+      timestamp: formatDateTime(uploadedTimestamp),
       color: "bg-blue-500",
       completed: true
     },
     {
       title: "AI Analysis Completed", 
-      timestamp: "April 3, 2025 , 2:20 PM",
-      color: "bg-green-500",
-      completed: true
-    },
-    {
-      title: "Sent for Verification",
-      timestamp: "April 3, 2025 , 2:27 PM", 
-      color: "bg-yellow-500",
-      completed: true
-    },
-    {
-      title: "Verified on",
-      timestamp: "April 3, 2025 , 2:27 PM",
-      color: "bg-orange-500", 
-      completed: true
-    },
-    {
-      title: "Escalated By",
-      timestamp: "Expected April 5, 2025",
-      color: "bg-red-500",
+      timestamp: "A few moments later", // This could also be a prop if available
+      color: "bg-blue-500",
       completed: true
     }
   ];
 
   return (
-    // Further reduced width from w-72 to w-68 for a more compact look
-    <Card className="bg-gray-50 w-69">
-      {}
+    <Card className="bg-white w-69">
       <CardHeader className="px-4 pb- pt-4">
-        <CardTitle className="text-base font-medium text-gray-900">Document Timeline</CardTitle>
+        <CardTitle className="text-base font-poppins font-normal">Document Timeline</CardTitle>
       </CardHeader>
-      {}
       <CardContent className="px-4 pb-5">
         <div className="relative">
           <div className="absolute left-[9px] top-[10px] w-px bg-gray-200" style={{ height: `${(timelineItems.length - 1) * 44}px` }}></div>
