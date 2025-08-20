@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, MessageSquare } from "lucide-react";
+import { Eye, MessageSquare } from "lucide-react";
 import { useChatSidebar } from "../../DocumentDetail";
 
 interface DocumentHeaderProps {
@@ -41,7 +41,7 @@ export default function DocumentHeader({ fileName, issueDate, publisher, documen
               style={!isPreviewOpen ? { backgroundColor: "#1F4A75" } : {}}
               onClick={onPreviewClick}
             >
-              <FileText className="w-4 h-4 mr-2" />
+              <Eye className="w-4 h-4 mr-2" />
               {isPreviewOpen ? "Close Preview" : "Preview Document"}
             </Button>
 

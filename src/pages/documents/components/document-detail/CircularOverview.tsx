@@ -19,7 +19,7 @@ export default function CircularOverview({
   return (
     <Card className="border-0 shadow-sm">
       <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-medium">Overview</CardTitle>
+        <CardTitle className="text-lg font-poppins font-normal">Overview</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-3 gap-y-6 gap-x-12">
@@ -36,12 +36,12 @@ export default function CircularOverview({
             <div className="text-sm text-gray-900 break-words">{circularType || "N/A"}</div>
           </div>
           <div>
-            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">REFERENCE NUMBER</div>
-            <div className="text-sm text-gray-900 break-words">{referenceNumber || "N/A"}</div>
-          </div>
-          <div className="col-span-2">
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">IMPACT AREAS</div>
             <div className="text-sm text-gray-900 break-words">{"Treasury, Foreign Exchange"}</div>
+          </div>
+          <div className="col-span-2">
+            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">REFERENCE NUMBER</div>
+            <div className="text-sm text-gray-900 break-words whitespace-nowrap">{referenceNumber || "N/A"}</div>
           </div>
         </div>
       </CardContent>

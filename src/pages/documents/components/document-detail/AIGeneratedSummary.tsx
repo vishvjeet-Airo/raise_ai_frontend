@@ -67,7 +67,7 @@ export default function AIGeneratedSummary({ documentId }: { documentId: number 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Summary</CardTitle>
+        <CardTitle className="text-lg font-poppins font-normal">Summary</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="border-l-4 border-blue-500 pl-4 bg-blue-50 p-4 rounded-r-lg min-h-[84px]">
@@ -75,12 +75,12 @@ export default function AIGeneratedSummary({ documentId }: { documentId: number 
             <FadedTextLoader />
           ) : (
             <>
-              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line justified">
                 {firstParagraph}
               </p>
 
               {restOfParagraphs && showAll && (
-                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line mt-4">
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line mt-4 justified">
                   {restOfParagraphs}
                 </p>
               )}
