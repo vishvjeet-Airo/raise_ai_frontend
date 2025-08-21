@@ -34,21 +34,30 @@ type ApiDocument = {
   action_points?: ApiActionPoint[] | null;
 };
 
-type RowItem = {
-  id: string; // stable string key
-  action: string; // task text
-  person: string; // assigned_to_name
-  department: string; // assigned_to_department
-  deadline: Date | null; // due_date
-  status: string; // status
-  circularId: number;
-  circularName: string;
+type DetailedActionItem = {
+  id: string;
+  task: string;
+  person: string;
+  department: string;
+  deadline: Date | null;
+  status: string;
+};
+
+type ActionItem = {
+  id: number;
+  title: string;
+  description?: string;
+  source_page?: number;
+  deadline: Date | null;
+  assigned_to_name?: string;
+  assigned_to_department?: string;
+  detailed_action_points: DetailedActionItem[];
 };
 
 type DocGroup = {
   documentId: number;
   documentTitle: string;
-  rows: RowItem[];
+  actionItems: ActionItem[];
 };
 
 const getAuthHeaders = (): HeadersInit | undefined => {
@@ -81,7 +90,7 @@ export default function ActionItemsPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch documents and flatten detailed_action_points into table rows
+  // Fetch documents and structure action points with their detailed action points
   useEffect(() => {
     let ignore = false;
 
@@ -99,14 +108,16 @@ export default function ActionItemsPage() {
         const data: ApiDocument[] = await res.json();
 
         const mapped: DocGroup[] = (data || []).map((doc) => {
-          const rows: RowItem[] = [];
+          const actionItems: ActionItem[] = [];
 
           // Only include action points with is_relevant === true
           (doc.action_points || [])
             .filter((ap) => ap.is_relevant === true)
             .forEach((ap) => {
+              const detailedActionPoints: DetailedActionItem[] = [];
+              
               (ap.detailed_action_points || []).forEach((dap) => {
-                const actionText = (dap.task && dap.task.trim()) || ns;
+                const taskText = (dap.task && dap.task.trim()) || ns;
                 const person = (dap.assigned_to_name && dap.assigned_to_name.trim()) || ns;
                 const department = (dap.assigned_to_department && dap.assigned_to_department.trim()) || ns;
 
@@ -115,23 +126,34 @@ export default function ActionItemsPage() {
                 const deadline = rawDate ? new Date(rawDate) : null;
                 const status = (dap.status && dap.status.trim()) || ns;
 
-                rows.push({
-                  id: `doc${doc.id}-ap${ap.id}-dap${dap.id}`,
-                  action: actionText,
+                detailedActionPoints.push({
+                  id: `dap-${dap.id}`,
+                  task: taskText,
                   person,
                   department,
                   deadline: deadline && !isNaN(deadline.getTime()) ? deadline : null,
                   status,
-                  circularId: doc.id,
-                  circularName: doc.title || `Document ${doc.id}`,
                 });
+              });
+
+              const actionItemDeadline = ap.deadline ? new Date(ap.deadline) : null;
+              
+              actionItems.push({
+                id: ap.id,
+                title: ap.title || `Action Item ${ap.id}`,
+                description: ap.description || undefined,
+                source_page: ap.source_page || undefined,
+                deadline: actionItemDeadline && !isNaN(actionItemDeadline.getTime()) ? actionItemDeadline : null,
+                assigned_to_name: ap.assigned_to_name || undefined,
+                assigned_to_department: ap.assigned_to_department || undefined,
+                detailed_action_points: detailedActionPoints,
               });
             });
 
           return {
             documentId: doc.id,
             documentTitle: doc.title || `Document ${doc.id}`,
-            rows,
+            actionItems: actionItems.filter(ai => ai.detailed_action_points.length > 0),
           };
         });
 
@@ -152,7 +174,13 @@ export default function ActionItemsPage() {
   // Build department options dynamically from data
   const departmentOptions = useMemo(() => {
     const set = new Set<string>();
-    groups.forEach((g) => g.rows.forEach((r) => r.department && set.add(r.department)));
+    groups.forEach((g) => 
+      g.actionItems.forEach((ai) => 
+        ai.detailed_action_points.forEach((dap) => 
+          dap.department && set.add(dap.department)
+        )
+      )
+    );
     return ["All", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
   }, [groups]);
 
@@ -161,7 +189,7 @@ export default function ActionItemsPage() {
     const term = searchTerm.trim().toLowerCase();
     const dir = sortConfig?.direction || "asc";
 
-    const cmpDeadline = (a: RowItem, b: RowItem) => {
+    const cmpDeadline = (a: DetailedActionItem, b: DetailedActionItem) => {
       // nulls last for asc, first for desc
       if (!a.deadline && !b.deadline) return 0;
       if (!a.deadline) return dir === "asc" ? 1 : -1;
@@ -171,31 +199,48 @@ export default function ActionItemsPage() {
 
     return groups
       .map((g) => {
-        let rows = [...g.rows];
+        let actionItems = [...g.actionItems];
 
-        if (departmentFilter !== "All") {
-          rows = rows.filter((r) => r.department === departmentFilter);
-        }
-
+        // Filter action items based on search term
         if (term) {
-          rows = rows.filter(
-            (r) =>
-              r.action.toLowerCase().includes(term) ||
-              r.person.toLowerCase().includes(term) ||
-              r.circularName.toLowerCase().includes(term) ||
-              r.department.toLowerCase().includes(term) ||
-              r.status.toLowerCase().includes(term)
-          );
+          actionItems = actionItems.filter((ai) => {
+            // Check if action item title/description matches
+            const titleMatch = ai.title.toLowerCase().includes(term);
+            const descMatch = ai.description?.toLowerCase().includes(term);
+            
+            // Check if any detailed action point matches
+            const detailedMatch = ai.detailed_action_points.some((dap) =>
+              dap.task.toLowerCase().includes(term) ||
+              dap.person.toLowerCase().includes(term) ||
+              dap.department.toLowerCase().includes(term) ||
+              dap.status.toLowerCase().includes(term)
+            );
+
+            return titleMatch || descMatch || detailedMatch;
+          });
         }
 
+        // Filter detailed action points based on department
+        if (departmentFilter !== "All") {
+          actionItems = actionItems.map((ai) => ({
+            ...ai,
+            detailed_action_points: ai.detailed_action_points.filter((dap) => 
+              dap.department === departmentFilter
+            )
+          })).filter((ai) => ai.detailed_action_points.length > 0);
+        }
+
+        // Sort detailed action points by deadline
         if (sortConfig?.key === "deadline") {
-          rows.sort(cmpDeadline);
-          if (dir === "desc") rows.reverse();
+          actionItems = actionItems.map((ai) => ({
+            ...ai,
+            detailed_action_points: [...ai.detailed_action_points].sort(cmpDeadline)
+          }));
         }
 
-        return { ...g, rows };
+        return { ...g, actionItems };
       })
-      .filter((g) => g.rows.length > 0);
+      .filter((g) => g.actionItems.length > 0);
   }, [groups, searchTerm, departmentFilter, sortConfig]);
 
   const handleSort = (key: "deadline") => {
@@ -262,95 +307,133 @@ export default function ActionItemsPage() {
               {filteredAndSortedGroups.map((group) => (
                 <section key={group.documentId}>
                   {/* Group Header: Clickable title */}
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-6">
                     <Link
                       to={`/documents/${group.documentId}`}
-                      className="text-lg font-semibold text-[#0F2353] hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 rounded transition-colors"
+                      className="text-xl font-semibold text-white bg-[#0F2353] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 rounded-lg px-4 py-2 transition-colors"
                       title="Open document details"
                     >
-                      {group.documentTitle}
+                      {group.documentTitle} (ID: {group.documentId})
                     </Link>
                   </div>
 
-                  {/* Table Card */}
-                  <div className="bg-white/95 backdrop-blur-sm rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="overflow-x-auto overflow-y-hidden rounded-xl">
-                      <table className="w-full table-auto text-sm text-left text-slate-700">
-                        <colgroup>
-                          <col style={{ width: "40%" }} />
-                          <col style={{ width: "20%" }} />
-                          <col style={{ width: "20%" }} />
-                          <col style={{ width: "10%" }} />
-                          <col style={{ width: "10%" }} />
-                        </colgroup>
-                        <thead className="bg-slate-50 text-xs text-slate-600">
-                          <tr className="border-b border-slate-200">
-                            <th scope="col" className="px-6 py-3 font-semibold text-left">Action Items</th>
-                            <th scope="col" className="px-6 py-3 font-semibold text-left">Department</th>
-                            <th scope="col" className="px-6 py-3 font-semibold text-left whitespace-nowrap">Department Head</th>
-                            <th scope="col" className="px-6 py-3 font-semibold text-center">
-                              <button
-                                onClick={() => handleSort("deadline")}
-                                className="inline-flex items-center gap-1.5 hover:text-slate-800"
-                              >
-                                Deadline
-                                {sortConfig?.key === "deadline" ? (
-                                  sortConfig.direction === "asc" ? (
-                                    <ArrowUp className="w-4 h-4" />
-                                  ) : (
-                                    <ArrowDown className="w-4 h-4" />
-                                  )
-                                ) : (
-                                  <ArrowUp className="w-4 h-4 text-slate-400" />
+                  {/* Action Items */}
+                  <div className="space-y-6">
+                    {group.actionItems.map((actionItem) => (
+                      <div key={actionItem.id} className="bg-white/95 backdrop-blur-sm rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                        {/* Action Item Header */}
+                        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/50 rounded-t-xl">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                                {actionItem.title}
+                              </h3>
+                              {actionItem.description && (
+                                <p className="text-sm text-slate-600 mb-2">
+                                  {actionItem.description}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-4 text-xs text-slate-500">
+                                {actionItem.source_page && (
+                                  <span>Page: {actionItem.source_page}</span>
                                 )}
-                              </button>
-                            </th>
-                            <th scope="col" className="px-6 py-3 font-semibold text-center">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {group.rows.map((item, idx) => (
-                            <tr
-                              key={item.id}
-                              className={`border-b border-slate-100 ${idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"} hover:bg-slate-50`}
-                            >
-                              <td className="px-6 py-4 align-middle">
-                                <div className="whitespace-pre-wrap break-words">{item.action || ns}</div>
-                              </td>
-                              <td className="px-6 py-4 align-middle whitespace-normal break-words">
-                                {item.department || ns}
-                              </td>
-                              <td className="px-6 py-4 align-middle whitespace-normal break-words">
-                                {item.person || ns}
-                              </td>
-                              <td className="px-6 py-4 align-middle text-center whitespace-nowrap">
-                                {item.deadline
-                                  ? item.deadline.toLocaleDateString("en-GB", {
-                                      day: "2-digit",
-                                      month: "short",
-                                      year: "numeric",
-                                    })
-                                  : ns}
-                              </td>
-                              <td className="px-6 py-4 align-middle">
-                                <div className="flex justify-center">
-                                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusClasses(item.status)}`}>
-                                    {item.status === ns ? ns : toTitle(item.status)}
-                                  </span>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                          {group.rows.length === 0 && (
-                            <tr>
-                              <td colSpan={5} className="px-6 py-6 text-center text-slate-500">
-                                No action items for this document.
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
+                                {actionItem.deadline && (
+                                  <span>Deadline: {actionItem.deadline.toLocaleDateString("en-GB", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                  })}</span>
+                                )}
+                                {actionItem.assigned_to_name && (
+                                  <span>Assigned: {actionItem.assigned_to_name}</span>
+                                )}
+                                {actionItem.assigned_to_department && (
+                                  <span>Department: {actionItem.assigned_to_department}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Detailed Action Points Table */}
+                        {actionItem.detailed_action_points.length > 0 ? (
+                          <div className="overflow-x-auto overflow-y-hidden rounded-b-xl">
+                            <table className="w-full table-auto text-sm text-left text-slate-700">
+                              <colgroup>
+                                <col style={{ width: "40%" }} />
+                                <col style={{ width: "20%" }} />
+                                <col style={{ width: "20%" }} />
+                                <col style={{ width: "10%" }} />
+                                <col style={{ width: "10%" }} />
+                              </colgroup>
+                              <thead className="bg-slate-50 text-xs text-slate-600">
+                                <tr className="border-b border-slate-200">
+                                  <th scope="col" className="px-6 py-3 font-semibold text-left">Detailed Tasks</th>
+                                  <th scope="col" className="px-6 py-3 font-semibold text-left">Department</th>
+                                  <th scope="col" className="px-6 py-3 font-semibold text-left whitespace-nowrap">Department Head</th>
+                                  <th scope="col" className="px-6 py-3 font-semibold text-center">
+                                    <button
+                                      onClick={() => handleSort("deadline")}
+                                      className="inline-flex items-center gap-1.5 hover:text-slate-800"
+                                    >
+                                      Deadline
+                                      {sortConfig?.key === "deadline" ? (
+                                        sortConfig.direction === "asc" ? (
+                                          <ArrowUp className="w-4 h-4" />
+                                        ) : (
+                                          <ArrowDown className="w-4 h-4" />
+                                        )
+                                      ) : (
+                                        <ArrowUp className="w-4 h-4 text-slate-400" />
+                                      )}
+                                    </button>
+                                  </th>
+                                  <th scope="col" className="px-6 py-3 font-semibold text-center">Status</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {actionItem.detailed_action_points.map((item, idx) => (
+                                  <tr
+                                    key={item.id}
+                                    className={`border-b border-slate-100 ${idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"} hover:bg-slate-50`}
+                                  >
+                                    <td className="px-6 py-4 align-middle">
+                                      <div className="whitespace-pre-wrap break-words">{item.task || ns}</div>
+                                    </td>
+                                    <td className="px-6 py-4 align-middle whitespace-normal break-words">
+                                      {item.department || ns}
+                                    </td>
+                                    <td className="px-6 py-4 align-middle whitespace-normal break-words">
+                                      {item.person || ns}
+                                    </td>
+                                    <td className="px-6 py-4 align-middle text-center whitespace-nowrap">
+                                      {item.deadline
+                                        ? item.deadline.toLocaleDateString("en-GB", {
+                                            day: "2-digit",
+                                            month: "short",
+                                            year: "numeric",
+                                          })
+                                        : ns}
+                                    </td>
+                                    <td className="px-6 py-4 align-middle">
+                                      <div className="flex justify-center">
+                                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusClasses(item.status)}`}>
+                                          {item.status === ns ? ns : toTitle(item.status)}
+                                        </span>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <div className="px-6 py-6 text-center text-slate-500">
+                            No detailed tasks for this action item.
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </section>
               ))}

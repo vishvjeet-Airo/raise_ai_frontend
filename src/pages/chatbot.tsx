@@ -4,6 +4,7 @@ import { Send, Plus, Search, Trash2 } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
+import { display } from "html2canvas/dist/types/css/property-descriptors/display";
 
 
 
@@ -437,7 +438,7 @@ export default function ChatBot() {
           </div>
         </div>
 
-        <div className="w-64 bg-white border-l border-gray-200 flex flex-col">
+        <div className="w-64 bg-white border-l border-gray-200 flex flex-col" style={{ display: "none" }}>
           <div className="p-4 space-y-3">
             <button 
               onClick={() => handleNewChat()}

@@ -5,7 +5,7 @@ interface CircularOverviewProps {
   issuingDate?: string;
   circularType?: string;
   referenceNumber?: string;
-  impactAreas?: string[];
+  impactAreas?: string;
   documentUrl?: string;
 }
 
@@ -37,7 +37,7 @@ export default function CircularOverview({
           </div>
           <div>
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">IMPACT AREAS</div>
-            <div className="text-sm text-gray-900 break-words">{"Treasury, Foreign Exchange"}</div>
+            <div className="text-sm text-gray-900 break-words">{impactAreas}</div>
           </div>
           <div className="col-span-2">
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">REFERENCE NUMBER</div>

@@ -33,6 +33,12 @@ export const useChatSidebar = () => {
   return context;
 };
 
+type ApiDetailedActionPoint = {
+  id: number;
+  assigned_to_department?: string | null;
+  // Add other fields as needed
+};
+
 type ApiActionPoint = {
   id: number;
   title: string;
@@ -42,6 +48,7 @@ type ApiActionPoint = {
   is_relevant?: boolean;
   assigned_to_name?: string | null;
   assigned_to_department?: string | null;
+  detailed_action_points?: ApiDetailedActionPoint[] | null;
 };
 
 type ApiDocument = {
@@ -69,7 +76,7 @@ type NormalizedDocument = {
   circularType: string;
   referenceNumber: string;
   url: string;
-  impactAreas: string[];
+  impactAreas: string;
   actionPoints: ApiActionPoint[];
 };
 
@@ -130,10 +137,18 @@ export default function DocumentDetail() {
           circularType: raw.circular_type || "",
           referenceNumber: raw.reference_number || "",
           url: raw.blob_url || "",
-          impactAreas: [], // not provided by API
+          impactAreas: (() => {
+            const departments = Array.from(new Set(
+              raw.action_points?.flatMap(ap => 
+                ap.detailed_action_points?.map(dap => dap.assigned_to_department).filter((dept): dept is string => Boolean(dept)) || []
+              ) || []
+            ));
+            return departments.length > 0 ? departments.join(", ") : "N/A";
+          })(),
           actionPoints: raw.action_points ?? [],
         };
-
+        console.log(raw.action_points);
+        
         if (!ignore) setDocument(normalized);
       } catch (e: any) {
         if (!ignore) setError(e?.message || "Something went wrong.");
