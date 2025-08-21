@@ -315,9 +315,9 @@ const PDFDocument = ({ docData, summary, versioningInfo }: { docData: any; summa
   return (
     <Document>
       <Page 
-        size="A4" 
+        size="RA4" 
         style={styles.page}
-        wrap={true}
+        wrap={false}
       >
         {/* Fixed Header - appears on every page */}
         <View fixed style={styles.fixedHeader}>
