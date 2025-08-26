@@ -21,12 +21,14 @@ interface KeyObligationsAndActionPointsProps {
   actionPoints?: ActionPoint[];
   loading?: boolean;
   error?: string | null;
+  onPageClick?: (pageNumber: number, searchText?: string) => void; // NEW: Add searchText parameter
 }
 
 export default function KeyObligationsAndActionPoints({
   actionPoints = [],
   loading = false,
   error = null,
+  onPageClick, // NEW: Destructure onPageClick
 }: KeyObligationsAndActionPointsProps) {
   // Show more/less
   const [showAll, setShowAll] = useState(false);
@@ -42,6 +44,15 @@ export default function KeyObligationsAndActionPoints({
 
   // Determine which obligations to display after filtering
   const displayedPoints = showAll ? filteredPoints : filteredPoints.slice(0, 3);
+
+  // NEW: Handle page number click with search text
+  const handlePageClick = (pageNumber: number | undefined, sourceText?: string) => {
+    if (pageNumber && onPageClick) {
+      // Clean up the source text for searching - remove extra whitespace and normalize
+      const cleanedText = sourceText?.trim().replace(/\s+/g, ' ');
+      onPageClick(pageNumber, cleanedText);
+    }
+  };
 
   return (
     <Card className="border-0 shadow-sm">
@@ -97,13 +108,14 @@ export default function KeyObligationsAndActionPoints({
 
               if (typeof point.source_page === "number") {
                 metaItems.push(
-                  <span
+                  <button
                     key="page"
-                    className="relative group cursor-help"
-                    title={point.source_text || "No source text available"}
+                    onClick={() => handlePageClick(point.source_page, point.source_text)}
+                    className="relative group cursor-pointer text-blue-600 hover:text-blue-800 hover:underline"
+                    title={point.source_text || "Click to view page in document"}
                   >
                     Page: {point.source_page}
-                  </span>
+                  </button>
                 );
               }
 
@@ -112,8 +124,6 @@ export default function KeyObligationsAndActionPoints({
                   <span key="deadline">Deadline: {formatDateShort(point.deadline)}</span>
                 );
               }
-
-              // ⚡ Removed showing "Relevant"/"Not Relevant" text here
 
               return (
                 <div key={point.id}>
