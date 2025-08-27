@@ -21,10 +21,6 @@ type ChatSidebarContextType = {
   shouldMinimizeSidebar: boolean;
   documentId: string;
   documentName: string;
-  previewPage?: number; // Add page number for preview
-  setPreviewPage: React.Dispatch<React.SetStateAction<number | undefined>>; // Setter for page
-  searchText?: string; // NEW: Add search text for highlighting
-  setSearchText: React.Dispatch<React.SetStateAction<string | undefined>>; // NEW: Setter for search text
 };
 
 const ChatSidebarContext = createContext<ChatSidebarContextType | null>(null);
@@ -88,21 +84,27 @@ type NormalizedDocument = {
 export default function DocumentDetail() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [previewPage, setPreviewPage] = useState<number | undefined>(undefined); // Track preview page
-  const [searchText, setSearchText] = useState<string | undefined>(undefined); // NEW: Track search text for highlighting
+  const [previewPage, setPreviewPage] = useState<number | null>(null);
+  const [searchText, setSearchText] = useState<string | null>(null);
   const { id } = useParams<{ id: string }>();
 
   const [document, setDocument] = useState<NormalizedDocument | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const handlePreviewClick = () => setIsPreviewOpen((v) => !v);
+  const handlePreviewClick = () => {
+    setIsPreviewOpen((v) => !v);
+    if (!isPreviewOpen) {
+      setPreviewPage(null); // Reset page when opening preview normally
+      setSearchText(null); // Reset search text
+    }
+  };
 
-  // MODIFIED: Function to handle page-specific preview opening with search text
-  const handlePageClick = (pageNumber: number, searchText?: string) => {
-    setPreviewPage(pageNumber);
-    setSearchText(searchText);
+  // Function to handle page-specific preview opening with optional search text
+  const handlePageClick = (pageNumber: number, sourceText?: string) => {
     setIsPreviewOpen(true);
+    setPreviewPage(pageNumber);
+    setSearchText(sourceText || null);
   };
 
   useEffect(() => {
@@ -180,6 +182,20 @@ export default function DocumentDetail() {
   const anySidebarOpen = isPreviewOpen || isChatOpen;
   const shouldMinimizeSidebar = anySidebarOpen;
 
+  // Function to get preview URL for iframe
+  const getPreviewUrl = () => {
+    if (!document?.url) return "";
+    let url = `${document.url}#toolbar=1&navpanes=1&scrollbar=1`;
+    if (previewPage) {
+      url += `&page=${previewPage}`;
+    }
+    if (searchText) {
+      // URL encode the search text for PDF.js search functionality
+      url += `&search=${encodeURIComponent(searchText)}`;
+    }
+    return url;
+  };
+
   const contextValue = useMemo<ChatSidebarContextType | null>(() => {
     if (!document) return null;
     return {
@@ -190,88 +206,8 @@ export default function DocumentDetail() {
       shouldMinimizeSidebar,
       documentId: document.id,
       documentName: document.name,
-      previewPage, // Include preview page in context
-      setPreviewPage, // Include setter in context
-      searchText, // NEW: Include search text in context
-      setSearchText, // NEW: Include setter in context
     };
-  }, [document, isChatOpen, isPreviewOpen, shouldMinimizeSidebar, previewPage, searchText]);
-
-  // MODIFIED: Generate preview URL with page parameter and search text
-  const getPreviewUrl = () => {
-    if (!document?.url) return '';
-    
-    let url = document.url;
-    // For PDF files, add page fragment (viewer will usually use #page=X)
-    if (document.url.toLowerCase().includes('.pdf')) {
-      if (previewPage) url += `#page=${previewPage}`;
-    }
-    
-    return url;
-  };
-
-  // Helper to escape regex
-  const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-  // Try to highlight `text` inside the preview iframe. If a PDF.js viewer is
-  // present (same-origin), use its find API. Otherwise, if iframe is same-origin
-  // and contains HTML/text, wrap matches in <mark> elements.
-  const highlightInIframe = (text?: string, page?: number) => {
-    if (!text && typeof page === 'undefined') return;
-    const iframe = globalThis.document.getElementById('doc-preview-iframe') as HTMLIFrameElement | null;
-    if (!iframe) return;
-
-    try {
-      const win = iframe.contentWindow as any | null;
-      const doc = iframe.contentDocument;
-
-      // If PDF.js is available inside the iframe, use its find API
-      if (win && win.PDFViewerApplication && win.PDFViewerApplication.eventBus) {
-        if (typeof page === 'number' && page > 0) {
-          try { win.PDFViewerApplication.page = page; } catch (e) { /* ignore */ }
-        }
-
-        if (text) {
-          win.PDFViewerApplication.eventBus.dispatch('find', {
-            source: win,
-            type: 'find',
-            query: text,
-            highlightAll: true,
-            caseSensitive: false,
-            entireWord: false,
-            findPrevious: false,
-          });
-        }
-        return;
-      }
-
-      // Fallback for same-origin HTML: search text nodes and wrap matches
-      if (doc && doc.body && text) {
-        if (typeof page === 'number' && page > 0 && win && 'page' in win) {
-          try { (win as any).page = page; } catch (e) { /* ignore */ }
-        }
-
-        const regex = new RegExp(escapeRegExp(text), 'gi');
-  const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, null);
-        const nodes: Text[] = [];
-        let node: Node | null = walker.nextNode();
-        while (node) {
-          if (node.nodeType === Node.TEXT_NODE && node.textContent && regex.test(node.textContent)) {
-            nodes.push(node as Text);
-          }
-          node = walker.nextNode();
-        }
-
-        nodes.forEach((textNode) => {
-          const span = doc.createElement('span');
-          span.innerHTML = (textNode.textContent || '').replace(regex, (m) => `<mark style="background:yellow; padding:0">${m}</mark>`);
-          textNode.parentNode?.replaceChild(span, textNode);
-        });
-      }
-    } catch (e) {
-      // Cross-origin iframe or other error — we cannot access contents
-    }
-  };
+  }, [document, isChatOpen, isPreviewOpen, shouldMinimizeSidebar]);
 
   if (loading) {
     return (
@@ -428,30 +364,22 @@ export default function DocumentDetail() {
 
           {isPreviewOpen && (
             <aside className="w-1/3 border-l border-gray-200 bg-white flex flex-col transition-all duration-300">
-              <div className="flex-1 min-h-0 relative">
+              <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 className="font-medium text-gray-900">Document Preview</h3>
+                <button
+                  onClick={() => setIsPreviewOpen(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="flex-1">
                 <iframe
-                  id="doc-preview-iframe"
-                  src={getPreviewUrl()} // Use dynamic URL with page parameter
-                  title={document.name}
-                  className="w-full h-full border-0 block"
-                  key={`${document.url}-${previewPage}-${searchText}`} // Force reload when page or search changes
-                  onLoad={() => {
-                    // Try to highlight the search text when iframe finishes loading
-                    if (searchText) {
-                      // Small timeout to allow viewer to initialize
-                      setTimeout(() => highlightInIframe(searchText, previewPage), 300);
-                    } else if (typeof previewPage === 'number') {
-                      // If only page changed, try to set page for same-origin viewer
-                      setTimeout(() => highlightInIframe(undefined, previewPage), 200);
-                    }
-                  }}
+                  key={`preview-${previewPage || 'default'}-${searchText || 'no-search'}`}
+                  src={getPreviewUrl()}
+                  className="w-full h-full border-0"
+                  title="Document Preview"
                 />
-                {/* Search indicator */}
-                {searchText && (
-                  <div className="absolute top-2 right-2 bg-yellow-100 border border-yellow-300 rounded px-2 py-1 text-xs text-yellow-800 shadow-sm">
-                    Searching: "{searchText}"
-                  </div>
-                )}
               </div>
             </aside>
           )}

@@ -21,7 +21,7 @@ interface KeyObligationsAndActionPointsProps {
   actionPoints?: ActionPoint[];
   loading?: boolean;
   error?: string | null;
-  onPageClick?: (pageNumber: number, searchText?: string) => void; // NEW: Add searchText parameter
+  onPageClick?: (pageNumber: number, sourceText?: string) => void; // Updated to accept source text
 }
 
 export default function KeyObligationsAndActionPoints({
@@ -45,12 +45,10 @@ export default function KeyObligationsAndActionPoints({
   // Determine which obligations to display after filtering
   const displayedPoints = showAll ? filteredPoints : filteredPoints.slice(0, 3);
 
-  // NEW: Handle page number click with search text
+  // Handle page number click
   const handlePageClick = (pageNumber: number | undefined, sourceText?: string) => {
     if (pageNumber && onPageClick) {
-      // Clean up the source text for searching - remove extra whitespace and normalize
-      const cleanedText = sourceText?.trim().replace(/\s+/g, ' ');
-      onPageClick(pageNumber, cleanedText);
+      onPageClick(pageNumber, sourceText);
     }
   };
 

@@ -6,7 +6,10 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
 import { display } from "html2canvas/dist/types/css/property-descriptors/display";
 
-
+const getAuthHeaders = (): HeadersInit | undefined => {
+  const token = localStorage.getItem('access_token');
+  return token ? { Authorization: `Bearer ${token}` } : undefined;
+};
 
 interface Reference {
   document_id: string;
@@ -50,7 +53,17 @@ export default function ChatBot() {
 
   const fetchChatSessions = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/chat/no-document`);
+      const authHeaders = getAuthHeaders();
+      const response = await fetch(`${API_BASE_URL}/api/chat/no-document`, {
+        headers: authHeaders
+      });
+      
+      if (response.status === 401) {
+        localStorage.removeItem('access_token');
+        window.location.href = '/auth/Login';
+        throw new Error('Unauthorized');
+      }
+      
       if (!response.ok) throw new Error('Failed to fetch chat sessions');
       const sessions = await response.json();
       setChatSessions(sessions || []);
@@ -71,11 +84,23 @@ export default function ChatBot() {
     setDocumentId(null);
 
     try {
+      const authHeaders = getAuthHeaders();
+      const headers = {
+        'Content-Type': 'application/json',
+        ...authHeaders
+      };
+      
       const response = await fetch(`${API_BASE_URL}/api/chat/new`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: docId ? JSON.stringify({ document_id: docId }) : undefined,
       });
+
+      if (response.status === 401) {
+        localStorage.removeItem('access_token');
+        window.location.href = '/auth/Login';
+        throw new Error('Unauthorized');
+      }
 
       if (!response.ok) throw new Error('Failed to create new chat session');
 
@@ -99,9 +124,17 @@ export default function ChatBot() {
 
   const handleDeleteChat = async (sessionIdToDelete: string) => {
     try {
+        const authHeaders = getAuthHeaders();
         const response = await fetch(`${API_BASE_URL}/api/chat/${sessionIdToDelete}`, {
             method: 'DELETE',
+            headers: authHeaders
         });
+
+        if (response.status === 401) {
+            localStorage.removeItem('access_token');
+            window.location.href = '/auth/Login';
+            throw new Error('Unauthorized');
+        }
 
         if (!response.ok) {
             throw new Error('Failed to delete chat session');
@@ -148,7 +181,17 @@ export default function ChatBot() {
   const fetchHistoryForSession = async (sessionIdToLoad: string) => {
       setIsLoading(true);
       try {
-          const response = await fetch(`${API_BASE_URL}/api/chat/${sessionIdToLoad}/history`);
+          const authHeaders = getAuthHeaders();
+          const response = await fetch(`${API_BASE_URL}/api/chat/${sessionIdToLoad}/history`, {
+            headers: authHeaders
+          });
+          
+          if (response.status === 401) {
+              localStorage.removeItem('access_token');
+              window.location.href = '/auth/Login';
+              throw new Error('Unauthorized');
+          }
+          
           if (!response.ok) {
               throw new Error(`Failed to fetch chat history for session ${sessionIdToLoad}`);
           }
@@ -214,13 +257,23 @@ export default function ChatBot() {
     setIsLoading(true);
 
     try {
+      const authHeaders = getAuthHeaders();
+      const headers = {
+        'Content-Type': 'application/json',
+        ...authHeaders
+      };
+      
       const response = await fetch(`${API_BASE_URL}/api/chat/${currentSessionId}/message`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ query: messageToSend }),
       });
+
+      if (response.status === 401) {
+        localStorage.removeItem('access_token');
+        window.location.href = '/auth/Login';
+        throw new Error('Unauthorized');
+      }
 
       if (!response.ok) {
         throw new Error('Failed to get response from chatbot');
@@ -438,7 +491,7 @@ export default function ChatBot() {
           </div>
         </div>
 
-        <div className="w-64 bg-white border-l border-gray-200 flex flex-col" style={{ display: "none" }}>
+        <div className="w-64 bg-white border-l border-gray-200 flex flex-col">
           <div className="p-4 space-y-3">
             <button 
               onClick={() => handleNewChat()}

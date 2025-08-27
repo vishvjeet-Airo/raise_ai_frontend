@@ -5,6 +5,11 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
 import { useNavigate } from "react-router-dom";
 
+const getAuthHeaders = (): HeadersInit | undefined => {
+  const token = localStorage.getItem('access_token');
+  return token ? { Authorization: `Bearer ${token}` } : undefined;
+};
+
 interface Reference {
   document_id: string;
   file_name: string;
@@ -79,10 +84,20 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
 
     // Try to load existing messages for this session
     try {
+      const authHeaders = getAuthHeaders();
       const response = await fetch(`${API_BASE_URL}/api/chat/${historySessionId}/history`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders
+        },
       });
+
+      if (response.status === 401) {
+        localStorage.removeItem('access_token');
+        window.location.href = '/auth/Login';
+        throw new Error('Unauthorized');
+      }
 
       if (response.ok) {
         const data = await response.json();
@@ -141,11 +156,24 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
     localStorage.removeItem(getMessagesKey(documentId));
 
     try {
+      const authHeaders = getAuthHeaders();
+      const headers = {
+        'Content-Type': 'application/json',
+        ...authHeaders
+      };
+      
       const response = await fetch(`${API_BASE_URL}/api/chat/new`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ document_id: documentId }),
       });
+      
+      if (response.status === 401) {
+        localStorage.removeItem('access_token');
+        window.location.href = '/auth/Login';
+        throw new Error('Unauthorized');
+      }
+      
       if (!response.ok) throw new Error('Failed to create new chat session');
       const data = await response.json();
       setSessionId(data.session_id);
@@ -196,11 +224,23 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
     localStorage.setItem(getMessagesKey(documentId), JSON.stringify(newMessages));
 
     try {
+      const authHeaders = getAuthHeaders();
+      const headers = {
+        'Content-Type': 'application/json',
+        ...authHeaders
+      };
+      
       const response = await fetch(`${API_BASE_URL}/api/chat/${currentSessionId}/message`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ query: messageToSend }),
       });
+
+      if (response.status === 401) {
+        localStorage.removeItem('access_token');
+        window.location.href = '/auth/Login';
+        throw new Error('Unauthorized');
+      }
 
       if (!response.ok) throw new Error('Failed to get response from chatbot');
       if (!response.body) throw new Error('Response body is null');
