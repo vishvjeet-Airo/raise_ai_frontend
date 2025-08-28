@@ -269,7 +269,7 @@ export default function DocumentDetail() {
                     letterSpacing: "0%",
                   }}
                 >
-                  {document.name}
+                  Document Detail
                 </span>
               </div>
 
@@ -305,6 +305,7 @@ export default function DocumentDetail() {
                       uploadedTimestamp={document.uploadedAtTimestamp}
                       completionTimestamp={document.completedAtTimestamp}
                     />
+                    <HumanValidationRequired/>
                     <ComparativeInsights documentId={Number(document.id)} />
                     <ReportsAndExports
                       documentTitle={document.name}
