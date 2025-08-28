@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, CheckCircle, Loader2, Mail, Lock, Building2, Eye, EyeOff } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AlertCircle, CheckCircle, Loader2, Mail, Lock, Building2, Eye, EyeOff, Users } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { API_BASE_URL } from "@/lib/config";
 
@@ -12,6 +13,14 @@ interface CreateUploaderFormData {
   username: string;
   password: string;
   organisation: string;
+}
+
+interface User {
+  id: number;
+  username: string;
+  role: string;
+  organisation_id: number;
+  created_at: string;
 }
 
 export default function CreateUploader() {
@@ -24,6 +33,42 @@ export default function CreateUploader() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [usersError, setUsersError] = useState<string | null>(null);
+
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    setUsersError(null);
+    
+    try {
+      const orgId = localStorage.getItem("organisation_id");
+      if (!orgId) throw new Error("Organisation ID not found");
+
+      const response = await fetch(`${API_BASE_URL}/api/users/organization/${orgId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch users");
+      }
+
+      const usersData = await response.json();
+      setUsers(usersData);
+    } catch (err) {
+      setUsersError(err instanceof Error ? err.message : "Failed to fetch users");
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -78,6 +123,8 @@ export default function CreateUploader() {
         password: "",
         organisation: localStorage.getItem("organisation_id") || "",
       });
+      // Refresh users list after successful creation
+      fetchUsers();
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred");
     } finally {
@@ -219,6 +266,70 @@ export default function CreateUploader() {
                   </Button>
                 </div>
               </form>
+            </CardContent>
+          </Card>
+
+          {/* Users Table */}
+          <Card className="border-slate-200 shadow-sm mt-8">
+            <CardHeader className="pb-3 border-b bg-gradient-to-r from-[#F7FAFF] to-white rounded-t-xl">
+              <CardTitle className="text-xl font-bold text-[#0F2353] flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Organization Users
+              </CardTitle>
+              <CardDescription className="text-slate-600">
+                All users in your organization with their roles and details.
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="pt-6">
+              {usersError && (
+                <Alert variant="destructive" className="mb-6">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{usersError}</AlertDescription>
+                </Alert>
+              )}
+
+              {loadingUsers ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                  <span className="ml-2 text-slate-600">Loading users...</span>
+                </div>
+              ) : (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Username</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Created At</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {users.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-center text-slate-500 py-8">
+                            No users found for this organization
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        users.map((user) => (
+                          <TableRow key={user.id}>
+                            <TableCell className="font-medium">{user.username}</TableCell>
+                            <TableCell>
+                              <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20">
+                                {user.role}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-slate-600">
+                              {new Date(user.created_at).toLocaleDateString()}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

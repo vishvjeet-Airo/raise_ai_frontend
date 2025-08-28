@@ -12,6 +12,7 @@ import KeyObligationsAndActionPoints from "./components/document-detail/KeyOblig
 import ReportsAndExports from "./components/document-detail/ReportsAndExports";
 import { API_BASE_URL } from "@/lib/config";
 import { formatDateShort } from "@/lib/dateUtils";
+import HumanValidationRequired from "./components/document-detail/HumanValidationRequired";
 
 type ChatSidebarContextType = {
   isChatOpen: boolean;
@@ -303,12 +304,14 @@ export default function DocumentDetail() {
                       uploadedTimestamp={document.uploadedAtTimestamp}
                       completionTimestamp={document.completedAtTimestamp}
                     />
+                    <HumanValidationRequired/>
                     <ComparativeInsights documentId={Number(document.id)} />
                     <ReportsAndExports
                       documentTitle={document.name}
                       documentUrl={document.url}
                       documentId={document.id}
                     />
+                    
                   </>
                 ) : (
                   // When NO sidebar is open, use two columns layout
@@ -346,6 +349,7 @@ export default function DocumentDetail() {
                           documentUrl={document.url}
                           documentId={document.id}
                         />
+                        <HumanValidationRequired/>
                       </div>
                     </div>
                     <div className="mx-4">
