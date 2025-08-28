@@ -1,6 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Download, ChevronDown, Mail } from "lucide-react";
 import { useState } from "react";
 import { API_BASE_URL } from "@/lib/config";
 import { pdf, Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
@@ -11,6 +19,24 @@ interface ReportsAndExportsProps {
   documentUrl?: string;
   documentId?: string;
 }
+
+// Define stakeholder interface
+interface Stakeholder {
+  id: string;
+  name: string;
+  email: string;
+  department?: string;
+}
+
+// Mock stakeholders data (in real app, this would come from API)
+const mockStakeholders: Stakeholder[] = [
+  { id: '1', name: 'John Smith', email: 'john.smith@company.com', department: 'Legal' },
+  { id: '2', name: 'Sarah Johnson', email: 'sarah.johnson@company.com', department: 'Compliance' },
+  { id: '3', name: 'Mike Chen', email: 'mike.chen@company.com', department: 'Risk Management' },
+  { id: '4', name: 'Lisa Wang', email: 'lisa.wang@company.com', department: 'Operations' },
+  { id: '5', name: 'David Brown', email: 'david.brown@company.com', department: 'Finance' },
+  { id: '6', name: 'Emma Davis', email: 'emma.davis@company.com', department: 'HR' },
+];
 
 // Create styles for PDF
 const styles = StyleSheet.create({
@@ -523,6 +549,9 @@ const PDFDocument = ({ docData, summary, versioningInfo }: { docData: any; summa
 
 export default function ReportsAndExports({ documentTitle, documentUrl, documentId }: ReportsAndExportsProps) {
   const [summaryDownloading, setSummaryDownloading] = useState(false);
+  const [stakeholderModalOpen, setStakeholderModalOpen] = useState(false);
+  const [selectedStakeholders, setSelectedStakeholders] = useState<string[]>([]);
+  const [sendingToStakeholders, setSendingToStakeholders] = useState(false);
 
   function withAttachment(sasUrl: string, fileName: string) {
     try {
@@ -642,6 +671,81 @@ export default function ReportsAndExports({ documentTitle, documentUrl, document
     }
   };
 
+  // Handle stakeholder selection
+  const handleStakeholderToggle = (stakeholderId: string) => {
+    setSelectedStakeholders(prev => {
+      if (prev.includes(stakeholderId)) {
+        return prev.filter(id => id !== stakeholderId);
+      } else {
+        return [...prev, stakeholderId];
+      }
+    });
+  };
+
+  // Handle select all stakeholders
+  const handleSelectAll = () => {
+    if (selectedStakeholders.length === mockStakeholders.length) {
+      setSelectedStakeholders([]);
+    } else {
+      setSelectedStakeholders(mockStakeholders.map(s => s.id));
+    }
+  };
+
+  // Handle send to stakeholders
+  const handleSendToStakeholders = async () => {
+    if (!documentId || selectedStakeholders.length === 0) {
+      console.error("Document ID and selected stakeholders are required");
+      return;
+    }
+
+    try {
+      setSendingToStakeholders(true);
+
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      const selectedStakeholderData = mockStakeholders.filter(s => selectedStakeholders.includes(s.id));
+
+      // Call backend API to send to stakeholders
+      const response = await fetch(`${API_BASE_URL}/api/documents/${documentId}/export-to-stakeholders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          document_id: documentId,
+          document_title: documentTitle,
+          stakeholders: selectedStakeholderData,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to export to stakeholders (${response.status})`);
+      }
+
+      // Show success message
+      console.log("Document exported to stakeholders successfully");
+
+      // Close modal and reset selection
+      setStakeholderModalOpen(false);
+      setSelectedStakeholders([]);
+
+      // You could add a toast notification here if you have a notification system
+      // toast.success(`Document sent to ${selectedStakeholderData.length} stakeholder(s) successfully`);
+
+    } catch (error) {
+      console.error("Failed to export to stakeholders:", error);
+      // You could add error handling/notification here
+      // toast.error("Failed to export to stakeholders");
+    } finally {
+      setSendingToStakeholders(false);
+    }
+  };
+
+  // Open stakeholder modal
+  const openStakeholderModal = () => {
+    setStakeholderModalOpen(true);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -702,8 +806,100 @@ export default function ReportsAndExports({ documentTitle, documentUrl, document
               </div>
             </div>
           </div>
+
+          {/* Send to Stakeholders */}
+          <div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <div className="w-7 h-7 bg-green-500 rounded flex items-center justify-center">
+                    <Mail className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium">Send to Stakeholders</p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  className="h-7 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 flex items-center space-x-1 px-3"
+                  onClick={openStakeholderModal}
+                  disabled={sendingToStakeholders}
+                  title="Select stakeholders and send"
+                >
+                  <span>{sendingToStakeholders ? "Sending..." : "Send"}</span>
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </CardContent>
+
+      {/* Stakeholder Selection Modal */}
+      <Dialog open={stakeholderModalOpen} onOpenChange={setStakeholderModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select Stakeholders</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Select All Option */}
+            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+              <Checkbox
+                id="select-all"
+                checked={selectedStakeholders.length === mockStakeholders.length}
+                onCheckedChange={handleSelectAll}
+              />
+              <label htmlFor="select-all" className="text-sm font-medium cursor-pointer">
+                Select All ({mockStakeholders.length} stakeholders)
+              </label>
+            </div>
+
+            {/* Individual Stakeholders */}
+            <div className="max-h-60 overflow-y-auto space-y-2">
+              {mockStakeholders.map((stakeholder) => (
+                <div key={stakeholder.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
+                  <Checkbox
+                    id={stakeholder.id}
+                    checked={selectedStakeholders.includes(stakeholder.id)}
+                    onCheckedChange={() => handleStakeholderToggle(stakeholder.id)}
+                  />
+                  <div className="flex-1 cursor-pointer" onClick={() => handleStakeholderToggle(stakeholder.id)}>
+                    <p className="text-sm font-medium">{stakeholder.name}</p>
+                    <p className="text-xs text-gray-500">{stakeholder.email}</p>
+                    {stakeholder.department && (
+                      <p className="text-xs text-blue-600">{stakeholder.department}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Selected count */}
+            <div className="text-xs text-gray-500 text-center">
+              {selectedStakeholders.length} of {mockStakeholders.length} stakeholders selected
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setStakeholderModalOpen(false)}
+              disabled={sendingToStakeholders}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSendToStakeholders}
+              disabled={selectedStakeholders.length === 0 || sendingToStakeholders}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              {sendingToStakeholders ? "Sending..." : `Send to ${selectedStakeholders.length} stakeholder${selectedStakeholders.length !== 1 ? 's' : ''}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

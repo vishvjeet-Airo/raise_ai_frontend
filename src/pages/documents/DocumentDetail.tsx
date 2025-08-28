@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
 import AIGeneratedSummary from "./components/document-detail/AIGeneratedSummary";
+import HumanValidation from "./components/document-detail/HumanValidation";
 import ChatSidebar from "./components/document-detail/ChatSidebar";
 import CircularOverview from "./components/document-detail/CircularOverview";
 import ComparativeInsights from "./components/document-detail/ComparativeInsights";
@@ -12,7 +13,7 @@ import KeyObligationsAndActionPoints from "./components/document-detail/KeyOblig
 import ReportsAndExports from "./components/document-detail/ReportsAndExports";
 import { API_BASE_URL } from "@/lib/config";
 import { formatDateShort } from "@/lib/dateUtils";
-import HumanValidationRequired from "./components/document-detail/HumanValidationRequired";
+
 
 type ChatSidebarContextType = {
   isChatOpen: boolean;
@@ -311,7 +312,7 @@ export default function DocumentDetail() {
                       documentUrl={document.url}
                       documentId={document.id}
                     />
-                    
+                    <HumanValidation />
                   </>
                 ) : (
                   // When NO sidebar is open, use two columns layout
@@ -349,7 +350,7 @@ export default function DocumentDetail() {
                           documentUrl={document.url}
                           documentId={document.id}
                         />
-                        <HumanValidationRequired/>
+                        <HumanValidation />
                       </div>
                     </div>
                     <div className="mx-4">

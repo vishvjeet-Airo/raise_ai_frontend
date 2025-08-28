@@ -46,16 +46,20 @@ export default function DocumentHeader({ fileName, issueDate, publisher, documen
             </Button>
 
             <Button
-              variant={isChatOpen ? "default" : "outline"}
-              className={isChatOpen
-                ? "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-medium"
-                : "border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 text-sm font-medium"
-              }
-              onClick={toggleChat}
-            >
-              <MessageSquare className="w-4 h-4 mr-2" />
-              {isChatOpen ? "Close Chat" : "Chat"}
-            </Button>
+                  variant={isChatOpen ? "default" : "outline"}
+                  className={isChatOpen
+                    ? "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-medium"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 text-sm font-medium"
+                  }
+                  onClick={toggleChat}
+                >
+                  <img 
+                    src="/chatbot.png" 
+                    alt="Chatbot Icon" 
+                    className="w-4 h-4 mr-2" 
+                  />
+                  {isChatOpen ? "Close Chat" : "Chat"}
+                </Button>
           </div>
         </div>
       </CardContent>
