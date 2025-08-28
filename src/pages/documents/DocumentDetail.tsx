@@ -267,7 +267,7 @@ export default function DocumentDetail() {
                     letterSpacing: "0%",
                   }}
                 >
-                  {document.name}
+                  Document Detail
                 </span>
               </div>
 
