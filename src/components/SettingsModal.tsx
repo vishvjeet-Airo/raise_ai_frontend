@@ -8,11 +8,11 @@ interface SettingsModalProps {
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
-    name: "Andrew Smith",
-    email: "andrew.smith@company.com",
-    role: "Finance Analyst",
+    name: "Shubham Sidana",
+    email: "shubham.sidana@airodigitallabs.com",
+    role: "Senior Consultant",
     department: "Finance",
-    phone: "+1 (555) 123-4567"
+    phone: "+91 7689374650"
   });
   const [profileImage, setProfileImage] = useState("/analyst.png");
   const [isLoading, setIsLoading] = useState(false);
