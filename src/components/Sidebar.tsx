@@ -136,7 +136,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ forceCollapsed = false }) => {
               <img src="/analyst.png" alt="User" className="w-10 h-10 rounded-full" />
               {!actuallyCollapsed && (
                 <div>
-                  <div className="font-medium text-[10px] leading-[12px] tracking-[0.4px] uppercase text-[#757575]">
+                  <div className="font-medium text-[9px] leading-[12px] tracking-[0.4px] text-[#757575]">
                     {username}
                   </div>
                   <div className="font-medium text-sm leading-5 tracking-normal text-black">

@@ -363,35 +363,10 @@ export default function Login() {
             <span className="text-[8px]">Support</span>
           </button>
         </div>
- 
+
 
       {/* Right Side - Feature Presentation */}
       <div className="hidden lg:flex flex-1 relative overflow-hidden" style={{ background: '#052E65' }}>
-        {/* Support Button */}
-        <div className="absolute top-6 left-12 z-10">
-          <button
-            onClick={() => setShowSupportModal(true)}
-            className="flex items-center space-x-2 transition-colors hover:opacity-80"
-            style={{
-              width: '120px',
-              height: '30px',
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 500,
-              fontStyle: 'normal',
-              fontSize: '17px',
-              lineHeight: '150%',
-              letterSpacing: '0%',
-              color: '#F7FAFC'
-            }}
-          >
-            <img
-              src="/MdOutlineSupportAgent.png"
-              alt="Support Agent"
-              className="w-4 h-4"
-            />
-            <span>Support</span>
-          </button>
-        </div>
 
         {/* Content */}
         <div className="flex flex-col justify-center items-center text-center px-12 relative z-10 h-full w-full">
@@ -421,7 +396,7 @@ export default function Login() {
               marginBottom: '16px'
             }}
           >
-            Presenting additional features
+            Unlock Intelligent Compliance
           </h2>
           <p 
             style={{
@@ -438,7 +413,7 @@ export default function Login() {
               marginBottom: '32px'
             }}
           >
-            Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500
+            Master your entire compliance workflow. Seamlessly upload, analyze, and interact with documents to gain instant clarity and generate actionable tasks from a single platform.
           </p>
         </div>
 

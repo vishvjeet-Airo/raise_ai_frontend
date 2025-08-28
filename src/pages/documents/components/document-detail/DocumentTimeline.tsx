@@ -53,7 +53,7 @@ export default function DocumentTimeline({
     {
       title: "AI Analysis Completed",
       timestamp: formatDateTime(completionTimestamp),
-      color: "bg-blue-500",
+      color: "bg-green-500",
       completed: true
     }
   ];

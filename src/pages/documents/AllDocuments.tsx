@@ -471,7 +471,12 @@ export default function AllDocuments() {
         </div>
       </div>
       {/* Conditionally render the modal */}
-      {viewingDocument && <DocumentViewerModal document={viewingDocument} onClose={() => setViewingDocument(null)} />}
+      {viewingDocument && (
+        <DocumentViewerModal
+          document={viewingDocument}
+          onClose={() => setViewingDocument(null)}
+        />
+      )}
       {deletingDocument && (
     <DeleteConfirmationDialog
       onConfirm={confirmDelete}
