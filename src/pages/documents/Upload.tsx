@@ -1,14 +1,9 @@
-import { API_BASE_URL } from "@/lib/config";
+import { apiClient } from "@/lib/apiClient";
 import { useState, useRef, useCallback } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { toast } from "sonner";
 import { Cloud, X, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-const getAuthHeaders = (): HeadersInit | undefined => {
-  const token = localStorage.getItem('access_token');
-  return token ? { Authorization: `Bearer ${token}` } : undefined;
-};
 
 interface UploadFile {
   id: string;
@@ -184,17 +179,7 @@ export default function Upload() {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/documents/upload`, {
-        method: 'POST',
-        body: formData,
-        headers: getAuthHeaders(),
-      });
-      if (response.status === 401) {
-        console.error("Unauthorized request. Logging out.");
-        localStorage.removeItem('access_token');
-        navigate("/login");
-        throw new Error('Unauthorized');
-      }
+      const response = await apiClient.post("/api/documents/upload", formData);
       if (response.ok) {
         const responseData = await response.json();
         const results = responseData.results;

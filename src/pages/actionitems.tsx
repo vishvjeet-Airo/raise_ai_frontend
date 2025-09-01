@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
 import { Search, ArrowUp, ArrowDown } from "lucide-react";
-import { API_BASE_URL } from "@/lib/config";
+import { apiClient } from "@/lib/apiClient";
 
 /* ---- API types (reflecting detailed_action_points) ---- */
 type ApiDetailedActionPoint = {
@@ -60,10 +60,7 @@ type DocGroup = {
   actionItems: ActionItem[];
 };
 
-const getAuthHeaders = (): HeadersInit | undefined => {
-  const token = localStorage.getItem("access_token");
-  return token ? { Authorization: `Bearer ${token}` } : undefined;
-};
+
 
 /* ---- helpers ---- */
 const ns = "Not Specified";
@@ -98,10 +95,9 @@ export default function ActionItemsPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${API_BASE_URL}/api/documents`, {
+        const res = await apiClient.get("/api/documents", {
           headers: {
             accept: "application/json",
-            ...getAuthHeaders(),
           },
         });
         if (!res.ok) throw new Error(`Failed to fetch (${res.status})`);

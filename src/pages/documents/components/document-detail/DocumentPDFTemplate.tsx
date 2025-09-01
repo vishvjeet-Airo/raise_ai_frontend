@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { API_BASE_URL } from "@/lib/config";
+import { apiClient } from "@/lib/apiClient";
 import { formatDateShort } from "@/lib/dateUtils";
 
 type ApiActionPoint = {
@@ -81,14 +81,9 @@ export default function DocumentPDFTemplate({ documentId, onDataLoaded }: Docume
       setError(null);
 
       try {
-        const token =
-          localStorage.getItem("access_token") ||
-          sessionStorage.getItem("access_token");
-
-        const res = await fetch(`${API_BASE_URL}/api/documents/${documentId}`, {
+        const res = await apiClient.get(`/api/documents/${documentId}`, {
           headers: {
             accept: "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         });
 
@@ -124,7 +119,7 @@ export default function DocumentPDFTemplate({ documentId, onDataLoaded }: Docume
 
         // Fetch AI summary
         try {
-          const summaryRes = await fetch(`${API_BASE_URL}/api/documents/${documentId}/summary`, {
+          const summaryRes = await apiClient.get(`/api/documents/${documentId}/summary`, {
             headers: { accept: "application/json" },
           });
 

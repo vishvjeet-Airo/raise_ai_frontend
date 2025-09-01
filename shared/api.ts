@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "@/lib/config";
+import { apiClient } from "@/lib/apiClient";
 
 /**
  * Shared code between client and server
@@ -14,20 +14,7 @@ export interface DemoResponse {
 }
 
 export const uploadDocument = async (file: File, name: string) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("name", name);
-
-  const response = await fetch(`${API_BASE_URL}/api/documents/upload`, {
-    method: "POST",
-    body: formData,
-  });
-
-  if (response.status === 401) {
-    localStorage.removeItem('access_token');
-    window.location.href = '/auth/Login';
-    throw new Error('Unauthorized');
-  }
+  const response = await apiClient.uploadFile("/api/documents/upload", file, { name });
 
   if (!response.ok) {
     throw new Error("Failed to upload document");

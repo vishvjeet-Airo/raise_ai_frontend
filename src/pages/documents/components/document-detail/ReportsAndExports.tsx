@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Download, ChevronDown, Mail } from "lucide-react";
 import { useState } from "react";
-import { API_BASE_URL } from "@/lib/config";
+import { apiClient } from "@/lib/apiClient";
 import { pdf, Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
 import ReactMarkdown from 'react-markdown';
 
@@ -601,12 +601,9 @@ export default function ReportsAndExports({ documentTitle, documentUrl, document
       setSummaryDownloading(true);
 
       // Fetch document data
-      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-
-      const documentRes = await fetch(`${API_BASE_URL}/api/documents/${documentId}`, {
+      const documentRes = await apiClient.get(`/api/documents/${documentId}`, {
         headers: {
           accept: "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
 
@@ -624,7 +621,7 @@ export default function ReportsAndExports({ documentTitle, documentUrl, document
       // Fetch AI summary
       let summary = "Summary not available for this document.";
       try {
-        const summaryRes = await fetch(`${API_BASE_URL}/api/documents/${documentId}/summary`, {
+        const summaryRes = await apiClient.get(`/api/documents/${documentId}/summary`, {
           headers: { accept: "application/json" },
         });
 
@@ -639,7 +636,7 @@ export default function ReportsAndExports({ documentTitle, documentUrl, document
       // Fetch versioning information
       let versioningInfo = null;
       try {
-        const versioningRes = await fetch(`${API_BASE_URL}/api/documents/${documentId}/versioning-info`, {
+        const versioningRes = await apiClient.get(`/api/documents/${documentId}/versioning-info`, {
           headers: { accept: "application/json" },
         });
 
@@ -701,21 +698,13 @@ export default function ReportsAndExports({ documentTitle, documentUrl, document
     try {
       setSendingToStakeholders(true);
 
-      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
       const selectedStakeholderData = mockStakeholders.filter(s => selectedStakeholders.includes(s.id));
 
       // Call backend API to send to stakeholders
-      const response = await fetch(`${API_BASE_URL}/api/documents/${documentId}/export-to-stakeholders`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          document_id: documentId,
-          document_title: documentTitle,
-          stakeholders: selectedStakeholderData,
-        }),
+      const response = await apiClient.post(`/api/documents/${documentId}/export-to-stakeholders`, {
+        document_id: documentId,
+        document_title: documentTitle,
+        stakeholders: selectedStakeholderData,
       });
 
       if (!response.ok) {

@@ -2,14 +2,9 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
 import { Search, ArrowDown, ArrowUp, Eye, Download, X, Loader2, Trash2, AlertTriangle } from "lucide-react";
-import { API_BASE_URL } from "@/lib/config";
+import { apiClient } from "@/lib/apiClient";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import FadedTextLoader from "./components/document-detail/FadedTextLoader";
-
-const getAuthHeaders = (): HeadersInit | undefined => {
-  const token = localStorage.getItem('access_token');
-  return token ? { Authorization: `Bearer ${token}` } : undefined;
-};
 
 interface ActionPoint {
   id: number;
@@ -165,16 +160,8 @@ export default function AllDocuments() {
   const { data: documents = [], isLoading, isError, error } = useQuery<Document[], Error>({
     queryKey: ["documents"],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/documents`,{
-        headers: getAuthHeaders(),
-      });
+      const response = await apiClient.get("/api/documents");
       if (!response.ok) {
-        if (response.status === 401) {
-          console.error("Unauthorized request. Logging out.");
-          localStorage.removeItem('access_token');
-          navigate("/login");
-          throw new Error('Unauthorized');
-        }
         throw new Error('Failed to fetch documents');
       }
       const data = await response.json();
@@ -207,11 +194,9 @@ export default function AllDocuments() {
 
   const deleteMutation = useMutation({
     mutationFn: async (fileName: string) => {
-      const response = await fetch(`${API_BASE_URL}/api/documents/delete`, {
-        method: 'DELETE',
+      const response = await apiClient.delete("/api/documents/delete", {
         headers: {
           'accept': 'application/json',
-          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           file_names: [fileName],
@@ -230,11 +215,9 @@ export default function AllDocuments() {
 
   const deleteAllMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/documents/all-from-db`, {
-        method: 'DELETE',
+      const response = await apiClient.delete("/api/documents/all-from-db", {
         headers: {
           'accept': 'application/json',
-          'Content-Type': 'application/json',
         },
       });
       if (!response.ok) {

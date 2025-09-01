@@ -1,15 +1,10 @@
-import { API_BASE_URL } from "@/lib/config";
+import { apiClient } from "@/lib/apiClient";
 import React, { useState, useRef, useEffect } from "react";
 import { Send, Plus, Search, Trash2 } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
 import { display } from "html2canvas/dist/types/css/property-descriptors/display";
-
-const getAuthHeaders = (): HeadersInit | undefined => {
-  const token = localStorage.getItem('access_token');
-  return token ? { Authorization: `Bearer ${token}` } : undefined;
-};
 
 interface Reference {
   document_id: string;
@@ -53,16 +48,7 @@ export default function ChatBot() {
 
   const fetchChatSessions = async () => {
     try {
-      const authHeaders = getAuthHeaders();
-      const response = await fetch(`${API_BASE_URL}/api/chat/no-document`, {
-        headers: authHeaders
-      });
-      
-      if (response.status === 401) {
-        localStorage.removeItem('access_token');
-        window.location.href = '/auth/Login';
-        throw new Error('Unauthorized');
-      }
+      const response = await apiClient.get("/api/chat/no-document");
       
       if (!response.ok) throw new Error('Failed to fetch chat sessions');
       const sessions = await response.json();
@@ -84,23 +70,9 @@ export default function ChatBot() {
     setDocumentId(null);
 
     try {
-      const authHeaders = getAuthHeaders();
-      const headers = {
-        'Content-Type': 'application/json',
-        ...authHeaders
-      };
-      
-      const response = await fetch(`${API_BASE_URL}/api/chat/new`, {
-        method: 'POST',
-        headers,
-        body: docId ? JSON.stringify({ document_id: docId }) : undefined,
-      });
-
-      if (response.status === 401) {
-        localStorage.removeItem('access_token');
-        window.location.href = '/auth/Login';
-        throw new Error('Unauthorized');
-      }
+      const response = await apiClient.post("/api/chat/new", 
+        docId ? { document_id: docId } : undefined
+      );
 
       if (!response.ok) throw new Error('Failed to create new chat session');
 
@@ -124,17 +96,7 @@ export default function ChatBot() {
 
   const handleDeleteChat = async (sessionIdToDelete: string) => {
     try {
-        const authHeaders = getAuthHeaders();
-        const response = await fetch(`${API_BASE_URL}/api/chat/${sessionIdToDelete}`, {
-            method: 'DELETE',
-            headers: authHeaders
-        });
-
-        if (response.status === 401) {
-            localStorage.removeItem('access_token');
-            window.location.href = '/auth/Login';
-            throw new Error('Unauthorized');
-        }
+        const response = await apiClient.delete(`/api/chat/${sessionIdToDelete}`);
 
         if (!response.ok) {
             throw new Error('Failed to delete chat session');
@@ -181,16 +143,7 @@ export default function ChatBot() {
   const fetchHistoryForSession = async (sessionIdToLoad: string) => {
       setIsLoading(true);
       try {
-          const authHeaders = getAuthHeaders();
-          const response = await fetch(`${API_BASE_URL}/api/chat/${sessionIdToLoad}/history`, {
-            headers: authHeaders
-          });
-          
-          if (response.status === 401) {
-              localStorage.removeItem('access_token');
-              window.location.href = '/auth/Login';
-              throw new Error('Unauthorized');
-          }
+          const response = await apiClient.get(`/api/chat/${sessionIdToLoad}/history`);
           
           if (!response.ok) {
               throw new Error(`Failed to fetch chat history for session ${sessionIdToLoad}`);
@@ -257,23 +210,9 @@ export default function ChatBot() {
     setIsLoading(true);
 
     try {
-      const authHeaders = getAuthHeaders();
-      const headers = {
-        'Content-Type': 'application/json',
-        ...authHeaders
-      };
-      
-      const response = await fetch(`${API_BASE_URL}/api/chat/${currentSessionId}/message`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ query: messageToSend }),
+      const response = await apiClient.post(`/api/chat/${currentSessionId}/message`, {
+        query: messageToSend
       });
-
-      if (response.status === 401) {
-        localStorage.removeItem('access_token');
-        window.location.href = '/auth/Login';
-        throw new Error('Unauthorized');
-      }
 
       if (!response.ok) {
         throw new Error('Failed to get response from chatbot');

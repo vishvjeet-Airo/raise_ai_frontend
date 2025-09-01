@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertCircle, CheckCircle, Loader2, Mail, Lock, Building2, Eye, EyeOff, Users } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { API_BASE_URL } from "@/lib/config";
+import { apiClient } from "@/lib/apiClient";
 
 interface CreateUploaderFormData {
   username: string;
@@ -20,7 +20,6 @@ interface User {
   username: string;
   role: string;
   organisation_id: number;
-  created_at: string;
 }
 
 export default function CreateUploader() {
@@ -42,16 +41,7 @@ export default function CreateUploader() {
     setUsersError(null);
     
     try {
-      const orgId = localStorage.getItem("organisation_id");
-      if (!orgId) throw new Error("Organisation ID not found");
-
-      const response = await fetch(`${API_BASE_URL}/api/users/organization/${orgId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-      });
+      const response = await apiClient.get("/users/by-organization");
 
       if (!response.ok) {
         throw new Error("Failed to fetch users");
@@ -98,14 +88,7 @@ export default function CreateUploader() {
       if (!payload.password) throw new Error("Password is required.");
       if (isNaN(payload.organisation_id)) throw new Error("Organisation ID not found in your session.");
 
-      const response = await fetch(`${API_BASE_URL}/api/users/create-uploader`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await apiClient.post("/api/users/create-uploader", payload);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -139,199 +122,205 @@ export default function CreateUploader() {
       <Sidebar />
 
       <main className="flex-1 p-8 overflow-y-auto">
-        <div className="max-w-xl mx-auto">
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="pb-3 border-b bg-gradient-to-r from-[#F7FAFF] to-white rounded-t-xl">
-              <CardTitle className="text-xl font-bold text-[#0F2353]">Create Uploader</CardTitle>
-              <CardDescription className="text-slate-600">
-                Add a new uploader who can upload documents for your organisation.
-              </CardDescription>
-            </CardHeader>
+        <div className="flex gap-8 h-full">
+          {/* Left Half - Create Uploader Form */}
+          <div className="flex-1">
+            <Card className="border-slate-200 shadow-sm h-fit">
+              <CardHeader className="pb-3 border-b bg-white from-[#F7FAFF] to-white rounded-t-xl">
+                <CardTitle className="text-xl font-bold text-[#0F2353]">Create Uploader</CardTitle>
+                <CardDescription className="text-slate-600">
+                  Add a new uploader who can upload documents for your organisation.
+                </CardDescription>
+              </CardHeader>
 
-            <CardContent className="pt-6">
-              {success && (
-                <Alert className="mb-6 border-green-200 bg-green-50">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-800">
-                    Uploader created successfully.
-                  </AlertDescription>
-                </Alert>
-              )}
+              <CardContent className="pt-6">
+                {success && (
+                  <Alert className="mb-6 border-green-200 bg-green-50">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <AlertDescription className="text-green-800">
+                      Uploader created successfully.
+                    </AlertDescription>
+                  </Alert>
+                )}
 
-              {error && (
-                <Alert variant="destructive" className="mb-6">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
+                {error && (
+                  <Alert variant="destructive" className="mb-6">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
 
-              <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Username */}
-                <div className="space-y-2">
-                  <Label htmlFor="username">Username (Email)</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <Input
-                      id="username"
-                      name="username"
-                      type="email"
-                      value={formData.username}
-                      onChange={handleInputChange}
-                      placeholder="e.g., user@example.com"
-                      required
-                      disabled={loading}
-                      className="pl-9"
-                    />
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  {/* Username */}
+                  <div className="space-y-2">
+                    <Label htmlFor="username">Username (Email)</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Input
+                        id="username"
+                        name="username"
+                        type="email"
+                        value={formData.username}
+                        onChange={handleInputChange}
+                        placeholder="e.g., user@example.com"
+                        required
+                        disabled={loading}
+                        className="pl-9"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                {/* Password */}
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <Input
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      placeholder="Enter a secure password"
-                      required
-                      disabled={loading}
-                      className="pl-9 pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(p => !p)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                      tabIndex={-1}
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                  {/* Password */}
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Input
+                        id="password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        placeholder="Enter a secure password"
+                        required
+                        disabled={loading}
+                        className="pl-9 pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(p => !p)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                {/* Organisation (prefilled and locked) */}
-                <div className="space-y-2">
-                  <Label htmlFor="organisation">Organisation ID</Label>
-                  <div className="relative">
-                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <Input
-                      id="organisation"
-                      name="organisation"
-                      type="number"
-                      value={formData.organisation}
-                      onChange={handleInputChange}
-                      placeholder="Organisation not found"
-                      required
-                      disabled
-                      readOnly
-                      className="pl-9 bg-slate-100 text-slate-700 cursor-not-allowed"
-                      title="This value is locked to your current organisation"
-                    />
+                  {/* Organisation (prefilled and locked) */}
+                  <div className="space-y-2">
+                    <Label htmlFor="organisation">Organisation ID</Label>
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Input
+                        id="organisation"
+                        name="organisation"
+                        type="number"
+                        value={formData.organisation}
+                        onChange={handleInputChange}
+                        placeholder="Organisation not found"
+                        required
+                        disabled
+                        readOnly
+                        className="pl-9 bg-slate-100 text-slate-700 cursor-not-allowed"
+                        title="This value is locked to your current organisation"
+                      />
+                    </div>
+
                   </div>
-                  
-                </div>
 
-                {/* Actions */}
-                <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                  <Button type="submit" disabled={!isFormValid || loading} className="sm:flex-1">
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating...
-                      </>
-                    ) : (
-                      "Create Uploader"
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setFormData({
-                        username: "",
-                        password: "",
-                        organisation: localStorage.getItem("organisation_id") || "",
-                      });
-                      setError(null);
-                      setSuccess(false);
-                    }}
-                    disabled={loading}
-                    className="sm:flex-1"
-                  >
-                    Clear
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-
-          {/* Users Table */}
-          <Card className="border-slate-200 shadow-sm mt-8">
-            <CardHeader className="pb-3 border-b bg-gradient-to-r from-[#F7FAFF] to-white rounded-t-xl">
-              <CardTitle className="text-xl font-bold text-[#0F2353] flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Organization Users
-              </CardTitle>
-              <CardDescription className="text-slate-600">
-                All users in your organization with their roles and details.
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="pt-6">
-              {usersError && (
-                <Alert variant="destructive" className="mb-6">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{usersError}</AlertDescription>
-                </Alert>
-              )}
-
-              {loadingUsers ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-                  <span className="ml-2 text-slate-600">Loading users...</span>
-                </div>
-              ) : (
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Username</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Created At</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {users.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={3} className="text-center text-slate-500 py-8">
-                            No users found for this organization
-                          </TableCell>
-                        </TableRow>
+                  {/* Actions */}
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                    <Button type="submit" disabled={!isFormValid || loading} className="sm:flex-1">
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating...
+                        </>
                       ) : (
-                        users.map((user) => (
-                          <TableRow key={user.id}>
-                            <TableCell className="font-medium">{user.username}</TableCell>
-                            <TableCell>
-                              <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20">
-                                {user.role}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-slate-600">
-                              {new Date(user.created_at).toLocaleDateString()}
+                        "Create Uploader"
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setFormData({
+                          username: "",
+                          password: "",
+                          organisation: localStorage.getItem("organisation_id") || "",
+                        });
+                        setError(null);
+                        setSuccess(false);
+                      }}
+                      disabled={loading}
+                      className="sm:flex-1"
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Half - Organization Users Table */}
+          <div className="flex-2">
+            <Card className="border-slate-200 shadow-sm h-fit">
+              <CardHeader className="pb-3 border-b bg-white from-[#F7FAFF] to-white rounded-t-xl">
+                <CardTitle className="text-xl font-bold text-[#0F2353] flex items-center gap-2">
+                  
+                  Organization Table
+                </CardTitle>
+                <CardDescription className="text-slate-600">
+                  A list of all users in the organization with their roles.
+                </CardDescription>
+                {users.length > 0 && (
+                  <div className="mt-2 text-sm text-slate-700">
+                    <span className="font-medium">Organization ID:</span> {users[0].organisation_id}
+                  </div>
+                )}
+              </CardHeader>
+
+              <CardContent className="pt-6">
+                {usersError && (
+                  <Alert variant="destructive" className="mb-6">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{usersError}</AlertDescription>
+                  </Alert>
+                )}
+
+                {loadingUsers ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                    <span className="ml-2 text-slate-600">Loading users...</span>
+                  </div>
+                ) : (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Role</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {users.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={2} className="text-center text-slate-500 py-8">
+                              No users found for this organization
                             </TableCell>
                           </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                        ) : (
+                          users.map((user) => (
+                            <TableRow key={user.id}>
+                              <TableCell className="font-medium">{user.username}</TableCell>
+                              <TableCell>
+                                <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20">
+                                  {user.role}
+                                </span>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
       </div>

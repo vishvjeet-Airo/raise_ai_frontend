@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "@/lib/config";
+import { apiClient } from "@/lib/apiClient";
 import { useState } from "react";
 import { Link } from 'react-router-dom';
 import { CheckCircle2 } from "lucide-react";
@@ -41,8 +41,7 @@ export default function ForgotPassword() {
     setLoading(true);
     setShowSuccessMessage(false);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/users/request-password-reset?email=${encodeURIComponent(email)}`, {
-        method: 'POST',
+      const response = await apiClient.post(`/api/users/request-password-reset?email=${encodeURIComponent(email)}`, undefined, {
         headers: {
           'accept': 'application/json',
         },

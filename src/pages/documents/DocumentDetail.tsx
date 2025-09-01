@@ -11,7 +11,7 @@ import DocumentHeader from "./components/document-detail/DocumentHeader";
 import DocumentTimeline from "./components/document-detail/DocumentTimeline";
 import KeyObligationsAndActionPoints from "./components/document-detail/KeyObligationsAndActionPoints";
 import ReportsAndExports from "./components/document-detail/ReportsAndExports";
-import { API_BASE_URL } from "@/lib/config";
+import { apiClient } from "@/lib/apiClient";
 import { formatDateShort } from "@/lib/dateUtils";
 
 
@@ -122,14 +122,9 @@ export default function DocumentDetail() {
       setError(null);
 
       try {
-        const token =
-          localStorage.getItem("access_token") ||
-          sessionStorage.getItem("access_token");
-
-        const res = await fetch(`${API_BASE_URL}/api/documents/${id}`, {
+        const res = await apiClient.get(`/api/documents/${id}`, {
           headers: {
             accept: "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         });
 
@@ -269,7 +264,7 @@ export default function DocumentDetail() {
                     letterSpacing: "0%",
                   }}
                 >
-                  Document Detail
+                  Document Details
                 </span>
               </div>
 
@@ -305,7 +300,6 @@ export default function DocumentDetail() {
                       uploadedTimestamp={document.uploadedAtTimestamp}
                       completionTimestamp={document.completedAtTimestamp}
                     />
-                    <HumanValidationRequired/>
                     <ComparativeInsights documentId={Number(document.id)} />
                     <ReportsAndExports
                       documentTitle={document.name}

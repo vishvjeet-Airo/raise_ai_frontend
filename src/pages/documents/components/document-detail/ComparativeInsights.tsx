@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import ReactMarkdown from 'react-markdown';
 import { Link } from "react-router-dom"; // 👈 1. Import Link for navigation
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { API_BASE_URL } from "@/lib/config";
+import { apiClient } from "@/lib/apiClient";
 import { Loader2 } from "lucide-react";
 import FadedTextLoader from "./FadedTextLoader";
 
@@ -72,8 +72,8 @@ export default function ComparativeInsights({ documentId }: { documentId: number
         setLoading(true);
         setError(null);
 
-        const response = await fetch(
-          `${API_BASE_URL}/api/documents/${documentId}/versioning-info`
+        const response = await apiClient.get(
+          `/api/documents/${documentId}/versioning-info`
         );
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);

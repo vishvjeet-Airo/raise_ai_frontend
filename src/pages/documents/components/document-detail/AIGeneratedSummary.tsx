@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { API_BASE_URL } from "@/lib/config";
+import { apiClient } from "@/lib/apiClient";
 import FadedTextLoader from "./FadedTextLoader";
 
 interface SummaryResponse {
@@ -33,7 +33,7 @@ export default function AIGeneratedSummary({ documentId }: { documentId: number 
       setSummary("");
 
       try {
-        const response = await fetch(`${API_BASE_URL}/api/documents/${documentId}/summary`, {
+        const response = await apiClient.get(`/api/documents/${documentId}/summary`, {
           headers: { accept: "application/json" },
         });
 
