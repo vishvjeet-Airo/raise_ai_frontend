@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, Pencil, Check, X, Plus, Trash2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import FadedTextLoader from "./FadedTextLoader";
 import { formatDateShort } from "@/lib/dateUtils";
 import { apiClient } from "@/lib/apiClient";
@@ -27,7 +27,7 @@ interface KeyObligationsAndActionPointsProps {
   actionPoints?: ActionPoint[];
   loading?: boolean;
   error?: string | null;
-  onPageClick?: (pageNumber: number, sourceText?: string) => void; // Updated to accept source text
+  onPageClick?: (pageNumber: number, sourceText?: string) => void;
 }
 
 type EditState = {
@@ -54,14 +54,7 @@ export default function KeyObligationsAndActionPoints({
   const [overrides, setOverrides] = useState<Record<number, { description?: string; title?: string }>>({});
   const [editStates, setEditStates] = useState<Record<number, EditState>>({});
 
-  // Local additions and modal states
-  const [localAdds, setLocalAdds] = useState<ActionPoint[]>([]);
-  const [showAddObligation, setShowAddObligation] = useState(false);
-  const [newHeading, setNewHeading] = useState("");
-  const [newDescription, setNewDescription] = useState("");
-  const [newPage, setNewPage] = useState<string>("");
-  const [newSourceText, setNewSourceText] = useState("");
-
+  // States for the "Add Detailed Task" modal
   const [showAddTaskFor, setShowAddTaskFor] = useState<number | null>(null);
   const [taskText, setTaskText] = useState("");
   const [taskDept, setTaskDept] = useState("");
@@ -71,10 +64,10 @@ export default function KeyObligationsAndActionPoints({
 
   const [deletedIds, setDeletedIds] = useState<Set<number>>(new Set());
 
+  // Updated to remove dependency on localAdds
   const allPoints = useMemo(() => {
-    const base = [...localAdds, ...actionPoints];
-    return base.filter((p) => !deletedIds.has(p.id));
-  }, [localAdds, actionPoints, deletedIds]);
+    return actionPoints.filter((p) => !deletedIds.has(p.id));
+  }, [actionPoints, deletedIds]);
 
   const filteredPoints = useMemo(() => {
     const base = allPoints;
@@ -155,6 +148,7 @@ export default function KeyObligationsAndActionPoints({
     setEditStates((prev) => ({ ...prev, [id]: { ...prev[id], isEditing: false, proposed: null, prompt: "", error: null } }));
   };
 
+  // Updated to remove logic for localAdds
   const deleteObligation = (id: number) => {
     setDeletedIds((prev) => {
       const next = new Set(prev);
@@ -165,7 +159,6 @@ export default function KeyObligationsAndActionPoints({
       const { [id]: _omit, ...rest } = prev;
       return rest;
     });
-    setLocalAdds((prev) => prev.filter((p) => p.id !== id));
   };
 
   const getDescription = (p: ActionPoint) => overrides[p.id]?.description ?? p.description;
@@ -173,274 +166,173 @@ export default function KeyObligationsAndActionPoints({
 
   return (
     <>
-    <Card className="border-0 shadow-sm">
-    <CardHeader className="pb-4">
-  <div className="flex items-center justify-between gap-3">
-  
-    <CardTitle className="text-lg font-poppins font-normal flex items-center gap-2">
-      Obligations {!loading && filteredPoints.length > 0 && `(${filteredPoints.length})`}
-    </CardTitle>
-
- 
-    <div className="flex items-center gap-2">
-   
-      {!loading && (
-        <Button 
-          size="sm" 
-          className="h-8 px-3 text-xs bg-blue-700" 
-          onClick={() => { 
-            setNewHeading(""); 
-            setNewDescription(""); 
-            setNewPage(""); 
-            setNewSourceText(""); 
-            setShowAddObligation(true); 
-          }}
-        >
-          <Plus className="w-5.5 h-3.5 mr-1" /> Add Obligation
-        </Button>
-      )}
-
-  
-      <select
-        id="rel-filter"
-        value={relFilter}
-        onChange={(e) => setRelFilter(e.target.value as typeof relFilter)}
-        className="h-8 px-2 rounded-md border border-slate-300 text-xs text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
-        aria-label="Filter obligations by relevance"
-        disabled={loading}
-      >
-        <option value="relevant">Relevant</option>
-        <option value="irrelevant">Not Relevant</option>
-      </select>
-      
-    </div>
-  </div>
-</CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {loading && (
-            <>
-              <div className="flex items-center gap-2 py-2 text-gray-500">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm">Loading obligations...</span>
-              </div>
-              <FadedTextLoader />
-            </>
-          )}
-          {error && (
-            <div className="flex items-center py-4">
-              <p className="text-sm text-red-600">Error: {error}</p>
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle className="text-lg font-poppins font-normal flex items-center gap-2">
+              Obligations {!loading && filteredPoints.length > 0 && `(${filteredPoints.length})`}
+            </CardTitle>
+            <div>
+              <select
+                id="rel-filter"
+                value={relFilter}
+                onChange={(e) => setRelFilter(e.target.value as typeof relFilter)}
+                className="h-8 px-2 rounded-md border border-slate-300 text-xs text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+                aria-label="Filter obligations by relevance"
+                disabled={loading}
+              >
+                <option value="relevant">Relevant</option>
+                <option value="irrelevant">Not Relevant</option>
+              </select>
             </div>
-          )}
-          {!loading && !error && filteredPoints.length === 0 && (
-            <div className="text-gray-500 text-sm">
-              {relFilter === "relevant" ? "No relevant obligations found." : "No not relevant obligations found."}
-            </div>
-          )}
-          {!loading && !error &&
-            displayedPoints.map((point, idx) => {
-              const metaItems: React.ReactNode[] = [];
-
-              if (typeof point.source_page === "number") {
-                metaItems.push(
-                  <button
-                    key="page"
-                    onClick={() => handlePageClick(point.source_page, point.source_text)}
-                    className="relative group cursor-pointer text-blue-600 hover:text-blue-800 hover:underline"
-                    title={point.source_text || "Click to view page in document"}
-                  >
-                    Page: {point.source_page}
-                  </button>
-                );
-              }
-
-              if (point.deadline) {
-                metaItems.push(
-                  <span key="deadline">Deadline: {formatDateShort(point.deadline)}</span>
-                );
-              }
-
-              const st = editStates[point.id];
-
-              return (
-                <div key={point.id}>
-                  <div className="flex items-start space-x-3">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-medium text-gray-900 mb-1">{getTitle(point)}</h4>
-                      </div>
-                      {getDescription(point) && (
-                        <p className="text-sm text-gray-700 mb-2 justified">{st?.proposed ?? getDescription(point)}</p>
-                      )}
-                      {metaItems.length > 0 && (
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
-                          {metaItems.map((item, itemIdx) => (
-                            <span key={itemIdx}>
-                              {item}
-                              {itemIdx < metaItems.length - 1 && <span className="mx-1">|</span>}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {st?.isEditing && !st.proposed && (
-                        <div className="mt-3 bg-white p-3 rounded border border-gray-200">
-                          <label className="text-xs text-gray-600">Edit prompt</label>
-                          <textarea
-                            value={st.prompt}
-                            onChange={(e) =>
-                              setEditStates((prev) => ({ ...prev, [point.id]: { ...prev[point.id], prompt: e.target.value } }))
-                            }
-                            rows={3}
-                            placeholder="Describe how you want this obligation changed..."
-                            className="mt-1 w-full text-sm border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                          />
-                          {st.error && <div className="text-xs text-red-600 mt-2">{st.error}</div>}
-                          <div className="mt-2 flex gap-2">
-                            <Button size="sm" onClick={() => requestSuggestion(point.id)} disabled={st.loading || !(st.prompt || "").trim()} className="h-8 px-3">
-                              {st.loading ? "Generating..." : "Generate suggestion"}
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={() => cancelEdit(point.id)} className="h-8 px-3">
-                              Cancel
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-
-                      {st?.isEditing && st.proposed && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <Button size="icon" className="h-7 w-7" onClick={() => acceptEdit(point.id, point)} disabled={st.saving} title="Accept">
-                            <Check className="w-4 h-4" />
-                          </Button>
-                          <Button size="icon" variant="destructive" className="h-7 w-7" onClick={() => cancelEdit(point.id)} title="Discard">
-                            <X className="w-4 h-4" />
-                          </Button>
-                          {st.error && <div className="text-xs text-red-600 ml-2">{st.error}</div>}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  {idx !== displayedPoints.length - 1 && <div className="h-[2px] rounded-full bg-[#F6F6F6] mx-auto my-4" />}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {loading && (
+              <>
+                <div className="flex items-center gap-2 py-2 text-gray-500">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm">Loading obligations...</span>
                 </div>
-              );
-            })}
+                <FadedTextLoader />
+              </>
+            )}
+            {error && (
+              <div className="flex items-center py-4">
+                <p className="text-sm text-red-600">Error: {error}</p>
+              </div>
+            )}
+            {!loading && !error && filteredPoints.length === 0 && (
+              <div className="text-gray-500 text-sm">
+                {relFilter === "relevant" ? "No relevant obligations found." : "No not relevant obligations found."}
+              </div>
+            )}
+            {!loading && !error &&
+              displayedPoints.map((point, idx) => {
+                const metaItems: React.ReactNode[] = [];
 
-          {!loading && filteredPoints.length > 3 && (
-            <div className="pt-2">
-              {!showAll ? (
-                <button onClick={() => setShowAll(true)} className="text-blue-600 font-semibold text-sm hover:underline">
-                  + Show More ({filteredPoints.length - 3} more)
-                </button>
-              ) : (
-                <button onClick={() => setShowAll(false)} className="text-blue-600 font-semibold text-sm hover:underline">
-                  - Show Less
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+                if (typeof point.source_page === "number") {
+                  metaItems.push(
+                    <button
+                      key="page"
+                      onClick={() => handlePageClick(point.source_page, point.source_text)}
+                      className="relative group cursor-pointer text-blue-600 hover:text-blue-800 hover:underline"
+                      title={point.source_text || "Click to view page in document"}
+                    >
+                      Page: {point.source_page}
+                    </button>
+                  );
+                }
 
-    <Dialog open={showAddObligation} onOpenChange={setShowAddObligation}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add Obligation</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs text-gray-600">Heading of Obligation</label>
-            <Input value={newHeading} onChange={(e) => setNewHeading(e.target.value)} />
-          </div>
-          <div>
-            <label className="text-xs text-gray-600">Short Description</label>
-            <Textarea rows={3} value={newDescription} onChange={(e) => setNewDescription(e.target.value)} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-gray-600">Page Number</label>
-              <Input type="number" value={newPage} onChange={(e) => setNewPage(e.target.value)} />
-            </div>
-            <div>
-              <label className="text-xs text-gray-600">Source Text</label>
-              <Input value={newSourceText} onChange={(e) => setNewSourceText(e.target.value)} />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="ghost" onClick={() => setShowAddObligation(false)}>Cancel</Button>
-            <Button onClick={async () => {
-              const newItem: ActionPoint = {
-                id: -Date.now(),
-                title: newHeading.trim() || "New Obligation",
-                description: newDescription.trim() || undefined,
-                source_page: newPage ? Number(newPage) : undefined,
-                source_text: newSourceText.trim() || undefined,
-                is_relevant: true,
-              };
-              try {
-                await apiClient.post(`/api/documents/${documentId}/action-points`, newItem).catch(() => {});
-              } catch {}
-              setLocalAdds((prev) => [newItem, ...prev]);
-              setShowAddObligation(false);
-            }}>Add</Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+                if (point.deadline) {
+                  metaItems.push(
+                    <span key="deadline">Deadline: {formatDateShort(point.deadline)}</span>
+                  );
+                }
 
-    <Dialog open={showAddTaskFor !== null} onOpenChange={(v) => { if (!v) setShowAddTaskFor(null); }}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add Detailed Task</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs text-gray-600">Detailed Task</label>
-            <Textarea rows={3} value={taskText} onChange={(e) => setTaskText(e.target.value)} />
+                const st = editStates[point.id];
+
+                return (
+                  <div key={point.id}>
+                    <div className="flex items-start space-x-3">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="font-medium text-gray-900 mb-1">{getTitle(point)}</h4>
+                        </div>
+                        {getDescription(point) && (
+                          <p className="text-sm text-gray-700 mb-2 justified">{st?.proposed ?? getDescription(point)}</p>
+                        )}
+                        {metaItems.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                            {metaItems.map((item, itemIdx) => (
+                              <span key={itemIdx}>
+                                {item}
+                                {itemIdx < metaItems.length - 1 && <span className="mx-1">|</span>}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+
+                      </div>
+                    </div>
+                    {idx !== displayedPoints.length - 1 && <div className="h-[2px] rounded-full bg-[#F6F6F6] mx-auto my-4" />}
+                  </div>
+                );
+              })}
+
+            {!loading && filteredPoints.length > 3 && (
+              <div className="pt-2">
+                {!showAll ? (
+                  <button onClick={() => setShowAll(true)} className="text-blue-600 font-semibold text-sm hover:underline">
+                    + Show More ({filteredPoints.length - 3} more)
+                  </button>
+                ) : (
+                  <button onClick={() => setShowAll(false)} className="text-blue-600 font-semibold text-sm hover:underline">
+                    - Show Less
+                  </button>
+                )}
+              </div>
+            )}
           </div>
-          <div className="grid grid-cols-2 gap-3">
+        </CardContent>
+      </Card>
+      
+      {/* Dialog for adding a detailed task remains */}
+      <Dialog open={showAddTaskFor !== null} onOpenChange={(v) => { if (!v) setShowAddTaskFor(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Detailed Task</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
             <div>
-              <label className="text-xs text-gray-600">Department</label>
-              <Input value={taskDept} onChange={(e) => setTaskDept(e.target.value)} />
+              <label className="text-xs text-gray-600">Detailed Task</label>
+              <Textarea rows={3} value={taskText} onChange={(e) => setTaskText(e.target.value)} />
             </div>
-            <div>
-              <label className="text-xs text-gray-600">Department Head</label>
-              <Input value={taskHead} onChange={(e) => setTaskHead(e.target.value)} />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-gray-600">Department</label>
+                <Input value={taskDept} onChange={(e) => setTaskDept(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs text-gray-600">Department Head</label>
+                <Input value={taskHead} onChange={(e) => setTaskHead(e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-gray-600">Deadline</label>
+                <Input type="date" value={taskDeadline} onChange={(e) => setTaskDeadline(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs text-gray-600">Status</label>
+                <Input placeholder="Pending / In Progress / Done" value={taskStatus} onChange={(e) => setTaskStatus(e.target.value)} />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="ghost" onClick={() => setShowAddTaskFor(null)}>Cancel</Button>
+              <Button onClick={async () => {
+                const apId = showAddTaskFor;
+                if (!apId) return;
+                const payload = {
+                  task: taskText,
+                  assigned_to_department: taskDept,
+                  assigned_to_name: taskHead,
+                  due_date: taskDeadline || undefined,
+                  status: taskStatus,
+                };
+                try {
+                  await apiClient.post(`/api/action-points/${apId}/detailed-action-points`, payload).catch(() => {});
+                } catch {}
+                setShowAddTaskFor(null);
+                setTaskText(""); setTaskDept(""); setTaskHead(""); setTaskDeadline(""); setTaskStatus("");
+              }}>Add</Button>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-gray-600">Deadline</label>
-              <Input type="date" value={taskDeadline} onChange={(e) => setTaskDeadline(e.target.value)} />
-            </div>
-            <div>
-              <label className="text-xs text-gray-600">Status</label>
-              <Input placeholder="Pending / In Progress / Done" value={taskStatus} onChange={(e) => setTaskStatus(e.target.value)} />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="ghost" onClick={() => setShowAddTaskFor(null)}>Cancel</Button>
-            <Button onClick={async () => {
-              const apId = showAddTaskFor;
-              if (!apId) return;
-              const payload = {
-                task: taskText,
-                assigned_to_department: taskDept,
-                assigned_to_name: taskHead,
-                due_date: taskDeadline || undefined,
-                status: taskStatus,
-              };
-              try {
-                await apiClient.post(`/api/action-points/${apId}/detailed-action-points`, payload).catch(() => {});
-              } catch {}
-              setShowAddTaskFor(null);
-              setTaskText(""); setTaskDept(""); setTaskHead(""); setTaskDeadline(""); setTaskStatus("");
-            }}>Add</Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

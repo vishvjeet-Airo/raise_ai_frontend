@@ -1,17 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from "@/components/ui/dialog";
-import { Download, ChevronDown, Mail } from "lucide-react";
+import { Download } from "lucide-react";
 import { useState } from "react";
 import { apiClient } from "@/lib/apiClient";
-import { pdf, Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
+import { pdf, Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import ReactMarkdown from 'react-markdown';
 
 interface ReportsAndExportsProps {
@@ -19,24 +11,6 @@ interface ReportsAndExportsProps {
   documentUrl?: string;
   documentId?: string;
 }
-
-// Define stakeholder interface
-interface Stakeholder {
-  id: string;
-  name: string;
-  email: string;
-  department?: string;
-}
-
-// Mock stakeholders data (in real app, this would come from API)
-const mockStakeholders: Stakeholder[] = [
-  { id: '1', name: 'John Smith', email: 'john.smith@company.com', department: 'Legal' },
-  { id: '2', name: 'Sarah Johnson', email: 'sarah.johnson@company.com', department: 'Compliance' },
-  { id: '3', name: 'Mike Chen', email: 'mike.chen@company.com', department: 'Risk Management' },
-  { id: '4', name: 'Lisa Wang', email: 'lisa.wang@company.com', department: 'Operations' },
-  { id: '5', name: 'David Brown', email: 'david.brown@company.com', department: 'Finance' },
-  { id: '6', name: 'Emma Davis', email: 'emma.davis@company.com', department: 'HR' },
-];
 
 // Create styles for PDF
 const styles = StyleSheet.create({
@@ -314,7 +288,7 @@ const styles = StyleSheet.create({
   fixedFooter: {
     position: 'absolute',
     bottom: 0,
-    left: 0,  
+    left: 0,
     right: 0,
     backgroundColor: '#f8fafc',
     padding: 10,
@@ -324,28 +298,13 @@ const styles = StyleSheet.create({
 });
 
 // PDF Document Component
-const PDFDocument = ({ docData, summary, versioningInfo }: { docData: any; summary: string; versioningInfo?: any }) => {
-  // Separate obligations into relevant and irrelevant
-  const relevantObligations = docData.action_points?.filter((point: any) =>
-    point.is_relevant
-  ) || [];
-  console.log(relevantObligations);
-  
-
-  const irrelevantObligations = docData.action_points?.filter((point: any) =>
-    !point.is_relevant
-  ) || [];
-  let comparativeInsights = "";
-
+export const PDFDocument = ({ docData, summary, versioningInfo }: { docData: any; summary: string; versioningInfo?: any }) => {
+  const relevantObligations = docData.action_points?.filter((point: any) => point.is_relevant) || [];
+  const irrelevantObligations = docData.action_points?.filter((point: any) => !point.is_relevant) || [];
 
   return (
     <Document>
-      <Page 
-        size="RA4" 
-        style={styles.page}
-        wrap={false}
-      >
-        {/* Fixed Header - appears on every page */}
+      <Page size="RA4" style={styles.page} wrap={false}>
         <View fixed style={styles.fixedHeader}>
           <Text style={styles.fixedTitle}>
             {docData.title || docData.file_name || `Document ${docData.id}`}
@@ -353,14 +312,8 @@ const PDFDocument = ({ docData, summary, versioningInfo }: { docData: any; summa
           <Text style={styles.fixedSubtitle}>Regulatory Compliance Report</Text>
         </View>
 
-        {/* Dynamic Page Numbers - appears on every page */}
-        <Text 
-          fixed 
-          style={styles.pageNumber}
-          render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`}
-        />
+        <Text fixed style={styles.pageNumber} render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
 
-        {/* Document Header - only on first page */}
         <View style={[styles.header, { marginTop: 40 }]}>
           <View style={styles.documentMeta}>
             <Text>Publication Date: {docData.publication_date || 'N/A'}</Text>
@@ -368,14 +321,12 @@ const PDFDocument = ({ docData, summary, versioningInfo }: { docData: any; summa
           </View>
         </View>
 
-        {/* Comparative Insights with Real  Data */}
         <View style={styles.insightsBox}>
           <Text style={styles.insightsTitle}>Key Insights & Comparative Analysis</Text>
 
-          {/* Version Information */}
           {versioningInfo?.version_history && (
             <View style={styles.versionSection}>
-              <Text style={styles.versionTitle}>  Document Version History</Text>
+              <Text style={styles.versionTitle}>Document Version History</Text>
               <View style={styles.versionList}>
                 {versioningInfo.version_history.versions.map((version: any, index: number) => (
                   <Text key={index} style={styles.versionItem}>
@@ -389,12 +340,9 @@ const PDFDocument = ({ docData, summary, versioningInfo }: { docData: any; summa
             </View>
           )}
 
-          {/* Key Changes from Amendment Analysis */}
           {versioningInfo?.amendment_analysis?.has_analysis && versioningInfo?.amendment_analysis?.analysis_data?.key_changes && (
             <View style={styles.changesSection}>
-              <Text style={styles.changesTitle}>
-                Key Changes from Previous Version
-              </Text>
+              <Text style={styles.changesTitle}>Key Changes from Previous Version</Text>
               {versioningInfo.amendment_analysis.analysis_data.key_changes.map((change: string, index: number) => (
                 <View key={index} style={styles.changeItem}>
                   <ReactMarkdown
@@ -414,7 +362,6 @@ const PDFDocument = ({ docData, summary, versioningInfo }: { docData: any; summa
             </View>
           )}
 
-          {/* Comparison Note */}
           {versioningInfo?.amendment_analysis?.analysis_data?.comparison_note && (
             <View style={styles.changesSection}>
               <Text style={styles.changesTitle}>Comparison Analysis</Text>
@@ -423,10 +370,8 @@ const PDFDocument = ({ docData, summary, versioningInfo }: { docData: any; summa
               </Text>
             </View>
           )}
-
         </View>
 
-        {/* Document Overview */}
         <View style={styles.overviewBox}>
           <Text style={styles.sectionTitle}>Document Overview</Text>
           <View style={styles.grid}>
@@ -449,7 +394,6 @@ const PDFDocument = ({ docData, summary, versioningInfo }: { docData: any; summa
           </View>
         </View>
 
-        {/* AI Generated Summary with orphan/widow protection */}
         <View style={[styles.section, { marginTop: 40 }]}>
           <Text style={styles.sectionTitle} break>AI Generated Summary</Text>
           <View style={styles.summaryBox}>
@@ -457,12 +401,10 @@ const PDFDocument = ({ docData, summary, versioningInfo }: { docData: any; summa
           </View>
         </View>
 
-        {/* Key Obligations and Action Points - Relevant First */}
         {docData.action_points && docData.action_points.length > 0 && (
           <View style={[styles.obligationsSection, { marginTop: 40 }]}>
             <Text style={styles.sectionTitle} break>Compliance Obligations & Action Points</Text>
 
-            {/* Relevant Obligations - SHOWN FIRST */}
             {relevantObligations.length > 0 && (
               <View style={styles.obligationCategory}>
                 <Text style={[styles.categoryTitle, styles.relevantTitle]}>
@@ -472,9 +414,7 @@ const PDFDocument = ({ docData, summary, versioningInfo }: { docData: any; summa
                   {relevantObligations.map((point: any, index: number) => (
                     <View key={point.id || index} style={styles.actionPoint}>
                       <Text style={styles.actionPointTitle}>{point.title || point.name || `Obligation ${index + 1}`}</Text>
-                      {point.description && (
-                        <Text style={styles.actionPointDescription}>{point.description}</Text>
-                      )}
+                      {point.description && <Text style={styles.actionPointDescription}>{point.description}</Text>}
                       <View style={styles.actionPointMeta}>
                         {point.source_page && <Text>Page: {point.source_page}</Text>}
                         {point.deadline && <Text>Deadline: {new Date(point.deadline).toLocaleDateString()}</Text>}
@@ -487,7 +427,6 @@ const PDFDocument = ({ docData, summary, versioningInfo }: { docData: any; summa
               </View>
             )}
 
-            {/* Irrelevant Obligations - SHOWN SECOND */}
             {irrelevantObligations.length > 0 && (
               <View style={styles.obligationCategory}>
                 <Text style={[styles.categoryTitle, styles.irrelevantTitle]}>
@@ -497,9 +436,7 @@ const PDFDocument = ({ docData, summary, versioningInfo }: { docData: any; summa
                   {irrelevantObligations.map((point: any, index: number) => (
                     <View key={point.id || index} style={styles.actionPoint}>
                       <Text style={styles.actionPointTitle}>{point.title || point.name || `Obligation ${index + 1}`}</Text>
-                      {point.description && (
-                        <Text style={styles.actionPointDescription}>{point.description}</Text>
-                      )}
+                      {point.description && <Text style={styles.actionPointDescription}>{point.description}</Text>}
                       <View style={styles.actionPointMeta}>
                         {point.source_page && <Text>Page: {point.source_page}</Text>}
                         {point.deadline && <Text>Deadline: {new Date(point.deadline).toLocaleDateString()}</Text>}
@@ -514,7 +451,6 @@ const PDFDocument = ({ docData, summary, versioningInfo }: { docData: any; summa
           </View>
         )}
 
-        {/* Document Timeline */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle} break>Document Processing Timeline</Text>
           <View style={styles.overviewBox}>
@@ -549,48 +485,7 @@ const PDFDocument = ({ docData, summary, versioningInfo }: { docData: any; summa
 
 export default function ReportsAndExports({ documentTitle, documentUrl, documentId }: ReportsAndExportsProps) {
   const [summaryDownloading, setSummaryDownloading] = useState(false);
-  const [stakeholderModalOpen, setStakeholderModalOpen] = useState(false);
-  const [selectedStakeholders, setSelectedStakeholders] = useState<string[]>([]);
-  const [sendingToStakeholders, setSendingToStakeholders] = useState(false);
 
-  function withAttachment(sasUrl: string, fileName: string) {
-    try {
-      const url = new URL(sasUrl);
-      const disposition = `attachment; filename="${fileName}"`;
-      url.searchParams.set("response-content-disposition", disposition);
-      return url.toString();
-    } catch {
-      return sasUrl;
-    }
-  }
-
-  async function forceDownloadViaBlob(sasUrl: string, fileName: string = "document.pdf") {
-    try {
-      const res = await fetch(sasUrl, { mode: "cors", credentials: "omit" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      window.location.href = withAttachment(sasUrl, fileName);
-    }
-  }
-
-  /*const handleDownloadOriginal = async () => {
-    if (documentUrl) {
-      const fileName = (documentTitle || "document") + ".pdf";
-      await forceDownloadViaBlob(documentUrl, fileName);
-    }
-  };*/
-
-  // 🔹 PDF generation using @react-pdf/renderer
   const handleDownloadSummary = async () => {
     if (!documentId) {
       console.error("Document ID is required for PDF generation");
@@ -600,31 +495,15 @@ export default function ReportsAndExports({ documentTitle, documentUrl, document
     try {
       setSummaryDownloading(true);
 
-      // Fetch document data
-      const documentRes = await apiClient.get(`/api/documents/${documentId}`, {
-        headers: {
-          accept: "application/json",
-        },
-      });
-
-      if (!documentRes.ok) {
-        throw new Error(`Failed to fetch document (${documentRes.status})`);
-      }
-
+      const documentRes = await apiClient.get(`/api/documents/${documentId}`);
+      if (!documentRes.ok) throw new Error(`Failed to fetch document (${documentRes.status})`);
       const documentData = await documentRes.json();
       const docData = Array.isArray(documentData) ? documentData[0] : documentData;
+      if (!docData) throw new Error("Document not found");
 
-      if (!docData) {
-        throw new Error("Document not found");
-      }
-
-      // Fetch AI summary
       let summary = "Summary not available for this document.";
       try {
-        const summaryRes = await apiClient.get(`/api/documents/${documentId}/summary`, {
-          headers: { accept: "application/json" },
-        });
-
+        const summaryRes = await apiClient.get(`/api/documents/${documentId}/summary`);
         if (summaryRes.ok) {
           const summaryData = await summaryRes.json();
           summary = summaryData.overall_summary || summary;
@@ -633,13 +512,9 @@ export default function ReportsAndExports({ documentTitle, documentUrl, document
         console.warn("Failed to fetch summary:", summaryError);
       }
 
-      // Fetch versioning information
       let versioningInfo = null;
       try {
-        const versioningRes = await apiClient.get(`/api/documents/${documentId}/versioning-info`, {
-          headers: { accept: "application/json" },
-        });
-
+        const versioningRes = await apiClient.get(`/api/documents/${documentId}/versioning-info`);
         if (versioningRes.ok) {
           versioningInfo = await versioningRes.json();
         }
@@ -647,11 +522,8 @@ export default function ReportsAndExports({ documentTitle, documentUrl, document
         console.warn("Failed to fetch versioning info:", versioningError);
       }
 
-      // Generate PDF using @react-pdf/renderer
-      const fileName = (documentTitle || "summary-report") + ".pdf";
+      const fileName = `${documentTitle || "Document"}.pdf`;
       const blob = await pdf(<PDFDocument docData={docData} summary={summary} versioningInfo={versioningInfo} />).toBlob();
-
-      // Create download link
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -668,72 +540,6 @@ export default function ReportsAndExports({ documentTitle, documentUrl, document
     }
   };
 
-  // Handle stakeholder selection
-  const handleStakeholderToggle = (stakeholderId: string) => {
-    setSelectedStakeholders(prev => {
-      if (prev.includes(stakeholderId)) {
-        return prev.filter(id => id !== stakeholderId);
-      } else {
-        return [...prev, stakeholderId];
-      }
-    });
-  };
-
-  // Handle select all stakeholders
-  const handleSelectAll = () => {
-    if (selectedStakeholders.length === mockStakeholders.length) {
-      setSelectedStakeholders([]);
-    } else {
-      setSelectedStakeholders(mockStakeholders.map(s => s.id));
-    }
-  };
-
-  // Handle send to stakeholders
-  const handleSendToStakeholders = async () => {
-    if (!documentId || selectedStakeholders.length === 0) {
-      console.error("Document ID and selected stakeholders are required");
-      return;
-    }
-
-    try {
-      setSendingToStakeholders(true);
-
-      const selectedStakeholderData = mockStakeholders.filter(s => selectedStakeholders.includes(s.id));
-
-      // Call backend API to send to stakeholders
-      const response = await apiClient.post(`/api/documents/${documentId}/export-to-stakeholders`, {
-        document_id: documentId,
-        document_title: documentTitle,
-        stakeholders: selectedStakeholderData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to export to stakeholders (${response.status})`);
-      }
-
-      // Show success message
-      console.log("Document exported to stakeholders successfully");
-
-      // Close modal and reset selection
-      setStakeholderModalOpen(false);
-      setSelectedStakeholders([]);
-
-      // You could add a toast notification here if you have a notification system
-      // toast.success(`Document sent to ${selectedStakeholderData.length} stakeholder(s) successfully`);
-
-    } catch (error) {
-      console.error("Failed to export to stakeholders:", error);
-      // You could add error handling/notification here
-      // toast.error("Failed to export to stakeholders");
-    } finally {
-      setSendingToStakeholders(false);
-    }
-  };
-
-  // Open stakeholder modal
-  const openStakeholderModal = () => {
-    setStakeholderModalOpen(true);
-  };
 
   return (
     <Card>
@@ -743,152 +549,30 @@ export default function ReportsAndExports({ documentTitle, documentUrl, document
       <CardContent>
         <div className="space-y-2">
 
-          {/* Original Document */}
-          {/*<div>
-            <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
-              ORIGINAL DOCUMENT
-            </h4>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <div className="w-7 h-7 bg-red-500 rounded flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">PDF</span>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium">{documentTitle || "Executive Authority"}</p>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  className="h-7 bg-blue-600 hover:bg-blue-700"
-                  onClick={handleDownloadOriginal}
-                  disabled={!documentUrl}
-                >
-                  <Download className="w-3 h-3 mr-1" />
-                  Download
-                </Button>
-              </div>
-            </div>
-          </div>*/}
-
-          {/* Summary Report */}
+          {/* Summary Report Download */}
           <div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <div className="w-7 h-7 bg-red-500 rounded flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">PDF</span>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium">Summary Report</p>
-                  </div>
+            <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <div className="w-7 h-7 bg-red-500 rounded flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">PDF</span>
                 </div>
-                <Button
-                  size="sm"
-                  className="h-7 bg-blue-600 hover:bg-blue-700 disabled:opacity-60"
-                  onClick={handleDownloadSummary}
-                  disabled={summaryDownloading}
-                >
-                  <Download className="w-3 h-3 mr-1" />
-                  {summaryDownloading ? "Preparing..." : "Download"}
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Send to Stakeholders */}
-          <div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <div className="w-7 h-7 bg-green-500 rounded flex items-center justify-center">
-                    <Mail className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium">Send to Stakeholders</p>
-                  </div>
+                <div>
+                  <p className="text-xs font-medium">Summary Report</p>
                 </div>
-                <Button
-                  size="sm"
-                  className="h-7 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 flex items-center space-x-1 px-3"
-                  onClick={openStakeholderModal}
-                  disabled={sendingToStakeholders}
-                  title="Select stakeholders and send"
-                >
-                  <span>{sendingToStakeholders ? "Sending..." : "Send"}</span>
-                  <ChevronDown className="w-3 h-3" />
-                </Button>
               </div>
+              <Button
+                size="sm"
+                className="h-7 bg-blue-600 hover:bg-blue-700 disabled:opacity-60"
+                onClick={handleDownloadSummary}
+                disabled={summaryDownloading}
+              >
+                <Download className="w-3 h-3 mr-1" />
+                {summaryDownloading ? "Preparing..." : "Download"}
+              </Button>
             </div>
           </div>
         </div>
       </CardContent>
-
-      {/* Stakeholder Selection Modal */}
-      <Dialog open={stakeholderModalOpen} onOpenChange={setStakeholderModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Select Stakeholders</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {/* Select All Option */}
-            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-              <Checkbox
-                id="select-all"
-                checked={selectedStakeholders.length === mockStakeholders.length}
-                onCheckedChange={handleSelectAll}
-              />
-              <label htmlFor="select-all" className="text-sm font-medium cursor-pointer">
-                Select All ({mockStakeholders.length} stakeholders)
-              </label>
-            </div>
-
-            {/* Individual Stakeholders */}
-            <div className="max-h-60 overflow-y-auto space-y-2">
-              {mockStakeholders.map((stakeholder) => (
-                <div key={stakeholder.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
-                  <Checkbox
-                    id={stakeholder.id}
-                    checked={selectedStakeholders.includes(stakeholder.id)}
-                    onCheckedChange={() => handleStakeholderToggle(stakeholder.id)}
-                  />
-                  <div className="flex-1 cursor-pointer" onClick={() => handleStakeholderToggle(stakeholder.id)}>
-                    <p className="text-sm font-medium">{stakeholder.name}</p>
-                    <p className="text-xs text-gray-500">{stakeholder.email}</p>
-                    {stakeholder.department && (
-                      <p className="text-xs text-blue-600">{stakeholder.department}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Selected count */}
-            <div className="text-xs text-gray-500 text-center">
-              {selectedStakeholders.length} of {mockStakeholders.length} stakeholders selected
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setStakeholderModalOpen(false)}
-              disabled={sendingToStakeholders}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSendToStakeholders}
-              disabled={selectedStakeholders.length === 0 || sendingToStakeholders}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Mail className="w-4 h-4 mr-2" />
-              {sendingToStakeholders ? "Sending..." : `Send to ${selectedStakeholders.length} stakeholder${selectedStakeholders.length !== 1 ? 's' : ''}`}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Card>
   );
 }

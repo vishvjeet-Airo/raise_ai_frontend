@@ -32,7 +32,9 @@ type ModelType =
   | 'standard'
   | 'critical_process'
   | 'third_party'
-  | 'compliance_record';
+  | 'compliance_record'
+  | 'stakeholder'
+  | 'verifier'; // Renamed from 'validator'
 
 interface CreateOrganizationData {
   name: string;
@@ -50,6 +52,8 @@ interface Standard { id: number; name: string; certification_number?: string; va
 interface CriticalProcess { id: number; name: string; description?: string; }
 interface ThirdParty { id: number; name: string; service_provided?: string; contract_expiry?: string; }
 interface ComplianceRecord { id: number; record_type: string; description: string; date: string; outcome?: string; }
+interface Stakeholder { id: number; name: string; email: string; }
+interface Verifier { id: number; name: string; email: string; } // Renamed from Validator
 
 interface OrganizationData {
   id: number;
@@ -66,6 +70,8 @@ interface OrganizationData {
   critical_processes: CriticalProcess[];
   third_parties: ThirdParty[];
   compliance_history: ComplianceRecord[];
+  stakeholders?: Stakeholder[];
+  verifiers?: Verifier[]; // Renamed from validators
 }
 
 const InfoItem = ({ label, value }: { label: string; value: React.ReactNode }) => (
@@ -260,6 +266,16 @@ const EditModal = ({
           <FormInput label="Service Provided" name="service_provided" defaultValue={data?.service_provided} />
           <FormInput label="Contract Expiry" name="contract_expiry" defaultValue={data?.contract_expiry} placeholder="YYYY-MM-DD" type="date" />
         </>;
+      case 'stakeholder':
+        return <>
+          <FormInput label="Name" name="name" defaultValue={data?.name} inputRef={firstFieldRef} autoFocus />
+          <FormInput label="Email" name="email" defaultValue={data?.email} type="email" />
+        </>;
+      case 'verifier': // Renamed from 'validator'
+        return <>
+          <FormInput label="Name" name="name" defaultValue={data?.name} inputRef={firstFieldRef} autoFocus />
+          <FormInput label="Email" name="email" defaultValue={data?.email} type="email" />
+        </>;
       case 'compliance_record':
         return <>
           <FormInput label="Record Type" name="record_type" defaultValue={data?.record_type} inputRef={firstFieldRef} autoFocus placeholder="e.g., Audit, Incident" />
@@ -336,6 +352,7 @@ export default function CompanyProfileByIdPage() {
   const handleSave = async (modelType: ModelType, itemData: any, orgId: number) => {
     // No edits for organization from UI; guard anyway
     if (modelType === 'organization') return;
+    
     if (!isAdmin) return;
     try {
       const dataToSend = { ...itemData };
@@ -360,6 +377,7 @@ export default function CompanyProfileByIdPage() {
 
   const handleDelete = async (modelType: ModelType, itemId: number) => {
     if (!isAdmin) return;
+    
     if (window.confirm(`Are you sure you want to delete this ${modelType.replace(/_/g, ' ')}?`)) {
       try {
         await api.deleteItem(modelType, itemId);
@@ -626,6 +644,62 @@ export default function CompanyProfileByIdPage() {
               )}
             </div>
 
+            {/* Stakeholders */}
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <CardHeader
+                title="Stakeholders"
+                icon={<Users />}
+                onAdd={isAdmin ? () => setModalConfig({ mode: 'create', modelType: 'stakeholder' }) : undefined}
+              />
+              {profile.stakeholders?.length ? (
+                profile.stakeholders.map((s) => (
+                  <ListItem
+                    key={s.id}
+                    modelType="stakeholder"
+                    item={s}
+                    onEdit={(mt, data) => setModalConfig({ mode: 'edit', modelType: mt, data })}
+                    onDelete={handleDelete} 
+                    canEdit={isAdmin}
+                  >
+                    <>
+                      <p className="font-semibold">{s.name}</p>
+                      <p className="text-xs text-gray-500">{s.email}</p>
+                    </>
+                  </ListItem>
+                ))
+              ) : (
+                <p className="text-gray-400">No stakeholders added.</p>
+              )}
+            </div>
+
+            {/* Verifiers */}
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <CardHeader
+                title="Verifiers" 
+                icon={<Users />}
+                onAdd={isAdmin ? () => setModalConfig({ mode: 'create', modelType: 'verifier' }) : undefined} 
+              />
+              {profile.verifiers?.length ? ( // Renamed
+                profile.verifiers.map((v) => ( // Renamed
+                  <ListItem
+                    key={v.id}
+                    modelType="verifier" // Renamed
+                    item={v}
+                    onEdit={(mt, data) => setModalConfig({ mode: 'edit', modelType: mt, data })}
+                    onDelete={handleDelete} // Updated
+                    canEdit={isAdmin}
+                  >
+                    <>
+                      <p className="font-semibold">{v.name}</p>
+                      <p className="text-xs text-gray-500">{v.email}</p>
+                    </>
+                  </ListItem>
+                ))
+              ) : (
+                <p className="text-gray-400">No verifiers added.</p> // Renamed
+              )}
+            </div>
+
             {/* Compliance History */}
             <div className="bg-white p-6 rounded-lg shadow-md">
               <CardHeader
@@ -653,7 +727,7 @@ export default function CompanyProfileByIdPage() {
                 ))
               ) : (
                 <p className="text-gray-400">No compliance records added.</p>
-                )}
+              )}
             </div>
           </div>
         </div>

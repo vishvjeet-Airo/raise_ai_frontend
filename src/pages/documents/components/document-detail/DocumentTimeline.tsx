@@ -28,9 +28,13 @@ const formatDateTime = (isoString?: string) => {
 export default function DocumentTimeline({
   uploadedTimestamp,
   completionTimestamp,
+  approvalStatus,
+  approvalVerifiedAt,
 }: {
   uploadedTimestamp?: string;
   completionTimestamp?: string;
+  approvalStatus?: string | null;
+  approvalVerifiedAt?: string | null;
 }) {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -43,6 +47,7 @@ export default function DocumentTimeline({
   };
 
   // MODIFIED: timelineItems now uses the dynamic timestamps
+  const isVerified = (approvalStatus || "").toLowerCase() === "accepted" || (approvalStatus || "").toLowerCase() === "approved";
   const timelineItems = [
     {
       title: "Document Uploaded",
@@ -55,6 +60,12 @@ export default function DocumentTimeline({
       timestamp: formatDateTime(completionTimestamp),
       color: "bg-green-500",
       completed: true
+    },
+    {
+      title: isVerified ? "Report Verified" : "Report Verification",
+      timestamp: isVerified ? formatDateTime(approvalVerifiedAt || undefined) : "Pending",
+      color: isVerified ? "bg-emerald-500" : "bg-gray-400",
+      completed: isVerified
     }
   ];
 
@@ -65,7 +76,7 @@ export default function DocumentTimeline({
       </CardHeader>
       <CardContent className="px-4 pb-5">
         <div className="relative">
-          <div className="absolute left-[9px] top-[10px] w-px bg-gray-200" style={{ height: `${(timelineItems.length - 1) * 44}px` }}></div>
+          <div className="absolute left-[9px] top-[10px] bottom-[10px] w-px bg-gray-200"></div>
           
           {timelineItems.map((item, index) => (
             <div key={index} className="flex items-start space-x-2.5 pb-4 last:pb-0 relative">

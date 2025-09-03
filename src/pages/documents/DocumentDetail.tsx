@@ -65,6 +65,8 @@ type ApiDocument = {
   circular_type?: string | null;
   reference_number?: string | null;
   action_points?: ApiActionPoint[] | null;
+  approval_of_report?: string | null;
+  approval_verified_at?: string | null;
 };
 
 // MODIFIED: Added uploadedAtTimestamp and completedAtTimestamp to the normalized shape
@@ -75,6 +77,8 @@ type NormalizedDocument = {
   publicationDate: string;
   uploadedAtTimestamp?: string; // To store the full ISO string for the timeline
   completedAtTimestamp?: string; // analysis completion timestamp
+  approvalStatus?: string | null;
+  approvalVerifiedAt?: string | null;
   circularType: string;
   referenceNumber: string;
   url: string;
@@ -145,7 +149,9 @@ export default function DocumentDetail() {
           publisher: raw.issuing_authority || "Unknown",
           publicationDate: formatDateShort(raw.publication_date),
           uploadedAtTimestamp: raw.uploaded_at || "", // Keep the full timestamp
-          completedAtTimestamp: raw.analysis_completed_at || "", 
+          completedAtTimestamp: raw.analysis_completed_at || "",
+          approvalStatus: raw.approval_of_report ?? null,
+          approvalVerifiedAt: raw.approval_verified_at ?? null,
           circularType: raw.circular_type || "",
           referenceNumber: raw.reference_number || "",
           url: raw.blob_url || "",
@@ -298,6 +304,8 @@ export default function DocumentDetail() {
                     <DocumentTimeline
                       uploadedTimestamp={document.uploadedAtTimestamp}
                       completionTimestamp={document.completedAtTimestamp}
+                      approvalStatus={document.approvalStatus}
+                      approvalVerifiedAt={document.approvalVerifiedAt}
                     />
                     <ComparativeInsights documentId={Number(document.id)} />
                     <ReportsAndExports
@@ -334,9 +342,11 @@ export default function DocumentDetail() {
                       <div className="w-[361px] flex-shrink-0 space-y-6">
                         {/* Pass both uploaded and completion timestamps */}
                         <DocumentTimeline
-                          uploadedTimestamp={document.uploadedAtTimestamp}
-                          completionTimestamp={document.completedAtTimestamp}
-                        />
+                      uploadedTimestamp={document.uploadedAtTimestamp}
+                      completionTimestamp={document.completedAtTimestamp}
+                      approvalStatus={document.approvalStatus}
+                      approvalVerifiedAt={document.approvalVerifiedAt}
+                    />
                         <ComparativeInsights documentId={Number(document.id)} />
                         <ReportsAndExports
                           documentTitle={document.name}

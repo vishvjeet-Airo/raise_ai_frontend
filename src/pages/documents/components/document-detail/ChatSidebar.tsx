@@ -323,14 +323,14 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
   return (
     <div className="w-full bg-[#FBFBFB] flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white flex-shrink-0">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white flex-shrink-0 relative">
         <div className="flex flex-col">
           <span className="text-sm font-medium text-gray-700">Chat Assistant</span>
           <span className="text-xs text-gray-500">{documentId ? `Document ID: ${documentId}` : "No Document Selected"}</span>
         </div>
         <div className="flex items-center space-x-2">
           {/* Chat History Button - always show for testing, only show if there are previous chats */}
-          <div className="relative">
+          <div>
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -345,7 +345,7 @@ export default function ChatSidebar({ isOpen, onClose, documentId, documentName 
             {/* History Popup */}
             {showHistoryPopup && (
               <div
-                className="absolute top-full left-0 mt-1 w-72 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto"
+                className="absolute top-full right-4 mt-1 w-72 max-w-[calc(100%-1rem)] bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="p-2 border-b border-gray-100">

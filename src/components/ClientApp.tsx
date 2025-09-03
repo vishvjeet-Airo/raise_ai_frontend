@@ -17,6 +17,7 @@ import CompanyCreatePage from "@/pages/company/create";
 
 
 
+
 // Custom hook to get the authentication token
 const useAuth = () => {
   // Check for the token directly in the hook
@@ -67,6 +68,7 @@ function RouterContent() {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+
       </Route>
 
       {/* Protected Routes */}

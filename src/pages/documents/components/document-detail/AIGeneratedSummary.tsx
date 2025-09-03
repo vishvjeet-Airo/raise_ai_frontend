@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiClient } from "@/lib/apiClient";
 import FadedTextLoader from "./FadedTextLoader";
-import { Button } from "@/components/ui/button";
-import { Check, X, Pencil } from "lucide-react";
 
 interface SummaryResponse {
   success: boolean;
@@ -130,11 +128,6 @@ export default function AIGeneratedSummary({ documentId }: { documentId: number 
       <Card className={isEditing ? "blur-sm pointer-events-none" : ""}>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg font-poppins font-normal">Summary</CardTitle>
-          {!loading && (
-            <Button variant="outline" size="sm" onClick={() => setIsEditing((v) => !v)} className="h-8 px-2 text-xs">
-              <Pencil className="w-3.5 h-3.5 mr-1" /> Edit
-            </Button>
-          )}
         </CardHeader>
         <CardContent>
           <div className="border-l-4 border-blue-500 pl-4 bg-blue-50 p-4 rounded-r-lg min-h-[84px]">
@@ -170,56 +163,7 @@ export default function AIGeneratedSummary({ documentId }: { documentId: number 
         </CardContent>
       </Card>
 
-      {isEditing && !proposedSummary && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-lg p-4 w-[min(90%,32rem)] pointer-events-auto">
-            <div className="text-sm font-medium mb-2">Edit summary</div>
-            <label className="text-xs text-gray-600">Prompt</label>
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              rows={4}
-              placeholder="Describe how you want the summary to be changed..."
-              className="mt-1 w-full text-sm border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
-            />
-            {editError && (
-              <div className="text-xs text-red-600 mt-2">{editError}</div>
-            )}
-            <div className="mt-3 flex justify-end gap-2">
-              <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)} className="h-8 px-3">
-                Cancel
-              </Button>
-              <Button size="sm" onClick={requestEditSuggestion} disabled={submitting || !prompt.trim()} className="h-8 px-3">
-                {submitting ? "Generating..." : "Generate suggestion"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {isEditing && proposedSummary && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-lg p-4 w-[min(90%,32rem)] pointer-events-auto">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-medium">Preview changes</div>
-              <div className="flex items-center gap-2">
-                <Button size="icon" className="h-7 w-7" onClick={acceptEdit} disabled={saving} title="Accept">
-                  <Check className="w-4 h-4" />
-                </Button>
-                <Button size="icon" variant="destructive" className="h-7 w-7" onClick={cancelEdit} title="Discard">
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-            <div className="text-sm text-gray-700 whitespace-pre-line max-h-[50vh] overflow-auto">
-              {proposedSummary}
-            </div>
-            {editError && (
-              <div className="text-xs text-red-600 mt-2">{editError}</div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
