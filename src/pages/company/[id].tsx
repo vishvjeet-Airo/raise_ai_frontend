@@ -326,6 +326,11 @@ export default function CompanyProfileByIdPage() {
   // Role-based permissions
   const role = (localStorage.getItem('role') || '').toLowerCase();
   const isAdmin = role === 'admin';
+  const rawPrivileges = localStorage.getItem('privileges');
+  const privileges: Array<{ name?: string }> = (() => {
+    try { return rawPrivileges ? JSON.parse(rawPrivileges) : []; } catch { return []; }
+  })();
+  const canEditOrganisation = privileges?.some(p => (p?.name || '').toLowerCase() === 'can_edit_organisation');
 
   const [profile, setProfile] = useState<OrganizationData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -353,7 +358,7 @@ export default function CompanyProfileByIdPage() {
     // No edits for organization from UI; guard anyway
     if (modelType === 'organization') return;
     
-    if (!isAdmin) return;
+    if (!(isAdmin || canEditOrganisation)) return;
     try {
       const dataToSend = { ...itemData };
       if (modalConfig?.mode === 'create') {
@@ -376,7 +381,7 @@ export default function CompanyProfileByIdPage() {
   };
 
   const handleDelete = async (modelType: ModelType, itemId: number) => {
-    if (!isAdmin) return;
+    if (!(isAdmin || canEditOrganisation)) return;
     
     if (window.confirm(`Are you sure you want to delete this ${modelType.replace(/_/g, ' ')}?`)) {
       try {
@@ -417,7 +422,7 @@ export default function CompanyProfileByIdPage() {
 
   return (
     <>
-      {isAdmin && modalConfig && profile && (
+      {(isAdmin || canEditOrganisation) && modalConfig && profile && (
         <EditModal
           modalConfig={modalConfig}
           onClose={() => setModalConfig(null)}
@@ -459,7 +464,7 @@ export default function CompanyProfileByIdPage() {
               <CardHeader
                 title="Jurisdictions"
                 icon={<Globe />}
-                onAdd={isAdmin ? () => setModalConfig({ mode: 'create', modelType: 'jurisdiction' }) : undefined}
+                onAdd={(isAdmin || canEditOrganisation) ? () => setModalConfig({ mode: 'create', modelType: 'jurisdiction' }) : undefined}
               />
               {profile.jurisdictions?.length ? (
                 profile.jurisdictions.map(j => (
@@ -469,7 +474,7 @@ export default function CompanyProfileByIdPage() {
                     item={j}
                     onEdit={(mt, data) => setModalConfig({ mode: 'edit', modelType: mt, data })}
                     onDelete={handleDelete}
-                    canEdit={isAdmin}
+                    canEdit={isAdmin || canEditOrganisation}
                   >
                     <span>{[j.city, j.state, j.country].filter(Boolean).join(", ")}</span>
                   </ListItem>
@@ -484,7 +489,7 @@ export default function CompanyProfileByIdPage() {
               <CardHeader
                 title="Business Units"
                 icon={<Briefcase />}
-                onAdd={isAdmin ? () => setModalConfig({ mode: 'create', modelType: 'business_unit' }) : undefined}
+                onAdd={(isAdmin || canEditOrganisation) ? () => setModalConfig({ mode: 'create', modelType: 'business_unit' }) : undefined}
               />
               {profile.business_units?.length ? (
                 profile.business_units.map(bu => (
@@ -494,7 +499,7 @@ export default function CompanyProfileByIdPage() {
                     item={bu}
                     onEdit={(mt, data) => setModalConfig({ mode: 'edit', modelType: mt, data })}
                     onDelete={handleDelete}
-                    canEdit={isAdmin}
+                    canEdit={isAdmin || canEditOrganisation}
                   >
                     <>
                       <p className="font-semibold">{bu.name}</p>
@@ -512,7 +517,7 @@ export default function CompanyProfileByIdPage() {
               <CardHeader
                 title="Licenses & Registrations"
                 icon={<FileText />}
-                onAdd={isAdmin ? () => setModalConfig({ mode: 'create', modelType: 'license' }) : undefined}
+                onAdd={(isAdmin || canEditOrganisation) ? () => setModalConfig({ mode: 'create', modelType: 'license' }) : undefined}
               />
               {profile.licenses?.length ? (
                 profile.licenses.map(lic => (
@@ -522,7 +527,7 @@ export default function CompanyProfileByIdPage() {
                     item={lic}
                     onEdit={(mt, data) => setModalConfig({ mode: 'edit', modelType: mt, data })}
                     onDelete={handleDelete}
-                    canEdit={isAdmin}
+                    canEdit={isAdmin || canEditOrganisation}
                   >
                     <>
                       <p className="font-semibold">{lic.license_name}</p>
@@ -540,7 +545,7 @@ export default function CompanyProfileByIdPage() {
               <CardHeader
                 title="Regulators"
                 icon={<Landmark />}
-                onAdd={isAdmin ? () => setModalConfig({ mode: 'create', modelType: 'regulator' }) : undefined}
+                onAdd={(isAdmin || canEditOrganisation) ? () => setModalConfig({ mode: 'create', modelType: 'regulator' }) : undefined}
               />
               {profile.regulators?.length ? (
                 profile.regulators.map(reg => (
@@ -550,7 +555,7 @@ export default function CompanyProfileByIdPage() {
                     item={reg}
                     onEdit={(mt, data) => setModalConfig({ mode: 'edit', modelType: mt, data })}
                     onDelete={handleDelete}
-                    canEdit={isAdmin}
+                    canEdit={isAdmin || canEditOrganisation}
                   >
                     <span>{reg.name}{reg.jurisdiction ? ` (${reg.jurisdiction})` : ''}</span>
                   </ListItem>
@@ -565,7 +570,7 @@ export default function CompanyProfileByIdPage() {
               <CardHeader
                 title="Standards Adopted"
                 icon={<ClipboardCheck />}
-                onAdd={isAdmin ? () => setModalConfig({ mode: 'create', modelType: 'standard' }) : undefined}
+                onAdd={(isAdmin || canEditOrganisation) ? () => setModalConfig({ mode: 'create', modelType: 'standard' }) : undefined}
               />
               {profile.standards?.length ? (
                 profile.standards.map(std => (
@@ -575,7 +580,7 @@ export default function CompanyProfileByIdPage() {
                     item={std}
                     onEdit={(mt, data) => setModalConfig({ mode: 'edit', modelType: mt, data })}
                     onDelete={handleDelete}
-                    canEdit={isAdmin}
+                    canEdit={isAdmin || canEditOrganisation}
                   >
                     <>
                       <p className="font-semibold">{std.name}</p>
@@ -593,7 +598,7 @@ export default function CompanyProfileByIdPage() {
               <CardHeader
                 title="Critical Processes"
                 icon={<AlertTriangle />}
-                onAdd={isAdmin ? () => setModalConfig({ mode: 'create', modelType: 'critical_process' }) : undefined}
+                onAdd={(isAdmin || canEditOrganisation) ? () => setModalConfig({ mode: 'create', modelType: 'critical_process' }) : undefined}
               />
               {profile.critical_processes?.length ? (
                 profile.critical_processes.map(cp => (
@@ -603,7 +608,7 @@ export default function CompanyProfileByIdPage() {
                     item={cp}
                     onEdit={(mt, data) => setModalConfig({ mode: 'edit', modelType: mt, data })}
                     onDelete={handleDelete}
-                    canEdit={isAdmin}
+                    canEdit={isAdmin || canEditOrganisation}
                   >
                     <>
                       <p className="font-semibold">{cp.name}</p>
@@ -621,7 +626,7 @@ export default function CompanyProfileByIdPage() {
               <CardHeader
                 title="Third-Party Dependencies"
                 icon={<Users />}
-                onAdd={isAdmin ? () => setModalConfig({ mode: 'create', modelType: 'third_party' }) : undefined}
+                onAdd={(isAdmin || canEditOrganisation) ? () => setModalConfig({ mode: 'create', modelType: 'third_party' }) : undefined}
               />
               {profile.third_parties?.length ? (
                 profile.third_parties.map(tp => (
@@ -631,7 +636,7 @@ export default function CompanyProfileByIdPage() {
                     item={tp}
                     onEdit={(mt, data) => setModalConfig({ mode: 'edit', modelType: mt, data })}
                     onDelete={handleDelete}
-                    canEdit={isAdmin}
+                    canEdit={isAdmin || canEditOrganisation}
                   >
                     <>
                       <p className="font-semibold">{tp.name}</p>
@@ -649,7 +654,7 @@ export default function CompanyProfileByIdPage() {
               <CardHeader
                 title="Stakeholders"
                 icon={<Users />}
-                onAdd={isAdmin ? () => setModalConfig({ mode: 'create', modelType: 'stakeholder' }) : undefined}
+                onAdd={(isAdmin || canEditOrganisation) ? () => setModalConfig({ mode: 'create', modelType: 'stakeholder' }) : undefined}
               />
               {profile.stakeholders?.length ? (
                 profile.stakeholders.map((s) => (
@@ -659,7 +664,7 @@ export default function CompanyProfileByIdPage() {
                     item={s}
                     onEdit={(mt, data) => setModalConfig({ mode: 'edit', modelType: mt, data })}
                     onDelete={handleDelete} 
-                    canEdit={isAdmin}
+                    canEdit={isAdmin || canEditOrganisation}
                   >
                     <>
                       <p className="font-semibold">{s.name}</p>
@@ -677,7 +682,7 @@ export default function CompanyProfileByIdPage() {
               <CardHeader
                 title="Verifiers" 
                 icon={<Users />}
-                onAdd={isAdmin ? () => setModalConfig({ mode: 'create', modelType: 'verifier' }) : undefined} 
+                onAdd={(isAdmin || canEditOrganisation) ? () => setModalConfig({ mode: 'create', modelType: 'verifier' }) : undefined} 
               />
               {profile.verifiers?.length ? ( // Renamed
                 profile.verifiers.map((v) => ( // Renamed
@@ -687,7 +692,7 @@ export default function CompanyProfileByIdPage() {
                     item={v}
                     onEdit={(mt, data) => setModalConfig({ mode: 'edit', modelType: mt, data })}
                     onDelete={handleDelete} // Updated
-                    canEdit={isAdmin}
+                    canEdit={isAdmin || canEditOrganisation}
                   >
                     <>
                       <p className="font-semibold">{v.name}</p>
@@ -705,7 +710,7 @@ export default function CompanyProfileByIdPage() {
               <CardHeader
                 title="Compliance History"
                 icon={<History />}
-                onAdd={isAdmin ? () => setModalConfig({ mode: 'create', modelType: 'compliance_record' }) : undefined}
+                onAdd={(isAdmin || canEditOrganisation) ? () => setModalConfig({ mode: 'create', modelType: 'compliance_record' }) : undefined}
               />
               {profile.compliance_history?.length ? (
                 profile.compliance_history.map(ch => (
@@ -715,7 +720,7 @@ export default function CompanyProfileByIdPage() {
                     item={ch}
                     onEdit={(mt, data) => setModalConfig({ mode: 'edit', modelType: mt, data })}
                     onDelete={handleDelete}
-                    canEdit={isAdmin}
+                    canEdit={isAdmin || canEditOrganisation}
                   >
                     <>
                       <p className="font-semibold">{ch.record_type} ({ch.date})</p>

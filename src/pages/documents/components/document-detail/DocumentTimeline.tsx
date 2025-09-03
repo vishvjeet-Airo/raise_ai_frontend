@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, X as XIcon } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 
 // NEW: Helper function to format the date and time
@@ -46,26 +46,35 @@ export default function DocumentTimeline({
     });
   };
 
-  // MODIFIED: timelineItems now uses the dynamic timestamps
-  const isVerified = (approvalStatus || "").toLowerCase() === "accepted" || (approvalStatus || "").toLowerCase() === "approved";
+  // MODIFIED: timelineItems now uses the dynamic timestamps and explicit status labels
+  const normalizedStatus = (approvalStatus || "").toLowerCase();
+  const isAccepted = normalizedStatus === "accepted" || normalizedStatus === "approved";
+  const isRejected = normalizedStatus === "rejected";
+  const statusTitle = isAccepted ? "Report accepted" : isRejected ? "Report rejected" : "Verification pending";
+  const statusTimestamp = (isAccepted || isRejected) ? formatDateTime(approvalVerifiedAt || undefined) : "Pending";
+  const statusColor = isAccepted ? "bg-emerald-500" : isRejected ? "bg-red-500" : "bg-gray-400";
+  const statusCompleted = isAccepted || isRejected;
   const timelineItems = [
     {
       title: "Document Uploaded",
       timestamp: formatDateTime(uploadedTimestamp),
       color: "bg-blue-500",
-      completed: true
+      completed: true,
+      icon: "check" as const,
     },
     {
       title: "AI Analysis Completed",
       timestamp: formatDateTime(completionTimestamp),
       color: "bg-green-500",
-      completed: true
+      completed: true,
+      icon: "check" as const,
     },
     {
-      title: isVerified ? "Report Verified" : "Report Verification",
-      timestamp: isVerified ? formatDateTime(approvalVerifiedAt || undefined) : "Pending",
-      color: isVerified ? "bg-emerald-500" : "bg-gray-400",
-      completed: isVerified
+      title: statusTitle,
+      timestamp: statusTimestamp,
+      color: statusColor,
+      completed: statusCompleted,
+      icon: isRejected ? "x" as const : "check" as const,
     }
   ];
 
@@ -82,7 +91,11 @@ export default function DocumentTimeline({
             <div key={index} className="flex items-start space-x-2.5 pb-4 last:pb-0 relative">
               <div className={`relative z-10 w-5 h-5 ${item.color} rounded-full flex items-center justify-center flex-shrink-0`}>
                 {item.completed && (
-                  <Check className="w-2.5 h-2.5 text-white" />
+                  item.icon === "x" ? (
+                    <XIcon className="w-2.5 h-2.5 text-white" />
+                  ) : (
+                    <Check className="w-2.5 h-2.5 text-white" />
+                  )
                 )}
               </div>
               

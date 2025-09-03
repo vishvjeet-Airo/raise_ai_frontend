@@ -313,7 +313,7 @@ export default function DocumentDetail() {
                       documentUrl={document.url}
                       documentId={document.id}
                     />
-                    <HumanValidation />
+                    <HumanValidation approvalStatus={document.approvalStatus} />
                   </>
                 ) : (
                   // When NO sidebar is open, use two columns layout
@@ -353,7 +353,7 @@ export default function DocumentDetail() {
                           documentUrl={document.url}
                           documentId={document.id}
                         />
-                        <HumanValidation />
+                        <HumanValidation approvalStatus={document.approvalStatus} />
                       </div>
                     </div>
                     <div className="mx-4">

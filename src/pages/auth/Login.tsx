@@ -84,10 +84,26 @@ export default function Login() {
         }
 
     // Save tokens and user info in localStorage
-    localStorage.setItem("role", data.user.role);  
-    localStorage.setItem("organisation_id", data.user.organisation_id);
-    localStorage.setItem("username", data.user.username);
-    localStorage.setItem("organisation_name",data.organisation.name);
+    if (data.token_type) {
+      localStorage.setItem("token_type", data.token_type);
+    }
+    if (data.role) {
+      localStorage.setItem("role", data.role);
+    }
+    if (data.user) {
+      if (data.user.organisation_id !== undefined) {
+        localStorage.setItem("organisation_id", String(data.user.organisation_id));
+      }
+      if (data.user.username) {
+        localStorage.setItem("username", data.user.username);
+      }
+    }
+    if (data.organisation && data.organisation.name) {
+      localStorage.setItem("organisation_name", data.organisation.name);
+    }
+    if (Array.isArray(data.privileges)) {
+      localStorage.setItem("privileges", JSON.stringify(data.privileges));
+    }
         navigate('/documents');
       } catch (err: any) {
         let finalErrorMessage = 'Login failed. Please check your credentials and try again.';

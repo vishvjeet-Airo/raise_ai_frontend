@@ -23,15 +23,16 @@ interface Verifier {
   email: string;
 }
 
-export default function HumanValidation() {
+export default function HumanValidation({ approvalStatus: approvalStatusProp }: { approvalStatus?: string | null }) {
   const { id: routeDocId } = useParams<{ id: string }>();
   const documentId = routeDocId ? Number(routeDocId) : undefined;
 
   const [stakeholderModalOpen, setStakeholderModalOpen] = useState(false);
   const [verifiers, setVerifiers] = useState<Verifier[]>([]);
-  const [selectedStakeholders, setSelectedStakeholders] = useState<string[]>([]);
+  const [selectedStakeholder, setSelectedStakeholder] = useState<string | null>(null);
   const [sendingValidation, setSendingValidation] = useState(false);
   const [loadingVerifiers, setLoadingVerifiers] = useState(false);
+  const [approvalStatus, setApprovalStatus] = useState<string | null>(approvalStatusProp ?? null);
 
   // Load verifiers from organization profile
   useEffect(() => {
@@ -60,25 +61,15 @@ export default function HumanValidation() {
     return () => { ignore = true; };
   }, []);
 
-  // Handle stakeholder selection toggle
-  const handleStakeholderToggle = (stakeholderId: string | number) => {
-    const sid = String(stakeholderId);
-    setSelectedStakeholders(prev => {
-      if (prev.includes(sid)) {
-        return prev.filter(id => id !== sid);
-      } else {
-        return [...prev, sid];
-      }
-    });
-  };
+  // Sync approval status from parent
+  useEffect(() => {
+    setApprovalStatus(approvalStatusProp ?? null);
+  }, [approvalStatusProp]);
 
-  // Handle select/deselect all verifiers
-  const handleSelectAll = () => {
-    if (selectedStakeholders.length === verifiers.length) {
-      setSelectedStakeholders([]);
-    } else {
-      setSelectedStakeholders(verifiers.map(s => String(s.id)));
-    }
+  // Handle single stakeholder selection toggle
+  const handleStakeholderSelect = (stakeholderId: string | number) => {
+    const sid = String(stakeholderId);
+    setSelectedStakeholder(prev => (prev === sid ? null : sid));
   };
 
   // Build PDF summary report blob
@@ -118,11 +109,11 @@ export default function HumanValidation() {
   // Handle sending the validation request
   const handleSendValidation = async () => {
     if (!documentId) return;
-    if (selectedStakeholders.length === 0) return;
+    if (!selectedStakeholder) return;
 
     try {
       setSendingValidation(true);
-      const chosen = verifiers.filter(v => selectedStakeholders.includes(String(v.id)));
+      const chosen = verifiers.filter(v => String(v.id) === selectedStakeholder);
 
       const { blob, title } = await buildSummaryPdf();
       const fileName = `${title}.pdf`;
@@ -144,7 +135,7 @@ export default function HumanValidation() {
 
       toast.success("Mail sent successfully");
       setStakeholderModalOpen(false);
-      setSelectedStakeholders([]);
+      setSelectedStakeholder(null);
     } catch (error) {
       console.error("Failed to send validation request:", error);
     } finally {
@@ -162,89 +153,87 @@ export default function HumanValidation() {
         </CardHeader>
         <CardContent>
           <div className="relative">
-            <Button
-              className="w-full bg-[#1F4A75] hover:bg-[#1f4a75]/90 flex items-center justify-center gap-2 disabled:opacity-60"
-              onClick={() => setStakeholderModalOpen(true)}
-              disabled={sendingValidation}
-              title="Select verifiers to send report"
-            >
-              <span className="font-montserrat font-medium text-[14px] leading-[100%] tracking-[0] text-[#FFFFFF]">
-                {sendingValidation ? "Sending..." : "Send Validation"}
-              </span>
-              <ChevronDown className="w-4 h-4" />
-            </Button>
+            {approvalStatus && approvalStatus.toLowerCase() !== "pending" ? (
+              <div className="w-full flex items-center justify-center py-3 rounded-md border">
+                <span className="text-sm">
+                  Report status: <span className={
+                    approvalStatus.toLowerCase() === "accepted" ? "text-green-600 font-semibold" :
+                    approvalStatus.toLowerCase() === "rejected" ? "text-red-600 font-semibold" : "text-gray-600 font-semibold"
+                  }>{approvalStatus}</span>
+                </span>
+              </div>
+            ) : (
+              <Button
+                className="w-full bg-[#1F4A75] hover:bg-[#1f4a75]/90 flex items-center justify-center gap-2 disabled:opacity-60"
+                onClick={() => setStakeholderModalOpen(true)}
+                disabled={sendingValidation}
+                title="Select verifiers to send report"
+              >
+                <span className="font-montserrat font-medium text-[14px] leading-[100%] tracking-[0] text-[#FFFFFF]">
+                  {sendingValidation ? "Sending..." : "Send Validation"}
+                </span>
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Stakeholder Selection Modal */}
-      <Dialog open={stakeholderModalOpen} onOpenChange={(v)=>{ setStakeholderModalOpen(v); if (v) setSelectedStakeholders([]); }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Select Verifiers</DialogTitle>
-          </DialogHeader>
+      {/* Stakeholder Selection Modal (only when pending or null) */}
+      {(!approvalStatus || approvalStatus.toLowerCase() === "pending") && (
+        <Dialog open={stakeholderModalOpen} onOpenChange={(v)=>{ setStakeholderModalOpen(v); if (v) setSelectedStakeholder(null); }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Select Verifiers</DialogTitle>
+            </DialogHeader>
 
-          <div className="space-y-4 py-2">
-            {/* Select All Option */}
-            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border">
-              <Checkbox
-                id="select-all"
-                checked={verifiers.length > 0 && selectedStakeholders.length === verifiers.length}
-                onCheckedChange={handleSelectAll}
-              />
-              <label htmlFor="select-all" className="text-sm font-medium cursor-pointer flex-1">
-                Select All ({verifiers.length} total)
-              </label>
-            </div>
-
-            {/* Individual Stakeholders List */}
-            <div className="max-h-60 overflow-y-auto space-y-1 pr-2">
-              {(loadingVerifiers ? [] : verifiers).map((stakeholder) => (
-                <div
-                  key={stakeholder.id}
-                  className="flex items-center space-x-3 p-2 hover:bg-gray-100 rounded-md cursor-pointer"
-                >
-                  <Checkbox
-                    id={String(stakeholder.id)}
-                    checked={selectedStakeholders.includes(String(stakeholder.id))}
-                    onCheckedChange={() => handleStakeholderToggle(String(stakeholder.id))}
-                  />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{stakeholder.name}</p>
-                    <p className="text-xs text-gray-500">{stakeholder.email}</p>
-                    {stakeholder.department && (
-                      <p className="text-xs text-blue-600 font-semibold">{stakeholder.department}</p>
-                    )}
+            <div className="space-y-4 py-2">
+              {/* Individual Stakeholders List */}
+              <div className="max-h-60 overflow-y-auto space-y-1 pr-2">
+                {(loadingVerifiers ? [] : verifiers).map((stakeholder) => (
+                  <div
+                    key={stakeholder.id}
+                    className="flex items-center space-x-3 p-2 hover:bg-gray-100 rounded-md cursor-pointer"
+                  >
+                    <Checkbox
+                      id={String(stakeholder.id)}
+                      checked={selectedStakeholder === String(stakeholder.id)}
+                      onCheckedChange={() => handleStakeholderSelect(String(stakeholder.id))}
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{stakeholder.name}</p>
+                      <p className="text-xs text-gray-500">{stakeholder.email}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              {/* Selected count */}
+              <div className="text-xs text-gray-500 text-center pt-2">
+                {selectedStakeholder ? 1 : 0} of {verifiers.length} selected
+              </div>
             </div>
 
-            {/* Selected count */}
-            <div className="text-xs text-gray-500 text-center pt-2">
-              {selectedStakeholders.length} of {verifiers.length} selected
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setStakeholderModalOpen(false)}
-              disabled={sendingValidation}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSendValidation}
-              disabled={selectedStakeholders.length === 0 || sendingValidation}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Mail className="w-4 h-4 mr-2" />
-              {sendingValidation ? "Sending..." : `Send Report to ${selectedStakeholders.length}`}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setStakeholderModalOpen(false)}
+                disabled={sendingValidation}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSendValidation}
+                disabled={!selectedStakeholder || sendingValidation}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                {sendingValidation ? "Sending..." : `Send Report`}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }

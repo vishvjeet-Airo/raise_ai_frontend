@@ -38,6 +38,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ forceCollapsed = false }) => {
   const role = (localStorage.getItem("role") || "").toLowerCase();
   const isAdmin = role === "admin";
   const isUploader = role === "uploader";
+  // Privileges from localStorage
+  const rawPrivileges = localStorage.getItem("privileges");
+  const privileges: Array<{ name?: string }> = (() => {
+    try { return rawPrivileges ? JSON.parse(rawPrivileges) : []; } catch { return []; }
+  })();
+  const canEditOrganisation = privileges?.some(p => (p?.name || "").toLowerCase() === "can_edit_organisation");
 
   // Username from localStorage (fallbacks)
   const username =
@@ -90,6 +96,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ forceCollapsed = false }) => {
     localStorage.removeItem("username");
     localStorage.removeItem("organisation_id")
     localStorage.removeItem("role")
+    localStorage.removeItem("privileges")
     navigate("/login");
   };
 
