@@ -1,8 +1,14 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Loader2, Pencil, Check, X, Plus, Trash2 } from "lucide-react";
 import FadedTextLoader from "./FadedTextLoader";
 import { formatDateShort } from "@/lib/dateUtils";
+import { apiClient } from "@/lib/apiClient";
+import { useChatSidebar } from "../../DocumentDetail";
 
 interface ActionPoint {
   id: number;
@@ -24,58 +30,192 @@ interface KeyObligationsAndActionPointsProps {
   onPageClick?: (pageNumber: number, sourceText?: string) => void; // Updated to accept source text
 }
 
+type EditState = {
+  isEditing: boolean;
+  prompt: string;
+  proposed: string | null;
+  loading: boolean;
+  saving: boolean;
+  error: string | null;
+};
+
 export default function KeyObligationsAndActionPoints({
   actionPoints = [],
   loading = false,
   error = null,
-  onPageClick, // NEW: Destructure onPageClick
+  onPageClick,
 }: KeyObligationsAndActionPointsProps) {
-  // Show more/less
   const [showAll, setShowAll] = useState(false);
-
-  // Relevance filter: relevant | irrelevant
   const [relFilter, setRelFilter] = useState<"relevant" | "irrelevant">("relevant");
 
-  // Apply relevance filter
-  const filteredPoints = useMemo(() => {
-    if (relFilter === "relevant") return actionPoints.filter((p) => p.is_relevant === true);
-    return actionPoints.filter((p) => p.is_relevant !== true);
-  }, [actionPoints, relFilter]);
+  const { documentId } = useChatSidebar();
 
-  // Determine which obligations to display after filtering
+  // Local overrides after accepting changes
+  const [overrides, setOverrides] = useState<Record<number, { description?: string; title?: string }>>({});
+  const [editStates, setEditStates] = useState<Record<number, EditState>>({});
+
+  // Local additions and modal states
+  const [localAdds, setLocalAdds] = useState<ActionPoint[]>([]);
+  const [showAddObligation, setShowAddObligation] = useState(false);
+  const [newHeading, setNewHeading] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [newPage, setNewPage] = useState<string>("");
+  const [newSourceText, setNewSourceText] = useState("");
+
+  const [showAddTaskFor, setShowAddTaskFor] = useState<number | null>(null);
+  const [taskText, setTaskText] = useState("");
+  const [taskDept, setTaskDept] = useState("");
+  const [taskHead, setTaskHead] = useState("");
+  const [taskDeadline, setTaskDeadline] = useState<string>("");
+  const [taskStatus, setTaskStatus] = useState("");
+
+  const [deletedIds, setDeletedIds] = useState<Set<number>>(new Set());
+
+  const allPoints = useMemo(() => {
+    const base = [...localAdds, ...actionPoints];
+    return base.filter((p) => !deletedIds.has(p.id));
+  }, [localAdds, actionPoints, deletedIds]);
+
+  const filteredPoints = useMemo(() => {
+    const base = allPoints;
+    if (relFilter === "relevant") return base.filter((p) => p.is_relevant === true || p.is_relevant === undefined);
+    return base.filter((p) => p.is_relevant === false);
+  }, [allPoints, relFilter]);
+
   const displayedPoints = showAll ? filteredPoints : filteredPoints.slice(0, 3);
 
-  // Handle page number click
   const handlePageClick = (pageNumber: number | undefined, sourceText?: string) => {
     if (pageNumber && onPageClick) {
       onPageClick(pageNumber, sourceText);
     }
   };
 
-  return (
-    <Card className="border-0 shadow-sm">
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between gap-3">
-          <CardTitle className="text-lg font-poppins font-normal">
-            Obligations {!loading && filteredPoints.length > 0 && `(${filteredPoints.length})`}
-          </CardTitle>
+  const toggleEdit = (id: number) => {
+    setEditStates((prev) => ({
+      ...prev,
+      [id]: {
+        isEditing: !prev[id]?.isEditing,
+        prompt: "",
+        proposed: null,
+        loading: false,
+        saving: false,
+        error: null,
+      },
+    }));
+  };
 
-          {/* Relevance dropdown (only 2 options) */}
-          <div>
-            <select
-              id="rel-filter"
-              value={relFilter}
-              onChange={(e) => setRelFilter(e.target.value as typeof relFilter)}
-              className="h-8 px-2 rounded-md border border-slate-300 text-xs text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
-              aria-label="Filter obligations by relevance"
-              disabled={loading}
-            >
-              <option value="relevant">Relevant</option>
-              <option value="irrelevant">Not Relevant</option>
-            </select>
-          </div>
-        </div>
-      </CardHeader>
+  const requestSuggestion = async (id: number) => {
+    setEditStates((prev) => ({ ...prev, [id]: { ...prev[id], loading: true, error: null } }));
+    try {
+      const prompt = editStates[id]?.prompt || "";
+      const res = await apiClient.post(`/api/documents/${documentId}/llm-edit`, {
+        target: "obligation",
+        obligation_id: id,
+        field: "description",
+        query: prompt,
+      });
+      if (!res.ok) {
+        const msg = await res.text().catch(() => "Failed to get suggestion");
+        throw new Error(msg);
+      }
+      const data = await res.json().catch(() => ({}));
+      const text = data.proposed_text || data.text || data.suggestion || "";
+      if (!text) throw new Error("Empty suggestion received");
+      setEditStates((prev) => ({ ...prev, [id]: { ...prev[id], proposed: text } }));
+    } catch (e: any) {
+      setEditStates((prev) => ({ ...prev, [id]: { ...prev[id], error: e.message || "Could not generate suggestion" } }));
+    } finally {
+      setEditStates((prev) => ({ ...prev, [id]: { ...prev[id], loading: false } }));
+    }
+  };
+
+  const acceptEdit = async (id: number, current: ActionPoint) => {
+    const proposed = editStates[id]?.proposed;
+    if (!proposed) return;
+    setEditStates((prev) => ({ ...prev, [id]: { ...prev[id], saving: true, error: null } }));
+    try {
+      // Attempt to persist
+      const res = await apiClient.patch(`/api/action-points/${id}`, {
+        description: proposed,
+      });
+      if (!res.ok) {
+        const msg = await res.text().catch(() => "Failed to save");
+        throw new Error(msg);
+      }
+      setOverrides((prev) => ({ ...prev, [id]: { ...prev[id], description: proposed } }));
+      setEditStates((prev) => ({ ...prev, [id]: { ...prev[id], isEditing: false, proposed: null, prompt: "" } }));
+    } catch (e: any) {
+      setEditStates((prev) => ({ ...prev, [id]: { ...prev[id], error: e.message || "Failed to save changes" } }));
+    } finally {
+      setEditStates((prev) => ({ ...prev, [id]: { ...prev[id], saving: false } }));
+    }
+  };
+
+  const cancelEdit = (id: number) => {
+    setEditStates((prev) => ({ ...prev, [id]: { ...prev[id], isEditing: false, proposed: null, prompt: "", error: null } }));
+  };
+
+  const deleteObligation = (id: number) => {
+    setDeletedIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+    setEditStates((prev) => {
+      const { [id]: _omit, ...rest } = prev;
+      return rest;
+    });
+    setLocalAdds((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const getDescription = (p: ActionPoint) => overrides[p.id]?.description ?? p.description;
+  const getTitle = (p: ActionPoint) => overrides[p.id]?.title ?? p.title;
+
+  return (
+    <>
+    <Card className="border-0 shadow-sm">
+    <CardHeader className="pb-4">
+  <div className="flex items-center justify-between gap-3">
+  
+    <CardTitle className="text-lg font-poppins font-normal flex items-center gap-2">
+      Obligations {!loading && filteredPoints.length > 0 && `(${filteredPoints.length})`}
+    </CardTitle>
+
+ 
+    <div className="flex items-center gap-2">
+   
+      {!loading && (
+        <Button 
+          size="sm" 
+          className="h-8 px-3 text-xs bg-blue-700" 
+          onClick={() => { 
+            setNewHeading(""); 
+            setNewDescription(""); 
+            setNewPage(""); 
+            setNewSourceText(""); 
+            setShowAddObligation(true); 
+          }}
+        >
+          <Plus className="w-5.5 h-3.5 mr-1" /> Add Obligation
+        </Button>
+      )}
+
+  
+      <select
+        id="rel-filter"
+        value={relFilter}
+        onChange={(e) => setRelFilter(e.target.value as typeof relFilter)}
+        className="h-8 px-2 rounded-md border border-slate-300 text-xs text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+        aria-label="Filter obligations by relevance"
+        disabled={loading}
+      >
+        <option value="relevant">Relevant</option>
+        <option value="irrelevant">Not Relevant</option>
+      </select>
+      
+    </div>
+  </div>
+</CardHeader>
       <CardContent>
         <div className="space-y-3">
           {loading && (
@@ -94,13 +234,10 @@ export default function KeyObligationsAndActionPoints({
           )}
           {!loading && !error && filteredPoints.length === 0 && (
             <div className="text-gray-500 text-sm">
-              {relFilter === "relevant"
-                ? "No relevant obligations found."
-                : "No not relevant obligations found."}
+              {relFilter === "relevant" ? "No relevant obligations found." : "No not relevant obligations found."}
             </div>
           )}
-          {!loading &&
-            !error &&
+          {!loading && !error &&
             displayedPoints.map((point, idx) => {
               const metaItems: React.ReactNode[] = [];
 
@@ -123,18 +260,18 @@ export default function KeyObligationsAndActionPoints({
                 );
               }
 
+              const st = editStates[point.id];
+
               return (
                 <div key={point.id}>
                   <div className="flex items-start space-x-3">
                     <div className="w-3 h-3 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-1">
-                        {point.title}
-                      </h4>
-                      {point.description && (
-                        <p className="text-sm text-gray-700 mb-2 justified">
-                          {point.description}
-                        </p>
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="font-medium text-gray-900 mb-1">{getTitle(point)}</h4>
+                      </div>
+                      {getDescription(point) && (
+                        <p className="text-sm text-gray-700 mb-2 justified">{st?.proposed ?? getDescription(point)}</p>
                       )}
                       {metaItems.length > 0 && (
                         <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
@@ -146,11 +283,45 @@ export default function KeyObligationsAndActionPoints({
                           ))}
                         </div>
                       )}
+
+                      {st?.isEditing && !st.proposed && (
+                        <div className="mt-3 bg-white p-3 rounded border border-gray-200">
+                          <label className="text-xs text-gray-600">Edit prompt</label>
+                          <textarea
+                            value={st.prompt}
+                            onChange={(e) =>
+                              setEditStates((prev) => ({ ...prev, [point.id]: { ...prev[point.id], prompt: e.target.value } }))
+                            }
+                            rows={3}
+                            placeholder="Describe how you want this obligation changed..."
+                            className="mt-1 w-full text-sm border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                          />
+                          {st.error && <div className="text-xs text-red-600 mt-2">{st.error}</div>}
+                          <div className="mt-2 flex gap-2">
+                            <Button size="sm" onClick={() => requestSuggestion(point.id)} disabled={st.loading || !(st.prompt || "").trim()} className="h-8 px-3">
+                              {st.loading ? "Generating..." : "Generate suggestion"}
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => cancelEdit(point.id)} className="h-8 px-3">
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {st?.isEditing && st.proposed && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <Button size="icon" className="h-7 w-7" onClick={() => acceptEdit(point.id, point)} disabled={st.saving} title="Accept">
+                            <Check className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="destructive" className="h-7 w-7" onClick={() => cancelEdit(point.id)} title="Discard">
+                            <X className="w-4 h-4" />
+                          </Button>
+                          {st.error && <div className="text-xs text-red-600 ml-2">{st.error}</div>}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  {idx !== displayedPoints.length - 1 && (
-                    <div className="h-[2px] rounded-full bg-[#F6F6F6] mx-auto my-4" />
-                  )}
+                  {idx !== displayedPoints.length - 1 && <div className="h-[2px] rounded-full bg-[#F6F6F6] mx-auto my-4" />}
                 </div>
               );
             })}
@@ -158,17 +329,11 @@ export default function KeyObligationsAndActionPoints({
           {!loading && filteredPoints.length > 3 && (
             <div className="pt-2">
               {!showAll ? (
-                <button
-                  onClick={() => setShowAll(true)}
-                  className="text-blue-600 font-semibold text-sm hover:underline"
-                >
+                <button onClick={() => setShowAll(true)} className="text-blue-600 font-semibold text-sm hover:underline">
                   + Show More ({filteredPoints.length - 3} more)
                 </button>
               ) : (
-                <button
-                  onClick={() => setShowAll(false)}
-                  className="text-blue-600 font-semibold text-sm hover:underline"
-                >
+                <button onClick={() => setShowAll(false)} className="text-blue-600 font-semibold text-sm hover:underline">
                   - Show Less
                 </button>
               )}
@@ -177,5 +342,105 @@ export default function KeyObligationsAndActionPoints({
         </div>
       </CardContent>
     </Card>
+
+    <Dialog open={showAddObligation} onOpenChange={setShowAddObligation}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Obligation</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs text-gray-600">Heading of Obligation</label>
+            <Input value={newHeading} onChange={(e) => setNewHeading(e.target.value)} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Short Description</label>
+            <Textarea rows={3} value={newDescription} onChange={(e) => setNewDescription(e.target.value)} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-600">Page Number</label>
+              <Input type="number" value={newPage} onChange={(e) => setNewPage(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-xs text-gray-600">Source Text</label>
+              <Input value={newSourceText} onChange={(e) => setNewSourceText(e.target.value)} />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="ghost" onClick={() => setShowAddObligation(false)}>Cancel</Button>
+            <Button onClick={async () => {
+              const newItem: ActionPoint = {
+                id: -Date.now(),
+                title: newHeading.trim() || "New Obligation",
+                description: newDescription.trim() || undefined,
+                source_page: newPage ? Number(newPage) : undefined,
+                source_text: newSourceText.trim() || undefined,
+                is_relevant: true,
+              };
+              try {
+                await apiClient.post(`/api/documents/${documentId}/action-points`, newItem).catch(() => {});
+              } catch {}
+              setLocalAdds((prev) => [newItem, ...prev]);
+              setShowAddObligation(false);
+            }}>Add</Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog open={showAddTaskFor !== null} onOpenChange={(v) => { if (!v) setShowAddTaskFor(null); }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Detailed Task</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs text-gray-600">Detailed Task</label>
+            <Textarea rows={3} value={taskText} onChange={(e) => setTaskText(e.target.value)} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-600">Department</label>
+              <Input value={taskDept} onChange={(e) => setTaskDept(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-xs text-gray-600">Department Head</label>
+              <Input value={taskHead} onChange={(e) => setTaskHead(e.target.value)} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-600">Deadline</label>
+              <Input type="date" value={taskDeadline} onChange={(e) => setTaskDeadline(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-xs text-gray-600">Status</label>
+              <Input placeholder="Pending / In Progress / Done" value={taskStatus} onChange={(e) => setTaskStatus(e.target.value)} />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="ghost" onClick={() => setShowAddTaskFor(null)}>Cancel</Button>
+            <Button onClick={async () => {
+              const apId = showAddTaskFor;
+              if (!apId) return;
+              const payload = {
+                task: taskText,
+                assigned_to_department: taskDept,
+                assigned_to_name: taskHead,
+                due_date: taskDeadline || undefined,
+                status: taskStatus,
+              };
+              try {
+                await apiClient.post(`/api/action-points/${apId}/detailed-action-points`, payload).catch(() => {});
+              } catch {}
+              setShowAddTaskFor(null);
+              setTaskText(""); setTaskDept(""); setTaskHead(""); setTaskDeadline(""); setTaskStatus("");
+            }}>Add</Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

@@ -109,7 +109,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left Side - Login Form */}
+      {/* Login Form */}
       <div className="flex-1 flex flex-col justify-center px-6 py-12 bg-white sm:px-8 lg:px-12 xl:px-16">
         <div className="mx-auto w-full max-w-[360px] text-sm">
           {/* Logo */}

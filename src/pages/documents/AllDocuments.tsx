@@ -21,8 +21,9 @@ interface Document {
   uploadedAtDate: Date;
   uploaded_at: string;
   status: 'PROCESSED' | 'COMPLETED' | 'PENDING' | 'FAILED' | 'QUEUED' | 'ANALYZED' | 'ANALYZING' | 'IN REVIEW' | 'ESCALATED' | 'VERIFIED' | 'FAILED' | 'ARCHIVED';
+  failureReason?: string;
   publisher: string;
-  url: string; // URL for the document to be viewed
+  url: string; 
   file_name: string;
   circularType?: string;
   referenceNumber?: string;
@@ -187,39 +188,40 @@ export default function AllDocuments() {
           circularType: doc.circular_type,
           referenceNumber: doc.reference_number,
           actionPoints: doc.action_points || [],
+          failureReason: doc.failure_reason || null,
         };
       });
     }
   }); 
 
-  const deleteMutation = useMutation({
-    mutationFn: async (fileName: string) => {
-      const response = await apiClient.delete("/api/documents/delete", {
-        headers: {
-          'accept': 'application/json',
-        },
-        body: JSON.stringify({
-          file_names: [fileName],
-        }),
-      });
-      if (!response.ok) {
-        const errorBody = await response.text();
-        console.error("Deletion failed with body:", errorBody);
-        throw new Error('Failed to delete document');
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["documents"] });
-    },
-  });
+    const deleteMutation = useMutation({
+      mutationFn: async (fileName: string) => {
+        const payload = { file_names: [fileName] };
+        const response = await apiClient.delete("/api/documents/delete", payload, {
+          headers: {
+            'accept': 'application/json',
+          },
+        });
+    
+        if (!response.ok) {
+          const errorBody = await response.text();
+          console.error("Deletion failed with body:", errorBody);
+          throw new Error('Failed to delete document');
+        }
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["documents"] });
+      },
+    });
 
   const deleteAllMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiClient.delete("/api/documents/all-from-db", {
+      const response = await apiClient.delete("/api/documents/all-from-db", undefined, {
         headers: {
           'accept': 'application/json',
         },
       });
+    
       if (!response.ok) {
         const errorBody = await response.text();
         console.error("Delete all failed with body:", errorBody);
@@ -417,10 +419,21 @@ export default function AllDocuments() {
                             </td>
            
                             <td className="px-8 py-4 text-center">
-                              <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(document.status)}`}>
-                                {document.status}
-                              </span>
-                            </td>
+                                  <div className="relative group flex justify-center items-center">
+                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(document.status)}`}>
+                                      {document.status === 'FAILED' && <AlertTriangle className="w-3.5 h-3.5" />}
+                                      {document.status}
+                                    </span>
+                                    {/* Tooltip for FAILED status */}
+                                    {document.status === 'FAILED' && document.failureReason && (
+                                      <div className="absolute bottom-full mb-2 w-max max-w-xs bg-gray-800 text-white text-sm rounded-md p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10 shadow-lg">
+                                        <p className="font-bold border-b border-gray-600 pb-1 mb-1">Failure Reason:</p>
+                                        <p className="whitespace-pre-wrap">{document.failureReason}</p>
+                                        <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-gray-800"></div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
 
                             <td className="px-8 py-4 text-center">
                               {isProcessed ? document.publisher : <FadedTextLoader lines={1} />}
@@ -428,7 +441,6 @@ export default function AllDocuments() {
 
                             <td className="px-8 py-4">
                               <div className="flex items-center justify-center space-x-3 text-[#1F4A75]">
-                                {/* Actions are kept as they are - user might want to delete a pending item */}
                                 <button onClick={() => setViewingDocument(document)} className="transition-colors hover:text-blue-700" title="View document"><Eye className="w-4 h-4" /></button>
                                 <button onClick={() => handleDelete(document)} className="transition-colors hover:text-red-600" title="Delete document"><Trash2 className="w-4 h-4" /></button>
                                 <button onClick={() => handleDownload(document)} className="transition-colors hover:text-blue-700" disabled={downloading === document.id} title="Download document">

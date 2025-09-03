@@ -94,12 +94,22 @@ class ApiClient {
     return this.fetchWithAuth(endpoint, config);
   }
 
-
-  async delete(endpoint: string, options: RequestInit = {}): Promise<Response> {
-    return this.fetchWithAuth(endpoint, {
+  async delete(endpoint: string, data?: any, options: RequestInit = {}): Promise<Response> {
+    const config: RequestInit = {
       ...options,
       method: 'DELETE',
-    });
+    };
+  
+    // This logic handles sending data in the request body
+    if (data) {
+      config.body = JSON.stringify(data);
+      config.headers = {
+        'Content-Type': 'application/json',
+        ...config.headers,
+      };
+    }
+  
+    return this.fetchWithAuth(endpoint, config);
   }
 
 
@@ -200,8 +210,8 @@ export const apiPost = (endpoint: string, data?: any, options?: RequestInit) =>
 export const apiPut = (endpoint: string, data?: any, options?: RequestInit) => 
   apiClient.put(endpoint, data, options);
 
-export const apiDelete = (endpoint: string, options?: RequestInit) => 
-  apiClient.delete(endpoint, options);
+export const apiDelete = (endpoint: string, data?: any, options?: RequestInit) => 
+  apiClient.delete(endpoint, data, options);
 
 export const apiPatch = (endpoint: string, data?: any, options?: RequestInit) => 
   apiClient.patch(endpoint, data, options);

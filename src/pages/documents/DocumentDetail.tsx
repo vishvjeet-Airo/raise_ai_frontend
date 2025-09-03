@@ -38,7 +38,6 @@ export const useChatSidebar = () => {
 type ApiDetailedActionPoint = {
   id: number;
   assigned_to_department?: string | null;
-  // Add other fields as needed
 };
 
 type ApiActionPoint = {

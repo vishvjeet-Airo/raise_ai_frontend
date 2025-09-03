@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
-import { Search, ArrowUp, ArrowDown } from "lucide-react";
+import { Search, ArrowUp, ArrowDown, Pencil, Plus, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { apiClient } from "@/lib/apiClient";
 
-/* ---- API types (reflecting detailed_action_points) ---- */
 type ApiDetailedActionPoint = {
   id: number;
   task?: string | null;
@@ -87,6 +90,24 @@ export default function ActionItemsPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Modals state
+  const [editActionItem, setEditActionItem] = useState<{ groupId: number; actionItemId: number } | null>(null);
+  const [addDetailedFor, setAddDetailedFor] = useState<{ groupId: number; actionItemId: number } | null>(null);
+  const [deleteActionItem, setDeleteActionItem] = useState<{ groupId: number; actionItemId: number } | null>(null);
+  const [editDetailedFor, setEditDetailedFor] = useState<{ groupId: number; actionItemId: number; detailedId: string } | null>(null);
+
+  // Form state for editing action item
+  const [formTitle, setFormTitle] = useState("");
+  const [formDesc, setFormDesc] = useState("");
+  const [formPage, setFormPage] = useState<string>("");
+  const [formDeadline, setFormDeadline] = useState<string>("");
+
+  // Form state for adding/editing detailed task
+  const [taskText, setTaskText] = useState("");
+  const [taskDept, setTaskDept] = useState("");
+  const [taskDeadline, setTaskDeadline] = useState<string>("");
+  const [taskStatus, setTaskStatus] = useState("");
+
   // Fetch documents and structure action points with their detailed action points
   useEffect(() => {
     let ignore = false;
@@ -152,6 +173,22 @@ export default function ActionItemsPage() {
             actionItems: actionItems.filter(ai => ai.detailed_action_points.length > 0),
           };
         });
+
+        // Seed one hardcoded detailed task example (demo)
+        if (mapped.length && mapped[0].actionItems.length) {
+          const first = mapped[0].actionItems[0];
+          first.detailed_action_points = [
+            {
+              id: `demo-${Date.now()}`,
+              task: "",
+              person: "",
+              department: "",
+              deadline: new Date(),
+              status: "",
+            },
+            ...first.detailed_action_points,
+          ];
+        }
 
         if (!ignore) setGroups(mapped);
       } catch (e: any) {
@@ -247,6 +284,117 @@ export default function ActionItemsPage() {
     setSortConfig({ key, direction });
   };
 
+  const openEdit = (groupId: number, actionItemId: number, ai: ActionItem) => {
+    setEditActionItem({ groupId, actionItemId });
+    setFormTitle(ai.title);
+    setFormDesc(ai.description || "");
+    setFormPage(ai.source_page ? String(ai.source_page) : "");
+    setFormDeadline(ai.deadline ? ai.deadline.toISOString().slice(0, 10) : "");
+  };
+
+  const applyEdit = () => {
+    if (!editActionItem) return;
+    setGroups((prev) => prev.map((g) => {
+      if (g.documentId !== editActionItem.groupId) return g;
+      return {
+        ...g,
+        actionItems: g.actionItems.map((ai) => ai.id === editActionItem.actionItemId ? {
+          ...ai,
+          title: formTitle || ai.title,
+          description: formDesc || undefined,
+          source_page: formPage ? Number(formPage) : undefined,
+          deadline: formDeadline ? new Date(formDeadline) : null,
+        } : ai),
+      };
+    }));
+    setEditActionItem(null);
+  };
+
+  const openAddDetailed = (groupId: number, actionItemId: number) => {
+    setAddDetailedFor({ groupId, actionItemId });
+    setTaskText("");
+    setTaskDept("");
+    setTaskDeadline("");
+    setTaskStatus("");
+  };
+
+  const applyAddDetailed = () => {
+    if (!addDetailedFor) return;
+    setGroups((prev) => prev.map((g) => {
+      if (g.documentId !== addDetailedFor.groupId) return g;
+      return {
+        ...g,
+        actionItems: g.actionItems.map((ai) => ai.id === addDetailedFor.actionItemId ? {
+          ...ai,
+          detailed_action_points: [
+            {
+              id: `local-${Date.now()}`,
+              task: taskText || "New Task",
+              department: taskDept || ns,
+              person: ns,
+              deadline: taskDeadline ? new Date(taskDeadline) : null,
+              status: taskStatus || "Pending",
+            },
+            ...ai.detailed_action_points,
+          ],
+        } : ai),
+      };
+    }));
+    setAddDetailedFor(null);
+  };
+
+  const openEditDetailed = (groupId: number, actionItemId: number, item: DetailedActionItem) => {
+    setEditDetailedFor({ groupId, actionItemId, detailedId: item.id });
+    setTaskText(item.task);
+    setTaskDept(item.department);
+    setTaskDeadline(item.deadline ? item.deadline.toISOString().slice(0, 10) : "");
+    setTaskStatus(item.status);
+  };
+
+  const applyEditDetailed = () => {
+    if (!editDetailedFor) return;
+    setGroups((prev) => prev.map((g) => {
+      if (g.documentId !== editDetailedFor.groupId) return g;
+      return {
+        ...g,
+        actionItems: g.actionItems.map((ai) => ai.id === editDetailedFor.actionItemId ? {
+          ...ai,
+          detailed_action_points: ai.detailed_action_points.map((d) => d.id === editDetailedFor.detailedId ? {
+            ...d,
+            task: taskText || d.task,
+            department: taskDept || d.department,
+            deadline: taskDeadline ? new Date(taskDeadline) : null,
+            status: taskStatus || d.status,
+          } : d),
+        } : ai),
+      };
+    }));
+    setEditDetailedFor(null);
+  };
+
+  const openDelete = (groupId: number, actionItemId: number) => setDeleteActionItem({ groupId, actionItemId });
+  const applyDelete = () => {
+    if (!deleteActionItem) return;
+    setGroups((prev) => prev.map((g) => {
+      if (g.documentId !== deleteActionItem.groupId) return g;
+      return { ...g, actionItems: g.actionItems.filter((ai) => ai.id !== deleteActionItem.actionItemId) };
+    }));
+    setDeleteActionItem(null);
+  };
+
+  const removeDetailed = (groupId: number, actionItemId: number, detailedId: string) => {
+    setGroups((prev) => prev.map((g) => {
+      if (g.documentId !== groupId) return g;
+      return {
+        ...g,
+        actionItems: g.actionItems.map((ai) => ai.id === actionItemId ? {
+          ...ai,
+          detailed_action_points: ai.detailed_action_points.filter((d) => d.id !== detailedId),
+        } : ai),
+      };
+    }));
+  };
+
   return (
     <div className="flex h-screen bg-slate-50">
       <Sidebar />
@@ -321,9 +469,16 @@ export default function ActionItemsPage() {
                         <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/50 rounded-t-xl">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                                {actionItem.title}
-                              </h3>
+                              <div className="flex items-center justify-between gap-3 mb-2">
+                                <h3 className="text-lg font-semibold text-slate-900 ">{actionItem.title}</h3>
+                                <Button 
+                                  size="sm" 
+                                  className="bg-blue-700 text-white hover:bg-blue-800" 
+                                  onClick={() => openAddDetailed(group.documentId, actionItem.id)}
+                                >
+                                  <Plus className="w-3.5 h-3.5 mr-1" /> Add Detailed Task
+                                </Button>
+                              </div>
                               {actionItem.description && (
                                 <p className="text-sm text-slate-600 mb-2">
                                   {actionItem.description}
@@ -394,7 +549,15 @@ export default function ActionItemsPage() {
                                     className={`border-b border-slate-100 ${idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"} hover:bg-slate-50`}
                                   >
                                     <td className="px-6 py-4 align-middle">
-                                      <div className="whitespace-pre-wrap break-words">{item.task || ns}</div>
+                                        <div className="whitespace-pre-wrap break-words flex-1">{item.task || ns}</div>
+                                        <div className="mt-2 flex gap-2">
+                                        <Button variant="ghost" size="icon" className="h-6 w-6 p-0 text-slate-600 hover:bg-transparent" title="Edit detailed task" onClick={() => openEditDetailed(group.documentId, actionItem.id, item.id)}>
+                                        <Pencil className="w-4 h-4" />
+                                          </Button>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6 p-0 text-red-600 hover:bg-transparent" title="Delete detailed task" onClick={() => removeDetailed(group.documentId, actionItem.id, item.id)}>
+                                          <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                      </div>
                                     </td>
                                     <td className="px-6 py-4 align-middle whitespace-normal break-words">
                                       {item.department || ns}
@@ -437,6 +600,118 @@ export default function ActionItemsPage() {
           )}
         </div>
       </main>
+      {/* Edit Action Item Modal */}
+      <Dialog open={!!editActionItem} onOpenChange={(v) => { if (!v) setEditActionItem(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Action Item</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-gray-600">Title</label>
+              <Input value={formTitle} onChange={(e) => setFormTitle(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-xs text-gray-600">Short Description</label>
+              <Textarea rows={3} value={formDesc} onChange={(e) => setFormDesc(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-gray-600">Page Number</label>
+                <Input type="number" value={formPage} onChange={(e) => setFormPage(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs text-gray-600">Deadline</label>
+                <Input type="date" value={formDeadline} onChange={(e) => setFormDeadline(e.target.value)} />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="ghost" onClick={() => setEditActionItem(null)}>Cancel</Button>
+              <Button onClick={applyEdit}>Save</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Detailed Task Modal */}
+      <Dialog open={!!addDetailedFor} onOpenChange={(v) => { if (!v) setAddDetailedFor(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Detailed Task</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-gray-600">Detailed Task</label>
+              <Textarea rows={3} value={taskText} onChange={(e) => setTaskText(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-gray-600">Department</label>
+                <Input value={taskDept} onChange={(e) => setTaskDept(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs text-gray-600">Status</label>
+                <Input placeholder="Pending / In Progress / Done" value={taskStatus} onChange={(e) => setTaskStatus(e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-gray-600">Deadline</label>
+              <Input type="date" value={taskDeadline} onChange={(e) => setTaskDeadline(e.target.value)} />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="ghost" onClick={() => setAddDetailedFor(null)}>Cancel</Button>
+              <Button onClick={applyAddDetailed}>Add</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Detailed Task Modal */}
+      <Dialog open={!!editDetailedFor} onOpenChange={(v) => { if (!v) setEditDetailedFor(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Detailed Task</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-gray-600">Detailed Task</label>
+              <Textarea rows={3} value={taskText} onChange={(e) => setTaskText(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-gray-600">Department</label>
+                <Input value={taskDept} onChange={(e) => setTaskDept(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs text-gray-600">Status</label>
+                <Input placeholder="Pending / In Progress / Done" value={taskStatus} onChange={(e) => setTaskStatus(e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-gray-600">Deadline</label>
+              <Input type="date" value={taskDeadline} onChange={(e) => setTaskDeadline(e.target.value)} />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="ghost" onClick={() => setEditDetailedFor(null)}>Cancel</Button>
+              <Button onClick={applyEditDetailed}>Save</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={!!deleteActionItem} onOpenChange={(v) => { if (!v) setDeleteActionItem(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Action Item?</DialogTitle>
+          </DialogHeader>
+          <div className="text-sm text-slate-700">This will remove the action item and its detailed tasks locally.</div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="ghost" onClick={() => setDeleteActionItem(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={applyDelete}>Delete</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
