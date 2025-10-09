@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
 import { Search, ArrowDown, ArrowUp, Eye, Download, X, Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { apiClient } from "@/lib/apiClient";
+import { parseAndFormatDate } from "@/lib/dateUtils";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import FadedTextLoader from "./components/document-detail/FadedTextLoader";
 
@@ -167,16 +168,12 @@ export default function AllDocuments() {
       }
       const data = await response.json();
       return data.map((doc: any) => {
-        doc.publication_date = doc.publication_date!='' ? String(doc.publication_date).trim().toUpperCase() : "";
-        const publicationDateObj = doc.publication_date != "NULL"? new Date(doc.publication_date) : null;
         const uploadedAtDateObj = doc.uploaded_at ? new Date(doc.uploaded_at) : null;
 
         return {
           id: doc.id.toString(),
           name: doc.title || 'No Title',
-          publicationDate: publicationDateObj
-            ? publicationDateObj.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
-            : 'N/A',
+          publicationDate: parseAndFormatDate(doc.publication_date),
           uploaded_at: uploadedAtDateObj
             ? uploadedAtDateObj.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
             : 'N/A',

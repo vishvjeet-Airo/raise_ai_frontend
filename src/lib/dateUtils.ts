@@ -80,6 +80,91 @@ export function formatDateTime(dateInput: Date | string | null | undefined): str
 }
 
 /**
+ * Parses various date formats and converts to dd/mm/yyyy
+ * Handles formats like: 25.07.2025, 23 JANUARY 2024, 2024-01-23, etc.
+ * @param dateInput - Date string in any format
+ * @returns formatted date string in dd/mm/yyyy format or 'N/A' if invalid
+ */
+export function parseAndFormatDate(dateInput: string | null | undefined): string {
+  if (!dateInput || typeof dateInput !== 'string') return 'N/A';
+  
+  const trimmed = dateInput.trim();
+  if (!trimmed) return 'N/A';
+  
+  try {
+    // Handle dot-separated dates (25.07.2025)
+    if (trimmed.includes('.')) {
+      const parts = trimmed.split('.');
+      if (parts.length === 3) {
+        const [day, month, year] = parts;
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        if (!isNaN(date.getTime())) {
+          return date.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          });
+        }
+      }
+    }
+    
+    // Handle space-separated dates with month names (23 JANUARY 2024)
+    const monthNames = [
+      'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+      'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER',
+      'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+      'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'
+    ];
+    
+    const upperInput = trimmed.toUpperCase();
+    for (const monthName of monthNames) {
+      if (upperInput.includes(monthName)) {
+        const parts = upperInput.split(/\s+/);
+        const monthIndex = monthNames.indexOf(monthName);
+        const actualMonthIndex = monthIndex >= 12 ? monthIndex - 12 : monthIndex;
+        
+        // Find day and year in the parts
+        let day = '', year = '';
+        for (const part of parts) {
+          if (part === monthName) continue;
+          if (/^\d{1,2}$/.test(part) && !day) {
+            day = part;
+          } else if (/^\d{4}$/.test(part) && !year) {
+            year = part;
+          }
+        }
+        
+        if (day && year) {
+          const date = new Date(parseInt(year), actualMonthIndex, parseInt(day));
+          if (!isNaN(date.getTime())) {
+            return date.toLocaleDateString('en-GB', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            });
+          }
+        }
+        break;
+      }
+    }
+    
+    // Fallback to native Date parsing for other formats
+    const date = new Date(trimmed);
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    }
+    
+    return 'N/A';
+  } catch {
+    return 'N/A';
+  }
+}
+
+/**
  * Formats timestamp for audit trail display
  * @param timestamp - ISO timestamp string
  * @returns object with separate date and time strings

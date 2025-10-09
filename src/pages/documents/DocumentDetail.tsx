@@ -12,7 +12,7 @@ import DocumentTimeline from "./components/document-detail/DocumentTimeline";
 import KeyObligationsAndActionPoints from "./components/document-detail/KeyObligationsAndActionPoints";
 import ReportsAndExports from "./components/document-detail/ReportsAndExports";
 import { apiClient } from "@/lib/apiClient";
-import { formatDateShort } from "@/lib/dateUtils";
+import { formatDateShort, parseAndFormatDate } from "@/lib/dateUtils";
 
 
 type ChatSidebarContextType = {
@@ -147,7 +147,7 @@ export default function DocumentDetail() {
           id: String(raw.id),
           name: raw.title || raw.file_name || `Document ${raw.id}`,
           publisher: raw.issuing_authority || "Unknown",
-          publicationDate: formatDateShort(raw.publication_date),
+          publicationDate: parseAndFormatDate(raw.publication_date),
           uploadedAtTimestamp: raw.uploaded_at || "", // Keep the full timestamp
           completedAtTimestamp: raw.analysis_completed_at || "",
           approvalStatus: raw.approval_of_report ?? null,
